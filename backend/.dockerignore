@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+env/
+venv/
+ENV/
+.pytest_cache/
+.coverage
+.tox/
+
+# IDE
+.idea/
+.vscode/
+
+# Firebase
+firebase-admin-sdk.json
