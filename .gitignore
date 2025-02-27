@@ -37,3 +37,6 @@ repomix-output.txt
 # Root package files if not needed
 /package.json
 /package-lock.json
+
+# Add these lines to your .gitignore
+backend/src/main/resources/application.properties

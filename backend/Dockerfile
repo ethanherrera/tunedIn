@@ -1,16 +1,13 @@
-FROM python:3.12-slim
+FROM eclipse-temurin:21-jdk-jammy as builder
 
 WORKDIR /app
-
-# Copy requirements first for better caching
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy the rest of the application
 COPY . .
+RUN ./mvnw clean package -DskipTests
 
-# Expose the API port
+FROM eclipse-temurin:21-jre-jammy
+
+WORKDIR /app
+COPY --from=builder /app/target/*.jar app.jar
+
 EXPOSE 8000
-
-# Command to run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["java", "-jar", "app.jar"] 
