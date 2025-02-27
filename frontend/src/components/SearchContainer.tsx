@@ -17,6 +17,7 @@ const SearchContainer: React.FC = () => {
   const [searchResults, setSearchResults] = useState<Track[]>([]);
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   // Combine featured track and comparison tracks
   const allTracks = [
@@ -45,6 +46,7 @@ const SearchContainer: React.FC = () => {
     setIsModalOpen(true);
     setSearchTerm('');
     setSearchResults([]);
+    setIsFocused(false);
   };
 
   return (
@@ -56,6 +58,8 @@ const SearchContainer: React.FC = () => {
           placeholder="Search for your song..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setTimeout(() => setIsFocused(false), 200)}
         />
         <div className="search-icon">
           <svg
@@ -75,7 +79,7 @@ const SearchContainer: React.FC = () => {
         </div>
       </div>
       
-      {searchResults.length > 0 && (
+      {searchResults.length > 0 && isFocused && (
         <div className="search-results">
           {searchResults.map((track) => (
             <div key={track.spotifyId} className="search-result-item">
