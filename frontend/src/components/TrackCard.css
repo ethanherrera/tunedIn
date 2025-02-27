@@ -6,6 +6,7 @@
 
 .track-card-inner {
   display: flex;
+  align-items: center;
   background-color: #27272a;
   border-radius: 0.5rem;
   overflow: hidden;
@@ -35,7 +36,7 @@
   padding: 0.75rem;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   overflow: hidden;
 }
 

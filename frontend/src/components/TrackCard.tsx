@@ -1,34 +1,37 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './TrackCard.css';
+import TrackRankingModal from './TrackRankingModal';
+import trackData from '../data/hard-coded-tracks.json';
 
 const TrackCard = () => {
-    // Track data
-    const track = {
-        albumImageUrl: "https://i.scdn.co/image/ab67616d0000b2737359994525d219f64872d3b1",
-        albumName: "Cut To The Feeling",
-        artistName: "Carly Rae Jepsen",
-        trackName: "Cut To The Feeling",
-        spotifyId: "11dFghVXANMlKmJXsNCbNl"
-    };
-
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    
     return (
-        <div className="track-card">
-            <div className="track-card-inner">
-                <div className="album-cover">
-                    <img
-                        src={track.albumImageUrl}
-                        alt={`${track.albumName} by ${track.artistName}`}
-                    />
-                </div>
-                <div className="track-info">
-                    <div>
-                        <h3 className="track-name">{track.trackName}</h3>
-                        <p className="artist-name">{track.artistName}</p>
-                        <p className="album-name">{track.albumName}</p>
+        <>
+            <div className="track-card" onClick={() => setIsModalOpen(true)}>
+                <div className="track-card-inner">
+                    <div className="album-cover">
+                        <img
+                            src={trackData.featuredTrack.albumImageUrl}
+                            alt={`${trackData.featuredTrack.albumName} by ${trackData.featuredTrack.artistName}`}
+                        />
+                    </div>
+                    <div className="track-info">
+                        <div>
+                            <h3 className="track-name">{trackData.featuredTrack.trackName}</h3>
+                            <p className="artist-name">{trackData.featuredTrack.artistName}</p>
+                            <p className="album-name">{trackData.featuredTrack.albumName}</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+
+            <TrackRankingModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                track={trackData.featuredTrack}
+            />
+        </>
     );
 };
 

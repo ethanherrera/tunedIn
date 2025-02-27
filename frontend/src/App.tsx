@@ -1,14 +1,13 @@
 import React from 'react';
-import TrackCard from './components/TrackCard';
+import SearchContainer from './components/SearchContainer';
+import UserRankingLists from './components/UserRankingLists';
 
 function App() {
     return (
         <div className="app">
-            <header className="app-header">
-                <h1>Featured Track</h1>
-            </header>
             <main className="app-content">
-                <TrackCard />
+                <SearchContainer />
+                <UserRankingLists />
             </main>
             <footer className="app-footer">
                 <p>React + TypeScript Music Card Demo</p>

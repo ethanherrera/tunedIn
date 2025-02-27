@@ -1,0 +1,119 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #1a1a1a;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+}
+
+.close-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.review-section {
+  margin: 1.5rem 0;
+}
+
+.review-input {
+  width: 100%;
+  min-height: 100px;
+  padding: 0.75rem;
+  background-color: #27272a;
+  border: 1px solid #3f3f46;
+  border-radius: 0.375rem;
+  color: white;
+  resize: vertical;
+}
+
+.rating-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+.rating-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.375rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.rating-button:hover {
+  opacity: 0.9;
+}
+
+.rating-button.active {
+  outline: 2px solid white;
+}
+
+.rating-button.dislike {
+  background-color: #dc2626;
+  color: white;
+}
+
+.rating-button.neutral {
+  background-color: #eab308;
+  color: black;
+}
+
+.rating-button.like {
+  background-color: #22c55e;
+  color: white;
+}
+
+.submit-button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #6366f1;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.submit-button:hover {
+  background-color: #4f46e5;
+}
+
+.word-count {
+  text-align: right;
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+  color: #a1a1aa;
+}
+
+.word-count .exceeded {
+  color: #ef4444;
+}
+
+.submit-button:disabled {
+  background-color: #4b5563;
+  cursor: not-allowed;
+  opacity: 0.7;
+} 

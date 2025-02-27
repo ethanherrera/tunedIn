@@ -1,0 +1,46 @@
+{
+  "featuredTrack": {
+    "albumImageUrl": "https://i.scdn.co/image/ab67616d0000b2737359994525d219f64872d3b1",
+    "albumName": "Cut To The Feeling",
+    "artistName": "Carly Rae Jepsen",
+    "trackName": "Cut To The Feeling",
+    "spotifyId": "11dFghVXANMlKmJXsNCbNl"
+  },
+  "comparisonTracks": [
+    {
+      "albumImageUrl": "https://i.scdn.co/image/ab67616d0000b273b1f8da74f225fa1225cdbd77",
+      "albumName": "Emotion",
+      "artistName": "Carly Rae Jepsen",
+      "trackName": "Run Away With Me",
+      "spotifyId": "7xGfFoTpQ2E7fRF5lN10tr"
+    },
+    {
+      "albumImageUrl": "https://i.scdn.co/image/ab67616d0000b273c5649add07ed3720be9d5526",
+      "albumName": "Dedicated",
+      "artistName": "Carly Rae Jepsen",
+      "trackName": "Want You In My Room",
+      "spotifyId": "2qXxkpfzOZXECmFhkEV3ZB"
+    },
+    {
+      "albumImageUrl": "https://i.scdn.co/image/ab67616d0000b2737359994525d219f64872d3b1",
+      "albumName": "Cut To The Feeling",
+      "artistName": "Carly Rae Jepsen",
+      "trackName": "Cut To The Feeling",
+      "spotifyId": "11dFghVXANMlKmJXsNCbNl"
+    },
+    {
+      "albumImageUrl": "https://i.scdn.co/image/ab67616d0000b273e6f407c7f3a0ec98845e4431",
+      "albumName": "The Loneliest Time",
+      "artistName": "Carly Rae Jepsen",
+      "trackName": "Talking To Yourself",
+      "spotifyId": "3zHq9ouUJQFQRf3cm1rRLu"
+    },
+    {
+      "albumImageUrl": "https://i.scdn.co/image/ab67616d0000b273873426539c927d46a9b2e00c",
+      "albumName": "EMOTION SIDE B",
+      "artistName": "Carly Rae Jepsen",
+      "trackName": "First Time",
+      "spotifyId": "4CdACLy0vEdqKMC9Y0rFMA"
+    }
+  ]
+} 
