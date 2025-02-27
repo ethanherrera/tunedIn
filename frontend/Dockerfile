@@ -2,19 +2,19 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package.json and package-lock.json (or yarn.lock)
-COPY package.json ./
-# If you use yarn, remove the next line
-RUN npm install
+# Copy package files
+COPY package*.json ./
+
+# Clean install dependencies
+RUN rm -rf node_modules && \
+    npm cache clean --force && \
+    npm install
 
 # Copy the rest of the application
-COPY . ./
+COPY . .
 
-# Build the application
-RUN npm run build
+# Expose the port Vite runs on
+EXPOSE 5137
 
-# Expose the port the app runs on
-EXPOSE 5173
-
-# Command to run the application in development
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+# Start the development server
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5137"]
