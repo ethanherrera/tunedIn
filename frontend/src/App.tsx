@@ -35,11 +35,7 @@ function App() {
                     Connect with Spotify
                 </button>
                 <SearchContainer />
-                <UserRankingLists />
             </main>
-            <footer className="app-footer">
-                <p>React + TypeScript Music Card Demo</p>
-            </footer>
         </div>
     );
 }
