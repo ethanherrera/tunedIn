@@ -1,6 +1,6 @@
-package com.tunedin.backend.repository.sql
+package com.tunedin.backend.repository
 
-import com.tunedin.backend.model.sql.RankingEntity
+import com.tunedin.backend.model.RankingEntity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 

@@ -1,8 +1,7 @@
-package com.tunedin.backend.service.sql
+package com.tunedin.backend.service
 
 import com.tunedin.backend.model.spotify.*
-import com.tunedin.backend.model.sql.SessionEntity
-import com.tunedin.backend.service.sql.SessionService
+import com.tunedin.backend.model.SessionEntity
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.*
 import org.springframework.stereotype.Service
@@ -73,7 +72,7 @@ class SpotifyService(
 
         val tokenResponse = response.body ?: throw RuntimeException("Failed to get token response")
         
-        // Store session in SQL database
+        // Store session in database
         val sessionEntity = SessionEntity(
             userId = "test-user-id",
             accessToken = tokenResponse.accessToken
@@ -88,7 +87,7 @@ class SpotifyService(
         type: String,
         limit: Int,
         offset: Int,
-        market: String?,
+        market: String?
     ): SpotifySearchResponse {
         val userId = "test-user-id"
         // Get access token from session service

@@ -1,7 +1,7 @@
-package com.tunedin.backend.service.sql
+package com.tunedin.backend.service
 
-import com.tunedin.backend.model.sql.SessionEntity
-import com.tunedin.backend.repository.sql.SessionRepository
+import com.tunedin.backend.model.SessionEntity
+import com.tunedin.backend.repository.SessionRepository
 import org.springframework.stereotype.Service
 
 @Service

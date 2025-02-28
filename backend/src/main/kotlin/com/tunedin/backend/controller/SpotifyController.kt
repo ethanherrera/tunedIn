@@ -1,7 +1,7 @@
 package com.tunedin.backend.controller
 
 import com.tunedin.backend.model.spotify.*
-import com.tunedin.backend.service.sql.SpotifyService
+import com.tunedin.backend.service.SpotifyService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 

@@ -1,4 +1,4 @@
-package com.tunedin.backend.model.sql
+package com.tunedin.backend.model
 
 import jakarta.persistence.*
 
