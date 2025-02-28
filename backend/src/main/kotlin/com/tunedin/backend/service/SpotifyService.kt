@@ -11,6 +11,7 @@ import org.springframework.web.context.request.ServletRequestAttributes
 import java.net.URLEncoder
 import java.util.*
 import com.tunedin.backend.model.Session
+import org.springframework.web.util.UriComponentsBuilder
 
 @Service
 class SpotifyService(
@@ -87,5 +88,47 @@ class SpotifyService(
         sessionService.saveSession(userId, firestoreSession)
         
         return tokenResponse
+    }
+
+    fun search(
+        query: String,
+        type: String,
+        limit: Int,
+        offset: Int,
+        market: String?,
+        userId: String
+    ): SpotifySearchResponse {
+        // Get access token from session service
+        val session = sessionService.getSession(userId) 
+            ?: throw RuntimeException("No session found for user $userId")
+        val accessToken = session.accessToken
+        
+        val restTemplate = RestTemplate()
+        val url = UriComponentsBuilder
+            .fromUriString("https://api.spotify.com/v1/search")
+            .queryParam("q", query)
+            .queryParam("type", type)
+            .queryParam("limit", limit)
+            .queryParam("offset", offset)
+            .apply { 
+                if (market != null) {
+                    queryParam("market", market)
+                }
+            }
+            .build()
+            .toUriString()
+
+        val headers = HttpHeaders().apply {
+            setBearerAuth(accessToken)
+        }
+
+        val response = restTemplate.exchange(
+            url,
+            HttpMethod.GET,
+            HttpEntity<Any>(headers),
+            SpotifySearchResponse::class.java
+        )
+
+        return response.body ?: throw RuntimeException("No response body from Spotify search API")
     }
 } 
