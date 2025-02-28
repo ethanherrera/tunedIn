@@ -14,10 +14,7 @@ class SecurityConfig {
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .csrf { it.disable() }
-            .authorizeHttpRequests {
-                it.requestMatchers("/api/**").permitAll()
-                   .anyRequest().authenticated()
-            }
+            .authorizeHttpRequests { it.anyRequest().permitAll() }
         return http.build()
     }
 } 

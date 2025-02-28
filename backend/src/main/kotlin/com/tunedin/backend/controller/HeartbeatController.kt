@@ -9,11 +9,15 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api")
 class HeartbeatController {
+
+    @GetMapping("/heartbeat")
+    fun getHeartbeat(): Map<String, String> {
+        return mapOf("status" to "running")
+    }
     
     @GetMapping("/firestore/heartbeat")
-    fun getHeartbeat(): HeartbeatResponse {
+    fun getFirestoreHeartbeat(): HeartbeatResponse {
         val firestoreConnection = try {
-            // Try to get an instance of Firestore to verify connection
             FirestoreClient.getFirestore()
             true
         } catch (e: Exception) {

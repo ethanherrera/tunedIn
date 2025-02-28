@@ -40,3 +40,5 @@ repomix-output.txt
 
 # Add these lines to your .gitignore
 backend/src/main/resources/application.properties
+
+eslint.config.js
