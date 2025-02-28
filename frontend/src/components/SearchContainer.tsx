@@ -32,7 +32,7 @@ const SearchContainer: React.FC = () => {
           q: searchTerm,
           type: 'track', // Only search for tracks
           limit: 5,      // Limit to top 5 results
-          userId: 'yez80r5JEkTOuCilR1Ur' // TODO: Replace with actual user ID
+          userId: 'test-user-id' // TODO: Replace with actual user ID
         });
 
         // Transform Spotify track results to match our Track interface

@@ -1,10 +1,9 @@
 package com.tunedin.backend.controller
 
 import com.tunedin.backend.model.spotify.*
-import com.tunedin.backend.service.SpotifyService
+import com.tunedin.backend.service.sql.SpotifyService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import com.tunedin.backend.model.spotify.SpotifySearchResponse.*
 
 @RestController
 @RequestMapping("/api/spotify")
@@ -31,7 +30,7 @@ class SpotifyController(
             return ResponseEntity.badRequest().body(SpotifyErrorResponse("Code not found"))
         }
 
-        val tokenResponse: SpotifyTokenResponse = spotifyService.exchangeCode(code)
+        val tokenResponse = spotifyService.exchangeCode(code)
         return ResponseEntity.ok(tokenResponse)
     }
 
@@ -42,9 +41,8 @@ class SpotifyController(
         @RequestParam(required = false, defaultValue = "20") limit: Int,
         @RequestParam(required = false, defaultValue = "0") offset: Int,
         @RequestParam(required = false) market: String?,
-        @RequestParam userId: String
     ): ResponseEntity<SpotifySearchResponse> {
-        val searchResponse = spotifyService.search(q, type, limit, offset, market, userId)
+        val searchResponse = spotifyService.search(q, type, limit, offset, market)
         return ResponseEntity.ok(searchResponse)
     }
 } 

@@ -1,6 +1,8 @@
-package com.tunedin.backend.service
+package com.tunedin.backend.service.sql
 
 import com.tunedin.backend.model.spotify.*
+import com.tunedin.backend.model.sql.SessionEntity
+import com.tunedin.backend.service.sql.SessionService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.*
 import org.springframework.stereotype.Service
@@ -8,10 +10,9 @@ import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import org.springframework.web.util.UriComponentsBuilder
 import java.net.URLEncoder
 import java.util.*
-import com.tunedin.backend.model.Session
-import org.springframework.web.util.UriComponentsBuilder
 
 @Service
 class SpotifyService(
@@ -72,20 +73,12 @@ class SpotifyService(
 
         val tokenResponse = response.body ?: throw RuntimeException("Failed to get token response")
         
-        // Store tokens in session
-        val session = (RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes)
-            .request.session
-            
-        session.setAttribute(SPOTIFY_ACCESS_TOKEN, tokenResponse.accessToken)
-        session.setAttribute(SPOTIFY_REFRESH_TOKEN, tokenResponse.refreshToken)
-        
-        // Store session in Firestore
-        val userId = "yez80r5JEkTOuCilR1Ur"  // TODO: Get real user ID
-        val firestoreSession = Session(
-            id = userId,
-            accessToken = tokenResponse.accessToken,
+        // Store session in SQL database
+        val sessionEntity = SessionEntity(
+            userId = "test-user-id",
+            accessToken = tokenResponse.accessToken
         )
-        sessionService.saveSession(userId, firestoreSession)
+        sessionService.saveSession(sessionEntity)
         
         return tokenResponse
     }
@@ -96,12 +89,11 @@ class SpotifyService(
         limit: Int,
         offset: Int,
         market: String?,
-        userId: String
     ): SpotifySearchResponse {
+        val userId = "test-user-id"
         // Get access token from session service
         val session = sessionService.getSession(userId) 
             ?: throw RuntimeException("No session found for user $userId")
-        val accessToken = session.accessToken
         
         val restTemplate = RestTemplate()
         val url = UriComponentsBuilder
@@ -119,7 +111,7 @@ class SpotifyService(
             .toUriString()
 
         val headers = HttpHeaders().apply {
-            setBearerAuth(accessToken)
+            setBearerAuth(session.accessToken)
         }
 
         val response = restTemplate.exchange(
