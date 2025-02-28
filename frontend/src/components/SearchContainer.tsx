@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './SearchContainer.css';
-import trackData from '../data/hard-coded-tracks.json';
 import TrackRankingModal from './TrackRankingModal';
 import TrackCardSearchResult from './TrackCardSearchResult';
+import { spotifyApi } from '../api/apiClient';
 
+// Updated Track interface to match what we need from Spotify's response
 interface Track {
   albumImageUrl: string;
   albumName: string;
@@ -19,26 +20,41 @@ const SearchContainer: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
-  // Combine featured track and comparison tracks
-  const allTracks = [
-    trackData.featuredTrack,
-    ...trackData.comparisonTracks
-  ];
-
   useEffect(() => {
-    if (searchTerm.trim() === '') {
-      setSearchResults([]);
-      return;
-    }
+    const searchSpotify = async () => {
+      if (searchTerm.trim() === '') {
+        setSearchResults([]);
+        return;
+      }
 
-    const filteredTracks = allTracks
-      .filter(track =>
-        track.trackName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        track.artistName.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      .slice(0, 5);
+      try {
+        const response = await spotifyApi.search({
+          q: searchTerm,
+          type: 'track', // Only search for tracks
+          limit: 5,      // Limit to top 5 results
+          userId: 'yez80r5JEkTOuCilR1Ur' // TODO: Replace with actual user ID
+        });
 
-    setSearchResults(filteredTracks);
+        // Transform Spotify track results to match our Track interface
+        const transformedTracks: Track[] = response.tracks?.items.map(track => ({
+          spotifyId: track.id,
+          trackName: track.name,
+          artistName: track.artists[0].name,
+          albumName: track.album.name,
+          albumImageUrl: track.album.images[0]?.url || ''
+        })) || [];
+
+        setSearchResults(transformedTracks);
+      } catch (error) {
+        console.error('Failed to search tracks:', error);
+        setSearchResults([]);
+      }
+    };
+
+    // Debounce the search to avoid too many API calls
+    const timeoutId = setTimeout(searchSpotify, 300);
+
+    return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
   const handleTrackClick = (track: Track) => {
