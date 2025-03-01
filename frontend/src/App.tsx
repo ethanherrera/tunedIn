@@ -1,6 +1,7 @@
 import React from 'react';
 import SearchContainer from './components/SearchContainer';
 import UserRankingLists from './components/UserRankingLists';
+import UserReviewedTracks from './components/UserReviewedTracks';
 import { spotifyApi } from './api/apiClient';
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
                     Connect with Spotify
                 </button>
                 <SearchContainer />
+                <UserReviewedTracks />
             </main>
         </div>
     );

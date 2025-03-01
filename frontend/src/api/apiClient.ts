@@ -137,6 +137,11 @@ export const spotifyApi = {
       }
     });
     return response.data;
+  },
+  
+  getTrack: async (trackId: string) => {
+    const response = await apiClient.get<Track>(`/spotify/tracks/${trackId}`);
+    return response.data;
   }
 };
 

@@ -127,6 +127,22 @@ class SpotifyService(
         return response.body ?: throw RuntimeException("Failed to get user profile")
     }
 
+    fun getTrack(trackId: String, accessToken: String): Track {
+        val restTemplate = RestTemplate()
+        val headers = HttpHeaders().apply {
+            setBearerAuth(accessToken)
+        }
+        
+        val response = restTemplate.exchange(
+            "https://api.spotify.com/v1/tracks/$trackId",
+            HttpMethod.GET,
+            HttpEntity<Any>(headers),
+            Track::class.java
+        )
+        
+        return response.body ?: throw RuntimeException("Failed to get track details")
+    }
+
     fun refreshAccessToken(refreshToken: String): SpotifyTokenResponse {
         val restTemplate = RestTemplate()
         
