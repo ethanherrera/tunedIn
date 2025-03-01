@@ -96,29 +96,23 @@
   /* No additional styling that would alter the appearance of the track card */
 }
 
-/* Opinion circle styling */
-.opinion-circle {
+/* Rating circle styling */
+.rating-circle {
   position: absolute;
   top: 10px;
-  right: 10px;
-  width: 20px;
-  height: 20px;
+  right: 10px; /* Position it where the opinion circle was */
+  width: 25px;
+  height: 25px;
   border-radius: 50%;
   border: 2px solid #1a1a1a;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  z-index: 10; /* Ensure it appears above the track card */
-}
-
-.opinion-circle-liked {
-  background-color: #22c55e; /* Green */
-}
-
-.opinion-circle-neutral {
-  background-color: #eab308; /* Yellow */
-}
-
-.opinion-circle-dislike {
-  background-color: #ef4444; /* Red */
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 10px;
 }
 
 .review-details {

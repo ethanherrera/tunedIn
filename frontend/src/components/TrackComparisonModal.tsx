@@ -108,7 +108,7 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
           const trackData = await spotifyApi.getTrack(review.spotifyTrackId);
           
           reviewedTracks.push({
-            albumImageUrl: trackData.album.images[0]?.url || 'https://via.placeholder.com/300',
+            albumImageUrl: trackData.album.images[0]?.url || '',
             albumName: trackData.album.name,
             artistName: trackData.artists[0].name,
             trackName: trackData.name,

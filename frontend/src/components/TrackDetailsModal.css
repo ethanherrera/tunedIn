@@ -118,24 +118,25 @@
   margin: 0;
 }
 
-.opinion-indicator {
-  width: 1.5rem;
-  height: 1.5rem;
+.rating-indicator {
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 50%;
-  border: 2px solid #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  margin-left: 0.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.opinion-liked {
-  background-color: #22c55e; /* Green */
-}
-
-.opinion-neutral {
-  background-color: #eab308; /* Yellow */
-}
-
-.opinion-dislike {
-  background-color: #ef4444; /* Red */
+.rating-scale {
+  font-size: 0.9rem;
+  color: #a1a1aa;
+  margin-left: 0.25rem;
+  align-self: center;
 }
 
 .spotify-button {

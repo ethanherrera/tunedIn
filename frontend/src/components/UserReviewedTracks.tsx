@@ -11,6 +11,7 @@ interface ReviewWithTrack {
   spotifyTrackId: string;
   opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
   description: string;
+  rating: number;
   createdAt: number;
   track: {
     albumImageUrl: string;
@@ -28,6 +29,13 @@ const UserReviewedTracks: React.FC = () => {
   const [selectedReview, setSelectedReview] = useState<ReviewWithTrack | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState<boolean>(false);
   const [isReReviewModalOpen, setIsReReviewModalOpen] = useState<boolean>(false);
+
+  // Function to get color based on rating value
+  const getRatingColor = (rating: number): string => {
+    if (rating < 4.0) return '#e74c3c'; // Red for low ratings (dislike range: 0.0-3.9)
+    if (rating < 8.0) return '#f39c12'; // Yellow/orange for mid ratings (neutral range: 4.0-7.9)
+    return '#2ecc71'; // Green for high ratings (like range: 8.0-10.0)
+  };
 
   const fetchUserReviews = async () => {
     setLoading(true);
@@ -70,8 +78,15 @@ const UserReviewedTracks: React.FC = () => {
         }
       }
       
-      // Sort reviews by creation date (newest first)
-      reviewsWithTracks.sort((a, b) => b.createdAt - a.createdAt);
+      // Sort reviews by rating (highest to lowest), then by date for equal ratings
+      reviewsWithTracks.sort((a, b) => {
+        // First sort by rating
+        if (b.rating !== a.rating) {
+          return b.rating - a.rating;
+        }
+        // If ratings are equal, sort by date (newest first)
+        return b.createdAt - a.createdAt;
+      });
       
       setReviews(reviewsWithTracks);
     } catch (err) {
@@ -142,8 +157,14 @@ const UserReviewedTracks: React.FC = () => {
                     handleTrackClick(review, e);
                   }}
                 />
-                <div className={`opinion-circle opinion-circle-${review.opinion.toLowerCase()}`} 
-                     title={review.opinion}>
+                <div 
+                  className="rating-circle" 
+                  title={`Rating: ${review.rating.toFixed(1)}`}
+                  style={{
+                    backgroundColor: getRatingColor(review.rating),
+                  }}
+                >
+                  {review.rating.toFixed(1)}
                 </div>
               </div>
               <div className="review-details">
@@ -170,6 +191,7 @@ const UserReviewedTracks: React.FC = () => {
           opinion={selectedReview.opinion}
           onReReview={handleReReview}
           description={selectedReview.description}
+          rating={selectedReview.rating}
         />
       )}
 

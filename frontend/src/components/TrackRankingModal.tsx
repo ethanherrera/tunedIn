@@ -120,6 +120,23 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
     }
   };
 
+  // Generate a random rating within a range depending on the opinion
+  const generateRandomRating = (): number => {
+    if (!rating) return 5.0; // Default to middle if no rating (shouldn't happen)
+    
+    // Define ranges for each opinion type
+    const ranges = {
+      'dislike': { min: 0.0, max: 3.9 },
+      'neutral': { min: 4.0, max: 7.9 },
+      'like': { min: 8.0, max: 10.0 }
+    };
+    
+    const range = ranges[rating];
+    
+    // Generate random number within the range, rounded to 1 decimal
+    return Math.round((range.min + Math.random() * (range.max - range.min)) * 10) / 10;
+  };
+
   const handleSubmit = async () => {
     if (!rating) {
       setError('Please select a rating');
@@ -136,11 +153,16 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
       setError(null);
       console.log('TrackRankingModal: Preparing to submit review');
 
+      // Generate a random rating
+      const randomRating = generateRandomRating();
+      console.log('TrackRankingModal: Generated random rating:', randomRating);
+
       // Create the review data
       const reviewData = {
         spotifyTrackId: track.spotifyId,
         opinion: mapRatingToOpinion(rating),
-        description: review.trim()
+        description: review.trim(),
+        rating: randomRating
       };
       
       console.log('TrackRankingModal: Submitting review to API');

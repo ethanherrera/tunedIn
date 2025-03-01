@@ -14,6 +14,7 @@ interface TrackDetailsModalProps {
   opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
   onReReview: () => void;
   description: string;
+  rating: number;
 }
 
 const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({ 
@@ -22,11 +23,22 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
   track, 
   opinion,
   onReReview,
-  description
+  description,
+  rating
 }) => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   
   if (!isOpen) return null;
+
+  // Function to get color based on rating value
+  const getRatingColor = (rating: number): string => {
+    if (rating < 4.0) return '#e74c3c'; // Red for low ratings (dislike range: 0.0-3.9)
+    if (rating < 8.0) return '#f39c12'; // Yellow/orange for mid ratings (neutral range: 4.0-7.9)
+    return '#2ecc71'; // Green for high ratings (like range: 8.0-10.0)
+  };
+  
+  // Format the rating to always show one decimal place
+  const formattedRating = rating.toFixed(1);
 
   const handleSpotifyOpen = () => {
     window.open(`https://open.spotify.com/track/${track.spotifyId}`, '_blank');
@@ -69,8 +81,24 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
             </div>
             
             <div className="track-details-ranking">
-              <p className="ranking-label">Your tunedIn Ranking:</p>
-              <div className={`opinion-indicator opinion-${opinion.toLowerCase()}`}></div>
+              <p className="ranking-label">Your tunedIn Score:</p>
+              <div 
+                className="rating-indicator" 
+                style={{ 
+                  backgroundColor: getRatingColor(rating),
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  marginLeft: '10px',
+                  color: 'white',
+                  fontWeight: 'bold'
+                }}
+              >
+                {formattedRating}
+              </div>
             </div>
             
             <button 

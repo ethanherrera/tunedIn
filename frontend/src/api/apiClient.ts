@@ -79,6 +79,7 @@ interface CreateReviewRequest {
   spotifyTrackId: string;
   opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
   description: string;
+  rating: number;
 }
 
 interface TrackReview {
@@ -87,6 +88,7 @@ interface TrackReview {
   spotifyTrackId: string;
   opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
   description: string;
+  rating: number;
   createdAt: number;
 }
 

@@ -10,12 +10,13 @@ import java.util.UUID
 class TrackReviewService(
     private val trackReviewRepository: TrackReviewRepository
 ) {
-    fun createReview(userId: String, spotifyTrackId: String, opinion: Opinion, description: String): TrackReview {
+    fun createReview(userId: String, spotifyTrackId: String, opinion: Opinion, description: String, rating: Double): TrackReview {
         val review = TrackReview(
             userId = userId,
             spotifyTrackId = spotifyTrackId,
             opinion = opinion,
-            description = description
+            description = description,
+            rating = rating
         )
         return trackReviewRepository.save(review)
     }
