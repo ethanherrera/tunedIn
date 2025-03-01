@@ -14,6 +14,7 @@ services:
       - MONGO_INITDB_DATABASE=tunedIn
     volumes:
       - mongodb_data:/data/db
+      - ./database/scripts:/scripts
     networks:
       - tunedin-network
 

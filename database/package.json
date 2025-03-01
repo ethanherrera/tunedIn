@@ -1,0 +1,11 @@
+{
+  "name": "tunedin-database",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "init": "docker exec -it mongodb mongosh -u root -p rootpassword /scripts/init-mongo.js",
+    "create": "docker exec -it mongodb mongosh -u root -p rootpassword /scripts/create-initial-documents.js",
+    "reset": "docker exec -it mongodb mongosh -u root -p rootpassword /scripts/reset-db.js",
+    "enter": "docker exec -it mongodb mongosh -u root -p rootpassword"
+  }
+}

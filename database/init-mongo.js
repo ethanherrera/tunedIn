@@ -24,3 +24,4 @@ db.createCollection('rankings');
 db.createCollection('sessions'); 
 db.createCollection('users'); 
 db.createCollection('user_ranking_lists'); 
+
