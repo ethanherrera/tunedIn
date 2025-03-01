@@ -76,7 +76,6 @@ interface SpotifySearchResponse {
 
 // Review types
 interface CreateReviewRequest {
-  userId: string;
   spotifyTrackId: string;
   opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
   description: string;
@@ -98,6 +97,7 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
 // Spotify authentication endpoints
@@ -126,7 +126,6 @@ export const spotifyApi = {
     limit?: number;
     offset?: number;
     market?: string;
-    accessToken: string;
   }) => {
     const response = await apiClient.get<SpotifySearchResponse>('/spotify/search', {
       params: {
@@ -134,8 +133,7 @@ export const spotifyApi = {
         type: params.type || 'track,album,artist,playlist',
         limit: params.limit || 20,
         offset: params.offset || 0,
-        market: params.market,
-        accessToken: params.accessToken
+        market: params.market
       }
     });
     return response.data;
@@ -145,6 +143,16 @@ export const spotifyApi = {
 export const reviewApi = {
   createReview: async (reviewData: CreateReviewRequest): Promise<TrackReview> => {
     const response = await apiClient.post<TrackReview>('/reviews', reviewData);
+    return response.data;
+  },
+  
+  getUserReviews: async (): Promise<TrackReview[]> => {
+    const response = await apiClient.get<TrackReview[]>('/reviews/user');
+    return response.data;
+  },
+  
+  getTrackReviews: async (spotifyTrackId: string): Promise<TrackReview[]> => {
+    const response = await apiClient.get<TrackReview[]>(`/reviews/track/${spotifyTrackId}`);
     return response.data;
   }
 };

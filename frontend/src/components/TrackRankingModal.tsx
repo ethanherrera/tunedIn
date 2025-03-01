@@ -58,11 +58,7 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
       setIsSubmitting(true);
       setError(null);
 
-      // TODO: Replace with actual user ID from authentication
-      const userId = "test-user-id";
-
       await reviewApi.createReview({
-        userId,
         spotifyTrackId: track.spotifyId,
         opinion: mapRatingToOpinion(rating),
         description: review.trim()

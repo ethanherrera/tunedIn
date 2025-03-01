@@ -31,8 +31,7 @@ const SearchContainer: React.FC = () => {
         const response = await spotifyApi.search({
           q: searchTerm,
           type: 'track', // Only search for tracks
-          limit: 5,      // Limit to top 5 results
-          accessToken: 'BQCRek-0BTLlpLeT5jIAeN1yMYScbXMCimmiL-6pUUVC1Xf8RC-xKRqgvxLtcvUwPHlLD7BLFoLkow97YbhD0d6M8LwPfDTMOK0hqcaQpwfMe6UX_m1fWUdDSdPS-JUVyrQ5YPQjgZDfXiP9vGM1AIJmjsfLtiutQwsyGLElOuumS560_eEor0fkj2UwQjbmVn-V0IIPWIyakEcuNVdm1rJn3sCiRUWZzBna0JE6POjsXeUEbFiO3C1fmvmOqa4QYlS6qmfid4Jx3as7AdD6U4-B8p6r1NxlWFHiWe-zqw' // TODO: Replace with actual user ID
+          limit: 5      // Limit to top 5 results
         });
 
         // Transform Spotify track results to match our Track interface

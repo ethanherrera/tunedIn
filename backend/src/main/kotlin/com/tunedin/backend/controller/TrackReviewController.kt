@@ -6,9 +6,11 @@ import com.tunedin.backend.service.TrackReviewService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.util.UUID
+import jakarta.servlet.http.HttpServletRequest
+import com.tunedin.backend.model.spotify.SpotifyErrorResponse
+import org.springframework.http.HttpStatus
 
 data class CreateReviewRequest(
-    val userId: String,
     val spotifyTrackId: String,
     val opinion: Opinion,
     val description: String
@@ -20,9 +22,14 @@ class TrackReviewController(
     private val trackReviewService: TrackReviewService
 ) {
     @PostMapping
-    fun createReview(@RequestBody request: CreateReviewRequest): ResponseEntity<TrackReview> {
+    fun createReview(@RequestBody request: CreateReviewRequest, httpRequest: HttpServletRequest): ResponseEntity<*> {
+        val cookiesInfo = httpRequest.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
+        val userId = httpRequest.cookies?.find { it.name == "userId" }?.value
+            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(SpotifyErrorResponse("User ID not found in cookies. Available cookies: [$cookiesInfo]"))
+        
         val review = trackReviewService.createReview(
-            userId = request.userId,
+            userId = userId,
             spotifyTrackId = request.spotifyTrackId,
             opinion = request.opinion,
             description = request.description
@@ -46,9 +53,14 @@ class TrackReviewController(
         return ResponseEntity.ok(reviews)
     }
 
-    @GetMapping("/user/{userId}")
-    fun getReviewsByUserId(@PathVariable userId: String): ResponseEntity<List<TrackReview>> {
+    @GetMapping("/user")
+    fun getReviewsByUserId(request: HttpServletRequest): ResponseEntity<*> {
+        val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
+        val userId = request.cookies?.find { it.name == "userId" }?.value
+            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(SpotifyErrorResponse("User ID not found in cookies. Available cookies: [$cookiesInfo]"))
+        
         val reviews = trackReviewService.getReviewsByUserId(userId)
         return ResponseEntity.ok(reviews)
     }
-} 
+}

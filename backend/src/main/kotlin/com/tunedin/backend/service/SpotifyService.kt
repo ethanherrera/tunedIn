@@ -110,4 +110,44 @@ class SpotifyService(
 
         return response.body ?: throw RuntimeException("No response body from Spotify search API")
     }
+
+    fun getUserProfile(accessToken: String): SpotifyUserProfile {
+        val restTemplate = RestTemplate()
+        val headers = HttpHeaders().apply {
+            setBearerAuth(accessToken)
+        }
+        
+        val response = restTemplate.exchange(
+            "https://api.spotify.com/v1/me",
+            HttpMethod.GET,
+            HttpEntity<Any>(headers),
+            SpotifyUserProfile::class.java
+        )
+        
+        return response.body ?: throw RuntimeException("Failed to get user profile")
+    }
+
+    fun refreshAccessToken(refreshToken: String): SpotifyTokenResponse {
+        val restTemplate = RestTemplate()
+        
+        val headers = HttpHeaders()
+        val credentials = "$clientId:$clientSecret"
+        val encodedCredentials = Base64.getEncoder().encodeToString(credentials.toByteArray())
+        headers.set("Authorization", "Basic $encodedCredentials")
+        headers.contentType = MediaType.APPLICATION_FORM_URLENCODED
+        
+        val body = LinkedMultiValueMap<String, String>()
+        body.add("grant_type", "refresh_token")
+        body.add("refresh_token", refreshToken)
+        
+        val request = HttpEntity(body, headers)
+        val response = restTemplate.exchange(
+            "https://accounts.spotify.com/api/token",
+            HttpMethod.POST,
+            request,
+            SpotifyTokenResponse::class.java
+        )
+        
+        return response.body ?: throw RuntimeException("Failed to refresh token")
+    }
 } 
