@@ -13,6 +13,8 @@ interface ReviewWithTrack {
   description: string;
   rating: number;
   createdAt: number;
+  rank?: number;
+  totalReviews?: number;
   track: {
     albumImageUrl: string;
     albumName: string;
@@ -86,6 +88,13 @@ const UserReviewedTracks: React.FC = () => {
         }
         // If ratings are equal, sort by date (newest first)
         return b.createdAt - a.createdAt;
+      });
+      
+      // Add ranking information
+      const totalReviews = reviewsWithTracks.length;
+      reviewsWithTracks.forEach((review, index) => {
+        review.rank = index + 1;
+        review.totalReviews = totalReviews;
       });
       
       setReviews(reviewsWithTracks);
@@ -166,6 +175,11 @@ const UserReviewedTracks: React.FC = () => {
                 >
                   {review.rating.toFixed(1)}
                 </div>
+                {review.rank && review.totalReviews && (
+                  <div className="rank-badge">
+                    Rank: {review.rank}/{review.totalReviews}
+                  </div>
+                )}
               </div>
               <div className="review-details">
                 <p className="review-description">
@@ -194,6 +208,8 @@ const UserReviewedTracks: React.FC = () => {
           rating={selectedReview.rating}
           reviewId={selectedReview.id}
           onReviewDeleted={fetchUserReviews}
+          rank={selectedReview.rank}
+          totalReviews={selectedReview.totalReviews}
         />
       )}
 

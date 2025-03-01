@@ -269,4 +269,20 @@
 .delete-review-button:disabled {
   background-color: #e57373;
   cursor: not-allowed;
+}
+
+.rank-info {
+  margin-left: 10px;
+  font-size: 14px;
+  color: #e4e4e7;
+}
+
+.rank-info-badge {
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  display: inline-block;
 } 

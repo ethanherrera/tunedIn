@@ -18,6 +18,8 @@ interface TrackDetailsModalProps {
   rating: number;
   reviewId?: string;
   onReviewDeleted?: () => void;
+  rank?: number;
+  totalReviews?: number;
 }
 
 const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({ 
@@ -29,7 +31,9 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
   description,
   rating,
   reviewId,
-  onReviewDeleted
+  onReviewDeleted,
+  rank,
+  totalReviews
 }) => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -128,6 +132,11 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
               >
                 {formattedRating}
               </div>
+              {rank && totalReviews && (
+                <div className="rank-info-badge">
+                  Rank: {rank}/{totalReviews}
+                </div>
+              )}
             </div>
             
             <button 

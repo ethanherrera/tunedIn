@@ -22,6 +22,8 @@ interface ReviewData {
   description: string;
   rating: number;
   createdAt: number;
+  rank?: number;
+  totalReviews?: number;
 }
 
 const SearchContainer: React.FC = () => {
@@ -76,7 +78,29 @@ const SearchContainer: React.FC = () => {
     try {
       const reviews = await reviewApi.getTrackReviews(trackId);
       if (reviews && reviews.length > 0) {
-        setReviewData(reviews[0]);
+        // Sort all user reviews by rating (highest to lowest)
+        const userReviews = await reviewApi.getUserReviews();
+        
+        // Sort reviews by rating (highest to lowest), then by date
+        userReviews.sort((a, b) => {
+          if (b.rating !== a.rating) {
+            return b.rating - a.rating;
+          }
+          return b.createdAt - a.createdAt;
+        });
+        
+        // Find the position of the current review
+        const totalReviews = userReviews.length;
+        const reviewIndex = userReviews.findIndex(r => r.spotifyTrackId === trackId);
+        
+        // Add rank information to the review
+        const reviewWithRank = {
+          ...reviews[0],
+          rank: reviewIndex !== -1 ? reviewIndex + 1 : undefined,
+          totalReviews: totalReviews > 0 ? totalReviews : undefined
+        };
+        
+        setReviewData(reviewWithRank);
       } else {
         setReviewData(null);
       }
@@ -100,10 +124,7 @@ const SearchContainer: React.FC = () => {
 
   const handleDetailsModalClose = () => {
     setIsDetailsModalOpen(false);
-    // Refresh review data if the track is still selected
-    if (selectedTrack) {
-      fetchReviewData(selectedTrack.spotifyId);
-    }
+    setReviewData(null);
   };
 
   const handleReviewClick = () => {
@@ -212,7 +233,6 @@ const SearchTrackDetailsModal: React.FC<SearchTrackDetailsModalProps> = ({
   isLoading
 }) => {
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   
   if (!isOpen) return null;
 
@@ -229,25 +249,6 @@ const SearchTrackDetailsModal: React.FC<SearchTrackDetailsModalProps> = ({
 
   const toggleDescription = () => {
     setShowFullDescription(!showFullDescription);
-  };
-  
-  const handleDeleteReview = async () => {
-    if (window.confirm('Are you sure you want to delete this review?')) {
-      setIsDeleting(true);
-      try {
-        if (reviewData?.id) {
-          await reviewApi.deleteReview(reviewData.id);
-        } else if (reviewData?.spotifyTrackId) {
-          await reviewApi.deleteReviewByTrackId(reviewData.spotifyTrackId);
-        }
-        onClose();
-      } catch (error) {
-        console.error('Failed to delete review:', error);
-        alert('Failed to delete review. Please try again.');
-      } finally {
-        setIsDeleting(false);
-      }
-    }
   };
 
   // Determine if the track has been reviewed
@@ -316,6 +317,11 @@ const SearchTrackDetailsModal: React.FC<SearchTrackDetailsModalProps> = ({
                 >
                   {reviewData.rating.toFixed(1)}
                 </div>
+                {reviewData.rank && reviewData.totalReviews && (
+                  <div className="rank-info-badge">
+                    Rank: {reviewData.rank}/{reviewData.totalReviews}
+                  </div>
+                )}
               </div>
             )}
             
@@ -345,15 +351,6 @@ const SearchTrackDetailsModal: React.FC<SearchTrackDetailsModalProps> = ({
                     {showFullDescription ? 'See less' : 'See more'}
                   </button>
                 )}
-                <div className="review-actions">
-                  <button 
-                    className="delete-review-button" 
-                    onClick={handleDeleteReview}
-                    disabled={isDeleting}
-                  >
-                    {isDeleting ? 'Deleting...' : 'Delete Review'}
-                  </button>
-                </div>
               </div>
             ) : (
               <div className="search-track-description">

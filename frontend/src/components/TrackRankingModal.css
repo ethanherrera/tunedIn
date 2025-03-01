@@ -172,7 +172,7 @@
 .action-buttons {
   display: flex;
   justify-content: space-between;
-  margin-top: 20px;
+  margin-top: 30px;
   gap: 10px;
 }
 
@@ -199,4 +199,9 @@
 
 .submit-button {
   flex: 1;
+}
+
+/* Add spacing after embedded comparison modal */
+.embedded-comparison {
+  margin-bottom: 20px;
 } 

@@ -60,12 +60,12 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
   useEffect(() => {
     if (rating) {
       console.log('TrackRankingModal: Rating changed, prefetching comparisons');
-      // When rating changes, start prefetching comparisons but don't show yet
+      // When rating changes, immediately start prefetching and show comparisons
       setIsPrefetchingComparisons(true);
       setComparisonsComplete(false);
       setComparisonDataReady(false);
-      // Reset the visibility flag to ensure we get a full refresh
-      setShowComparison(false);
+      // Show the comparison modal immediately when rating is selected
+      setShowComparison(true);
     } else {
       // Reset states when rating is cleared
       setShowComparison(false);
@@ -276,18 +276,37 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
         {/* Error Message */}
         {error && <div className="error-message">{error}</div>}
 
+        {/* Comparison Modal */}
+        {rating && (
+          <TrackComparisonModal
+            isOpen={true}
+            onClose={() => {
+              setShowComparison(false);
+              setComparisonsComplete(false);
+            }}
+            initialTrack={track}
+            onDataReady={handleDataReady}
+            onComparisonComplete={handleComparisonComplete}
+            embedded={true}
+            visibleWhenReady={true}
+          />
+        )}
+
         {/* Action Buttons */}
         <div className="action-buttons">
-          <button
-            className="submit-button"
-            onClick={handleSubmit}
-            disabled={isSubmitting || isDeleting || !rating || wordCount > 200}
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Review'}
-          </button>
+          {/* Only show submit button when comparisons are complete */}
+          {comparisonsComplete && (
+            <button
+              className="submit-button"
+              onClick={handleSubmit}
+              disabled={isSubmitting || isDeleting || !rating || wordCount > 200}
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Review'}
+            </button>
+          )}
           
           {/* Delete Button - Only show if we're re-reviewing */}
-          {(existingReviewId || track.spotifyId) && (
+          {existingReviewId && (
             <button
               className="delete-review-button"
               onClick={handleDeleteReview}
@@ -297,19 +316,6 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
             </button>
           )}
         </div>
-
-        {/* Comparison Modal */}
-        {showComparison && (
-          <TrackComparisonModal
-            isOpen={isPrefetchingComparisons}
-            onClose={() => setShowComparison(false)}
-            initialTrack={track}
-            onDataReady={handleDataReady}
-            onComparisonComplete={handleComparisonComplete}
-            embedded={true}
-            visibleWhenReady={showComparison}
-          />
-        )}
       </div>
     </div>
   );
