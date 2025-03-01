@@ -45,4 +45,21 @@ class TrackReviewService(
     fun getReviewsByUserId(userId: String): List<TrackReview> {
         return trackReviewRepository.findByUserId(userId)
     }
+    
+    fun deleteReview(id: UUID): Boolean {
+        if (trackReviewRepository.existsById(id)) {
+            trackReviewRepository.deleteById(id)
+            return true
+        }
+        return false
+    }
+    
+    fun deleteReviewByUserIdAndTrackId(userId: String, spotifyTrackId: String): Boolean {
+        val review = trackReviewRepository.findByUserIdAndSpotifyTrackId(userId, spotifyTrackId)
+        if (review != null) {
+            trackReviewRepository.delete(review)
+            return true
+        }
+        return false
+    }
 } 

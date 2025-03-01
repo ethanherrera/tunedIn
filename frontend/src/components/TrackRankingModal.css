@@ -167,4 +167,36 @@
   height: 0;
   width: 0;
   overflow: hidden;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  gap: 10px;
+}
+
+.delete-review-button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  flex: 1;
+}
+
+.delete-review-button:hover {
+  background-color: #c0392b;
+}
+
+.delete-review-button:disabled {
+  background-color: #e57373;
+  cursor: not-allowed;
+}
+
+.submit-button {
+  flex: 1;
 } 

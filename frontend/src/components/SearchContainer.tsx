@@ -100,7 +100,10 @@ const SearchContainer: React.FC = () => {
 
   const handleDetailsModalClose = () => {
     setIsDetailsModalOpen(false);
-    setReviewData(null);
+    // Refresh review data if the track is still selected
+    if (selectedTrack) {
+      fetchReviewData(selectedTrack.spotifyId);
+    }
   };
 
   const handleReviewClick = () => {
@@ -209,6 +212,7 @@ const SearchTrackDetailsModal: React.FC<SearchTrackDetailsModalProps> = ({
   isLoading
 }) => {
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   if (!isOpen) return null;
 
@@ -225,6 +229,25 @@ const SearchTrackDetailsModal: React.FC<SearchTrackDetailsModalProps> = ({
 
   const toggleDescription = () => {
     setShowFullDescription(!showFullDescription);
+  };
+  
+  const handleDeleteReview = async () => {
+    if (window.confirm('Are you sure you want to delete this review?')) {
+      setIsDeleting(true);
+      try {
+        if (reviewData?.id) {
+          await reviewApi.deleteReview(reviewData.id);
+        } else if (reviewData?.spotifyTrackId) {
+          await reviewApi.deleteReviewByTrackId(reviewData.spotifyTrackId);
+        }
+        onClose();
+      } catch (error) {
+        console.error('Failed to delete review:', error);
+        alert('Failed to delete review. Please try again.');
+      } finally {
+        setIsDeleting(false);
+      }
+    }
   };
 
   // Determine if the track has been reviewed
@@ -322,6 +345,15 @@ const SearchTrackDetailsModal: React.FC<SearchTrackDetailsModalProps> = ({
                     {showFullDescription ? 'See less' : 'See more'}
                   </button>
                 )}
+                <div className="review-actions">
+                  <button 
+                    className="delete-review-button" 
+                    onClick={handleDeleteReview}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? 'Deleting...' : 'Delete Review'}
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="search-track-description">

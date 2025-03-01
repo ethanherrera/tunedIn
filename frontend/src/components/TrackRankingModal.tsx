@@ -13,14 +13,16 @@ interface TrackRankingModalProps {
     trackName: string;
     spotifyId: string;
   };
+  existingReviewId?: string;
 }
 
-const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, track }) => {
+const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, track, existingReviewId }) => {
   const [review, setReview] = useState('');
   const [rating, setRating] = useState<'dislike' | 'neutral' | 'like' | null>(null);
   const [wordCount, setWordCount] = useState(0);
   const [showComparison, setShowComparison] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Store review data to submit after comparisons
   const [pendingReview, setPendingReview] = useState<{
@@ -137,6 +139,27 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
     return Math.round((range.min + Math.random() * (range.max - range.min)) * 10) / 10;
   };
 
+  const handleDeleteReview = async () => {
+    if (window.confirm('Are you sure you want to delete this review?')) {
+      setIsDeleting(true);
+      try {
+        if (existingReviewId) {
+          await reviewApi.deleteReview(existingReviewId);
+        } else {
+          await reviewApi.deleteReviewByTrackId(track.spotifyId);
+        }
+        
+        // Close modal after successful deletion
+        handleClose();
+      } catch (err) {
+        setError('Failed to delete review. Please try again.');
+        console.error('Error deleting review:', err);
+      } finally {
+        setIsDeleting(false);
+      }
+    }
+  };
+
   const handleSubmit = async () => {
     if (!rating) {
       setError('Please select a rating');
@@ -216,7 +239,7 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
             placeholder="Write your review (max 200 words)..."
             maxLength={1000}
             className="review-input"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isDeleting}
           />
           <div className="word-count">
             <span className={wordCount > 200 ? 'exceeded' : ''}>
@@ -230,58 +253,62 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
           <button
             className={`rating-button dislike ${rating === 'dislike' ? 'active' : ''}`}
             onClick={() => setRating('dislike')}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isDeleting}
           >
             Disliked It
           </button>
           <button
             className={`rating-button neutral ${rating === 'neutral' ? 'active' : ''}`}
             onClick={() => setRating('neutral')}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isDeleting}
           >
             Neutral
           </button>
           <button
             className={`rating-button like ${rating === 'like' ? 'active' : ''}`}
             onClick={() => setRating('like')}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isDeleting}
           >
             Liked It
           </button>
         </div>
 
-        {/* Prefetch and show comparisons when ready */}
-        {isPrefetchingComparisons && (
-          <div className={showComparison ? "comparison-section" : "hidden-prefetch"}>
-            {/* Using unique key based on rating and track to force complete remount when rating changes */}
-            <TrackComparisonModal
-              key={`comparison-${rating}-${track.spotifyId}`} // This forces React to remount the component when rating changes
-              isOpen={isPrefetchingComparisons}
-              onClose={() => setShowComparison(false)}
-              initialTrack={track}
-              embedded={true}
-              onComparisonComplete={handleComparisonComplete}
-              onDataReady={handleDataReady}
-              visibleWhenReady={showComparison}
-            />
-          </div>
-        )}
+        {/* Error Message */}
+        {error && <div className="error-message">{error}</div>}
 
-        {error && (
-          <div className="error-message">
-            {error}
-          </div>
-        )}
-
-        {/* Only show submit button when comparisons are complete */}
-        {comparisonsComplete && (
-          <button 
-            className="submit-button" 
+        {/* Action Buttons */}
+        <div className="action-buttons">
+          <button
+            className="submit-button"
             onClick={handleSubmit}
-            disabled={isSubmitting || wordCount > 200 || !rating}
+            disabled={isSubmitting || isDeleting || !rating || wordCount > 200}
           >
             {isSubmitting ? 'Submitting...' : 'Submit Review'}
           </button>
+          
+          {/* Delete Button - Only show if we're re-reviewing */}
+          {(existingReviewId || track.spotifyId) && (
+            <button
+              className="delete-review-button"
+              onClick={handleDeleteReview}
+              disabled={isSubmitting || isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete Review'}
+            </button>
+          )}
+        </div>
+
+        {/* Comparison Modal */}
+        {showComparison && (
+          <TrackComparisonModal
+            isOpen={isPrefetchingComparisons}
+            onClose={() => setShowComparison(false)}
+            initialTrack={track}
+            onDataReady={handleDataReady}
+            onComparisonComplete={handleComparisonComplete}
+            embedded={true}
+            visibleWhenReady={showComparison}
+          />
         )}
       </div>
     </div>

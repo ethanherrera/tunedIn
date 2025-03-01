@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './TrackDetailsModal.css';
+import { reviewApi } from '../api/apiClient';
 
 interface TrackDetailsModalProps {
   isOpen: boolean;
@@ -15,6 +16,8 @@ interface TrackDetailsModalProps {
   onReReview: () => void;
   description: string;
   rating: number;
+  reviewId?: string;
+  onReviewDeleted?: () => void;
 }
 
 const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({ 
@@ -24,9 +27,12 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
   opinion,
   onReReview,
   description,
-  rating
+  rating,
+  reviewId,
+  onReviewDeleted
 }) => {
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   if (!isOpen) return null;
 
@@ -46,6 +52,29 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
 
   const toggleDescription = () => {
     setShowFullDescription(!showFullDescription);
+  };
+
+  const handleDeleteReview = async () => {
+    if (window.confirm('Are you sure you want to delete this review?')) {
+      setIsDeleting(true);
+      try {
+        if (reviewId) {
+          await reviewApi.deleteReview(reviewId);
+        } else {
+          await reviewApi.deleteReviewByTrackId(track.spotifyId);
+        }
+        
+        if (onReviewDeleted) {
+          onReviewDeleted();
+        }
+        onClose();
+      } catch (error) {
+        console.error('Failed to delete review:', error);
+        alert('Failed to delete review. Please try again.');
+      } finally {
+        setIsDeleting(false);
+      }
+    }
   };
 
   // Truncate description if it's too long and not showing full description
@@ -122,6 +151,16 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
                   {showFullDescription ? 'See less' : 'See more'}
                 </button>
               )}
+            </div>
+            
+            <div className="review-actions">
+              <button 
+                className="delete-review-button"
+                onClick={handleDeleteReview}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Review'}
+              </button>
             </div>
           </div>
         </div>

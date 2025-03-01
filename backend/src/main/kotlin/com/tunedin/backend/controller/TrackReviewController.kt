@@ -65,4 +65,48 @@ class TrackReviewController(
         val reviews = trackReviewService.getReviewsByUserId(userId)
         return ResponseEntity.ok(reviews)
     }
+    
+    @DeleteMapping("/{id}")
+    fun deleteReview(@PathVariable id: UUID, request: HttpServletRequest): ResponseEntity<Any> {
+        val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
+        val userId = request.cookies?.find { it.name == "userId" }?.value
+            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(SpotifyErrorResponse("User ID not found in cookies. Available cookies: [$cookiesInfo]"))
+        
+        // Get the review to check if it belongs to the user
+        val review = trackReviewService.getReviewById(id)
+        if (review == null) {
+            return ResponseEntity.notFound().build()
+        }
+        
+        // Check if the review belongs to the user
+        if (review.userId != userId) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(SpotifyErrorResponse("You are not authorized to delete this review"))
+        }
+        
+        val deleted = trackReviewService.deleteReview(id)
+        return if (deleted) {
+            ResponseEntity.ok(mapOf("success" to true, "message" to "Review deleted successfully"))
+        } else {
+            ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(SpotifyErrorResponse("Review not found"))
+        }
+    }
+    
+    @DeleteMapping("/track/{spotifyTrackId}")
+    fun deleteReviewByTrackId(@PathVariable spotifyTrackId: String, request: HttpServletRequest): ResponseEntity<*> {
+        val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
+        val userId = request.cookies?.find { it.name == "userId" }?.value
+            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(SpotifyErrorResponse("User ID not found in cookies. Available cookies: [$cookiesInfo]"))
+        
+        val deleted = trackReviewService.deleteReviewByUserIdAndTrackId(userId, spotifyTrackId)
+        return if (deleted) {
+            ResponseEntity.ok(mapOf("success" to true, "message" to "Review deleted successfully"))
+        } else {
+            ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(SpotifyErrorResponse("Review not found"))
+        }
+    }
 }

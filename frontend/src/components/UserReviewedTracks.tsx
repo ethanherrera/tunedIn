@@ -192,6 +192,8 @@ const UserReviewedTracks: React.FC = () => {
           onReReview={handleReReview}
           description={selectedReview.description}
           rating={selectedReview.rating}
+          reviewId={selectedReview.id}
+          onReviewDeleted={fetchUserReviews}
         />
       )}
 
@@ -201,6 +203,7 @@ const UserReviewedTracks: React.FC = () => {
           isOpen={isReReviewModalOpen}
           onClose={handleCloseReReviewModal}
           track={selectedReview.track}
+          existingReviewId={selectedReview.id}
         />
       )}
     </div>
