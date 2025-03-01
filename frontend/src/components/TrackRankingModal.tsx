@@ -185,7 +185,6 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
         spotifyTrackId: track.spotifyId,
         opinion: mapRatingToOpinion(rating),
         description: review.trim(),
-        rating: randomRating
       };
       
       console.log('TrackRankingModal: Submitting review to API');
@@ -250,27 +249,30 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
 
         {/* Rating Buttons */}
         <div className="rating-buttons">
-          <button
-            className={`rating-button dislike ${rating === 'dislike' ? 'active' : ''}`}
-            onClick={() => setRating('dislike')}
-            disabled={isSubmitting || isDeleting}
-          >
-            Disliked It
-          </button>
-          <button
-            className={`rating-button neutral ${rating === 'neutral' ? 'active' : ''}`}
-            onClick={() => setRating('neutral')}
-            disabled={isSubmitting || isDeleting}
-          >
-            Neutral
-          </button>
-          <button
-            className={`rating-button like ${rating === 'like' ? 'active' : ''}`}
-            onClick={() => setRating('like')}
-            disabled={isSubmitting || isDeleting}
-          >
-            Liked It
-          </button>
+          <div className="rating-button-container">
+            <span className="rating-label">I didn't like it...</span>
+            <button
+              className={`rating-button dislike ${rating === 'dislike' ? 'active' : ''}`}
+              onClick={() => setRating('dislike')}
+              disabled={isSubmitting || isDeleting}
+            />
+          </div>
+          <div className="rating-button-container">
+            <span className="rating-label">It was fine.</span>
+            <button
+              className={`rating-button neutral ${rating === 'neutral' ? 'active' : ''}`}
+              onClick={() => setRating('neutral')}
+              disabled={isSubmitting || isDeleting}
+            />
+          </div>
+          <div className="rating-button-container">
+            <span className="rating-label">I liked it!</span>
+            <button
+              className={`rating-button like ${rating === 'like' ? 'active' : ''}`}
+              onClick={() => setRating('like')}
+              disabled={isSubmitting || isDeleting}
+            />
+          </div>
         </div>
 
         {/* Error Message */}
@@ -279,6 +281,7 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
         {/* Comparison Modal */}
         {rating && (
           <TrackComparisonModal
+            key={`comparison-${rating}-${track.spotifyId}`}
             isOpen={true}
             onClose={() => {
               setShowComparison(false);
@@ -302,17 +305,6 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
               disabled={isSubmitting || isDeleting || !rating || wordCount > 200}
             >
               {isSubmitting ? 'Submitting...' : 'Submit Review'}
-            </button>
-          )}
-          
-          {/* Delete Button - Only show if we're re-reviewing */}
-          {existingReviewId && (
-            <button
-              className="delete-review-button"
-              onClick={handleDeleteReview}
-              disabled={isSubmitting || isDeleting}
-            >
-              {isDeleting ? 'Deleting...' : 'Delete Review'}
             </button>
           )}
         </div>
