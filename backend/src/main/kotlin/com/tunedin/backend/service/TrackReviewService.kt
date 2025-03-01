@@ -11,6 +11,19 @@ class TrackReviewService(
     private val trackReviewRepository: TrackReviewRepository
 ) {
     fun createReview(userId: String, spotifyTrackId: String, opinion: Opinion, description: String, rating: Double): TrackReview {
+        // Check if the user has already reviewed this track
+        val existingReview = trackReviewRepository.findByUserIdAndSpotifyTrackId(userId, spotifyTrackId)
+        
+        if (existingReview != null) {
+            // Update the existing review
+            existingReview.opinion = opinion
+            existingReview.description = description
+            existingReview.rating = rating
+            // Don't update the createdAt timestamp to preserve the original review date
+            return trackReviewRepository.save(existingReview)
+        }
+        
+        // Create a new review if one doesn't exist
         val review = TrackReview(
             userId = userId,
             spotifyTrackId = spotifyTrackId,

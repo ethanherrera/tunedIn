@@ -9,13 +9,13 @@ enum class Opinion {
 }
 
 data class TrackReview(
-    val id: UUID = UUID.randomUUID(),
-    val userId: String,
-    val spotifyTrackId: String,
-    val opinion: Opinion,
-    val description: String,
-    val rating: Double = 5.0,
-    val createdAt: Long = System.currentTimeMillis()
+    var id: UUID = UUID.randomUUID(),
+    var userId: String,
+    var spotifyTrackId: String,
+    var opinion: Opinion,
+    var description: String,
+    var rating: Double = 5.0,
+    var createdAt: Long = System.currentTimeMillis()
 ) {
     init {
         require(description.split("\\s+".toRegex()).size <= 200) {
