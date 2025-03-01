@@ -73,8 +73,8 @@
 }
 
 .review-item {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr auto;
   background-color: #1a1a1a;
   border-radius: 8px;
   overflow: hidden;
@@ -90,72 +90,115 @@
   border-color: #6366f1;
 }
 
-/* Track card container with opinion circle */
 .track-card-container {
   position: relative;
-  /* No additional styling that would alter the appearance of the track card */
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1rem;
+  padding: 1rem;
+  align-items: center;
+}
+
+/* Album cover container with rank */
+.album-cover-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Rank badge styling */
+.rank-badge {
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Album cover styling */
+.track-card-container .album-cover {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.track-card-container .album-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Track info styling */
+.track-card-container .track-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-right: 1rem;
+}
+
+.track-card-container .track-name {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+}
+
+.track-card-container .artist-name {
+  font-size: 1rem;
+  color: #c084fc;
+  margin: 0;
+}
+
+.track-card-container .album-name {
+  font-size: 0.875rem;
+  color: #71717a;
+  margin: 0;
 }
 
 /* Rating circle styling */
 .rating-circle {
-  position: absolute;
-  top: 10px;
-  right: 10px; /* Position it where the opinion circle was */
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  border: 2px solid #1a1a1a;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  z-index: 10;
+  border: 3px solid #1a1a1a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: bold;
-  font-size: 14px;
+  font-size: 1.25rem;
   padding: 2px;
 }
 
-/* Rank badge styling */
-.rank-badge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: linear-gradient(90deg, #6366f1, #a855f7);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: bold;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  z-index: 10;
-}
-
+/* Review details styling */
 .review-details {
-  padding: 15px;
+  grid-column: 1 / -1;
+  padding: 0.75rem 1rem;
   border-top: 1px solid #3f3f46;
-  height: 100px; /* Fixed height for consistent card sizing */
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  background-color: #27272a;
 }
 
 .review-description {
-  margin: 8px 0;
-  font-size: 14px;
+  margin: 0;
+  font-size: 0.875rem;
   line-height: 1.4;
-  color: #e4e4e7;
+  color: #a1a1aa;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 3; /* Limit to 3 lines */
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 
 .review-date {
-  display: block;
-  font-size: 12px;
-  color: #a1a1aa;
-  text-align: right;
+  font-size: 0.75rem;
+  color: #71717a;
+  margin-top: 0.25rem;
 }
 
 /* Responsive adjustments */

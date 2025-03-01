@@ -159,13 +159,24 @@ const UserReviewedTracks: React.FC = () => {
               onClick={(e) => handleTrackClick(review, e)}
             >
               <div className="track-card-container">
-                <TrackCardSearchResult 
-                  track={review.track} 
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent double triggering
-                    handleTrackClick(review, e);
-                  }}
-                />
+                <div className="album-cover-container">
+                  {review.rank && review.totalReviews && (
+                    <div className="rank-badge">
+                      Rank: #{review.rank}/{review.totalReviews}
+                    </div>
+                  )}
+                  <div className="album-cover">
+                    <img 
+                      src={review.track.albumImageUrl} 
+                      alt={`${review.track.albumName} by ${review.track.artistName}`}
+                    />
+                  </div>
+                </div>
+                <div className="track-info">
+                  <h3 className="track-name">{review.track.trackName}</h3>
+                  <p className="artist-name">{review.track.artistName}</p>
+                  <p className="album-name">{review.track.albumName}</p>
+                </div>
                 <div 
                   className="rating-circle" 
                   title={`Rating: ${review.rating.toFixed(1)}`}
@@ -175,20 +186,11 @@ const UserReviewedTracks: React.FC = () => {
                 >
                   {review.rating.toFixed(1)}
                 </div>
-                {review.rank && review.totalReviews && (
-                  <div className="rank-badge">
-                    Rank: {review.rank}/{review.totalReviews}
-                  </div>
-                )}
               </div>
               <div className="review-details">
-                <p className="review-description">
-                  {review.description.length > 100 
-                    ? `${review.description.substring(0, 100)}...` 
-                    : review.description}
-                </p>
+                <p className="review-description">{review.description}</p>
                 <span className="review-date">
-                  {new Date(review.createdAt).toLocaleDateString()}
+                  Reviewed on: {new Date(review.createdAt).toLocaleDateString()}
                 </span>
               </div>
             </div>
