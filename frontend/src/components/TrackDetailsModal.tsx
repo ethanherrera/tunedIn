@@ -12,14 +12,18 @@ interface TrackDetailsModalProps {
     trackName: string;
     spotifyId: string;
   };
-  opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
-  onReReview: () => void;
-  description: string;
-  rating: number;
+  // Make review-related props optional for search results
+  opinion?: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
+  description?: string;
+  rating?: number;
   reviewId?: string;
-  onReviewDeleted?: () => void;
   rank?: number;
   totalReviews?: number;
+  // Add props for handling both review and re-review
+  onReview?: () => void;
+  onReReview?: () => void;
+  onReviewDeleted?: () => void;
+  isLoading?: boolean;
 }
 
 const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({ 
@@ -27,28 +31,34 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
   onClose, 
   track, 
   opinion,
-  onReReview,
-  description,
+  description = '',
   rating,
   reviewId,
   onReviewDeleted,
   rank,
-  totalReviews
+  totalReviews,
+  onReview,
+  onReReview,
+  isLoading = false
 }) => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
   if (!isOpen) return null;
 
-  // Function to get color based on rating value
-  const getRatingColor = (rating: number): string => {
-    if (rating < 4.0) return '#e74c3c'; // Red for low ratings (dislike range: 0.0-3.9)
-    if (rating < 8.0) return '#f39c12'; // Yellow/orange for mid ratings (neutral range: 4.0-7.9)
-    return '#2ecc71'; // Green for high ratings (like range: 8.0-10.0)
+  // Function to get color based on opinion
+  const getRatingColor = (opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED'): string => {
+    switch (opinion) {
+      case 'DISLIKE':
+        return '#e74c3c'; // Red for dislike
+      case 'NEUTRAL':
+        return '#f39c12'; // Yellow/orange for neutral
+      case 'LIKED':
+        return '#2ecc71'; // Green for like
+      default:
+        return '#f39c12'; // Default to neutral color
+    }
   };
-  
-  // Format the rating to always show one decimal place
-  const formattedRating = rating.toFixed(1);
 
   const handleSpotifyOpen = () => {
     window.open(`https://open.spotify.com/track/${track.spotifyId}`, '_blank');
@@ -59,6 +69,8 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
   };
 
   const handleDeleteReview = async () => {
+    if (!onReviewDeleted) return;
+    
     if (window.confirm('Are you sure you want to delete this review?')) {
       setIsDeleting(true);
       try {
@@ -68,9 +80,7 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
           await reviewApi.deleteReviewByTrackId(track.spotifyId);
         }
         
-        if (onReviewDeleted) {
-          onReviewDeleted();
-        }
+        onReviewDeleted();
         onClose();
       } catch (error) {
         console.error('Failed to delete review:', error);
@@ -80,6 +90,9 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
       }
     }
   };
+
+  // Determine if the track has been reviewed
+  const hasReview = opinion !== undefined && rating !== undefined;
 
   // Truncate description if it's too long and not showing full description
   const displayDescription = !showFullDescription && description.length > 150
@@ -105,39 +118,52 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
             
             <div className="track-details-artist-row">
               <p className="track-details-artist">{track.artistName}</p>
-              <button 
-                className="re-review-button"
-                onClick={onReReview}
-              >
-                Re-review
-              </button>
-            </div>
-            
-            <div className="track-details-ranking">
-              <p className="ranking-label">Your tunedIn Score:</p>
-              <div 
-                className="rating-indicator" 
-                style={{ 
-                  backgroundColor: getRatingColor(rating),
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  marginLeft: '10px',
-                  color: 'white',
-                  fontWeight: 'bold'
-                }}
-              >
-                {formattedRating}
-              </div>
-              {rank && totalReviews && (
-                <div className="rank-info-badge">
-                  Rank: #{rank}
-                </div>
+              {isLoading ? (
+                <div className="loading-indicator">Loading...</div>
+              ) : hasReview ? (
+                <button 
+                  className="re-review-button"
+                  onClick={onReReview}
+                >
+                  Re-review
+                </button>
+              ) : onReview && (
+                <button 
+                  className="re-review-button"
+                  onClick={onReview}
+                >
+                  Review
+                </button>
               )}
             </div>
+            
+            {hasReview && (
+              <div className="track-details-ranking">
+                <p className="ranking-label">Your tunedIn Score:</p>
+                <div 
+                  className="rating-indicator" 
+                  style={{ 
+                    backgroundColor: getRatingColor(opinion),
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    marginLeft: '10px',
+                    color: 'white',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {rating.toFixed(1)}
+                </div>
+                {rank && totalReviews && (
+                  <div className="rank-info-badge">
+                    Rank: #{rank}
+                  </div>
+                )}
+              </div>
+            )}
             
             <button 
               className="spotify-button"
@@ -149,28 +175,39 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
               Listen on Spotify
             </button>
             
-            <div className="review-description-section">
-              <h3 className="review-description-title">Review Description:</h3>
-              <p className="review-description-text">{displayDescription}</p>
-              {description.length > 150 && (
-                <button 
-                  className="see-more-button" 
-                  onClick={toggleDescription}
-                >
-                  {showFullDescription ? 'See less' : 'See more'}
-                </button>
-              )}
-            </div>
-            
-            <div className="review-actions">
-              <button 
-                className="delete-review-button"
-                onClick={handleDeleteReview}
-                disabled={isDeleting}
-              >
-                {isDeleting ? 'Deleting...' : 'Delete Review'}
-              </button>
-            </div>
+            {isLoading ? (
+              <div className="search-track-description">
+                <p>Loading review information...</p>
+              </div>
+            ) : hasReview ? (
+              <div className="review-description-section">
+                <h3 className="review-description-title">Your Review:</h3>
+                <p className="review-description-text">{displayDescription}</p>
+                {description.length > 150 && (
+                  <button 
+                    className="see-more-button" 
+                    onClick={toggleDescription}
+                  >
+                    {showFullDescription ? 'See less' : 'See more'}
+                  </button>
+                )}
+                {onReviewDeleted && (
+                  <div className="review-actions">
+                    <button 
+                      className="delete-review-button"
+                      onClick={handleDeleteReview}
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? 'Deleting...' : 'Delete Review'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="search-track-description">
+                <p>This track hasn't been reviewed yet. Click the Review button to add your review!</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

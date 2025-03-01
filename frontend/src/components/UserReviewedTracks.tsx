@@ -188,9 +188,9 @@ const UserReviewedTracks: React.FC = () => {
                   className="rating-circle"
                   style={{
                     backgroundColor: 
-                      review.rating < 4.0 ? '#e74c3c' :  // Red for low ratings
-                      review.rating < 8.0 ? '#f39c12' :  // Yellow/orange for mid ratings
-                      '#2ecc71'                          // Green for high ratings
+                      review.opinion === 'DISLIKE' ? '#e74c3c' :  // Red for dislike
+                      review.opinion === 'NEUTRAL' ? '#f39c12' :  // Yellow/orange for neutral
+                      '#2ecc71'                                   // Green for liked
                   }}
                 >
                   {review.rating.toFixed(1)}
