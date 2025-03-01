@@ -8,6 +8,7 @@ import './App.css';
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [activeView, setActiveView] = useState<'search' | 'reviews'>('search');
     
     // Combined authentication check
     useEffect(() => {
@@ -60,6 +61,26 @@ function App() {
         <div className="app">
             <header className="app-header">
                 <h1 className="app-title">tunedIn</h1>
+                <div className="nav-buttons">
+                    <button 
+                        className={`nav-button ${activeView === 'search' ? 'active' : ''}`}
+                        onClick={() => setActiveView('search')}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="nav-icon" viewBox="0 0 16 16">
+                            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                        </svg>
+                        Search
+                    </button>
+                    <button 
+                        className={`nav-button ${activeView === 'reviews' ? 'active' : ''}`}
+                        onClick={() => setActiveView('reviews')}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="nav-icon" viewBox="0 0 16 16">
+                            <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+                        </svg>
+                        Your Reviewed Tracks
+                    </button>
+                </div>
                 <button 
                     onClick={() => {
                         // Clear cookies and reload page
@@ -71,13 +92,20 @@ function App() {
                     }}
                     className="logout-button"
                 >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="logout-icon" viewBox="0 0 16 16">
+                        <path fillRule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
+                        <path fillRule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
+                    </svg>
                     Logout
                 </button>
             </header>
             
             <main className="app-content">
-                <SearchContainer />
-                <UserReviewedTracks />
+                {activeView === 'search' ? (
+                    <SearchContainer />
+                ) : (
+                    <UserReviewedTracks />
+                )}
             </main>
         </div>
     );

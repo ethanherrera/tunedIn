@@ -134,7 +134,7 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
               </div>
               {rank && totalReviews && (
                 <div className="rank-info-badge">
-                  Rank: {rank}/{totalReviews}
+                  Rank: #{rank}
                 </div>
               )}
             </div>

@@ -26,7 +26,7 @@ interface ReviewWithTrack {
 
 const UserReviewedTracks: React.FC = () => {
   const [reviews, setReviews] = useState<ReviewWithTrack[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedReview, setSelectedReview] = useState<ReviewWithTrack | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState<boolean>(false);
@@ -146,7 +146,12 @@ const UserReviewedTracks: React.FC = () => {
       
       {error && <div className="error-message">{error}</div>}
       
-      {reviews.length === 0 && !loading && !error ? (
+      {loading ? (
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading your reviewed tracks...</p>
+        </div>
+      ) : reviews.length === 0 ? (
         <div className="no-reviews">
           <p>You haven't reviewed any tracks yet. Search for tracks to review them!</p>
         </div>
@@ -160,45 +165,49 @@ const UserReviewedTracks: React.FC = () => {
             >
               <div className="track-card-container">
                 <div className="album-cover-container">
-                  {review.rank && review.totalReviews && (
-                    <div className="rank-badge">
-                      Rank: #{review.rank}/{review.totalReviews}
-                    </div>
-                  )}
                   <div className="album-cover">
                     <img 
                       src={review.track.albumImageUrl} 
                       alt={`${review.track.albumName} by ${review.track.artistName}`}
                     />
                   </div>
+                  {review.rank && review.totalReviews && (
+                    <div className="rank-badge">
+                      #{review.rank} / {review.totalReviews}
+                    </div>
+                  )}
                 </div>
+                
                 <div className="track-info">
                   <h3 className="track-name">{review.track.trackName}</h3>
                   <p className="artist-name">{review.track.artistName}</p>
                   <p className="album-name">{review.track.albumName}</p>
                 </div>
+                
                 <div 
-                  className="rating-circle" 
-                  title={`Rating: ${review.rating.toFixed(1)}`}
+                  className="rating-circle"
                   style={{
-                    backgroundColor: getRatingColor(review.rating),
+                    backgroundColor: 
+                      review.rating < 4.0 ? '#e74c3c' :  // Red for low ratings
+                      review.rating < 8.0 ? '#f39c12' :  // Yellow/orange for mid ratings
+                      '#2ecc71'                          // Green for high ratings
                   }}
                 >
                   {review.rating.toFixed(1)}
                 </div>
               </div>
+              
               <div className="review-details">
                 <p className="review-description">{review.description}</p>
-                <span className="review-date">
+                <p className="review-date">
                   Reviewed on: {new Date(review.createdAt).toLocaleDateString()}
-                </span>
+                </p>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Track Details Modal */}
       {selectedReview && (
         <TrackDetailsModal
           isOpen={isDetailsModalOpen}
