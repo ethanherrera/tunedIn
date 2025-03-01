@@ -32,7 +32,7 @@ const SearchContainer: React.FC = () => {
           q: searchTerm,
           type: 'track', // Only search for tracks
           limit: 5,      // Limit to top 5 results
-          userId: 'test-user-id' // TODO: Replace with actual user ID
+          accessToken: 'BQBvp1xSfS1gdM0mmNeuKRZiEEBs86h1etEXMtNUtbgPF1L2fCBUl5LV0NbDYfE3VTKSd7KIuUdjEhSqv65-GuHQYYAQHo6e2WlCmq_rGtCIHkeitfY6UBfWafC1YVkwIROOLhb2toJLZ3Ldlrixl6A1L2ZwYQLr-wznGSQy9zRa7L-rC3noIfuR4FUC_CAju-ZVJf0RKJS9a3ncOlDlIEhW7k4qqTvKHZp01QSm5M_Q9mQVaijXAMOMqBnDUztYhnkBhAKcKvtCDvvZGpGv6lPgMa5m8l5IdW30rmTODA' // TODO: Replace with actual user ID
         });
 
         // Transform Spotify track results to match our Track interface

@@ -16,12 +16,14 @@ db.createUser({
   ]
 });
 
+db.grantRolesToUser("tunedInUser", [{ role: "readWrite", db: "tunedindb" }])
+
 // Create initial collections
 db.createCollection('tracks');
 db.createCollection('artists');
 db.createCollection('albums'); 
-db.createCollection('rankings'); 
+db.createCollection('reviews'); 
 db.createCollection('sessions'); 
 db.createCollection('users'); 
-db.createCollection('user_ranking_lists'); 
+db.createCollection('user_reviews_lists'); 
 

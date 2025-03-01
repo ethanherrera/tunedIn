@@ -61,9 +61,9 @@ interface PagingObject<T> {
   href: string;
   items: T[];
   limit: number;
-  next?: string;
+  next: string | null;
   offset: number;
-  previous?: string;
+  previous: string | null;
   total: number;
 }
 
@@ -109,7 +109,7 @@ export const spotifyApi = {
     limit?: number;
     offset?: number;
     market?: string;
-    userId: string;
+    accessToken: string;
   }) => {
     const response = await apiClient.get<SpotifySearchResponse>('/spotify/search', {
       params: {
@@ -118,7 +118,7 @@ export const spotifyApi = {
         limit: params.limit || 20,
         offset: params.offset || 0,
         market: params.market,
-        userId: params.userId
+        accessToken: params.accessToken
       }
     });
     return response.data;

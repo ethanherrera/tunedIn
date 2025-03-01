@@ -1,0 +1,4 @@
+npm run create -> populate the database
+npm run enter -> ssh into the container mongodb
+npm run reset -> reset the database
+npm run drop -> kill the whole volume
