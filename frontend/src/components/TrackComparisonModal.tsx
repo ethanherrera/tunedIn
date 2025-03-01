@@ -15,35 +15,84 @@ interface TrackComparisonModalProps {
   onClose: () => void;
   initialTrack: Track;
   onComplete?: () => void; // Optional callback for when all comparisons are done
+  embedded?: boolean; // Whether this modal is embedded within another component
+  onComparisonComplete?: () => void; // Called when comparisons are complete or none available
+  onDataReady?: () => void; // Callback for when data is ready but before showing the modal
+  visibleWhenReady?: boolean; // Whether the modal should be visible when data is ready
 }
 
 const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
   isOpen,
   onClose,
   initialTrack,
-  onComplete
+  onComplete,
+  embedded = false,
+  onComparisonComplete,
+  onDataReady,
+  visibleWhenReady = true
 }) => {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [comparisonTracks, setComparisonTracks] = useState<Track[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start as loading
   const [error, setError] = useState<string | null>(null);
+  const [hasCalledComplete, setHasCalledComplete] = useState(false);
+  const [noTracksAvailable, setNoTracksAvailable] = useState(false);
+  const [allComparisonsCompleted, setAllComparisonsCompleted] = useState(false);
+  const [contentReady, setContentReady] = useState(false); // Add new state for content readiness
+
+  // Call onComparisonComplete when appropriate
+  useEffect(() => {
+    // Call the comparison complete callback when:
+    // 1. No tracks are available
+    // 2. All comparisons have been completed
+    if (contentReady && onComparisonComplete) {
+      if (noTracksAvailable || allComparisonsCompleted || comparisonTracks.length === 0) {
+        console.log('TrackComparisonModal: Notifying comparison completion');
+        onComparisonComplete();
+      }
+    }
+  }, [contentReady, noTracksAvailable, allComparisonsCompleted, comparisonTracks.length, onComparisonComplete]);
+
+  // Call onDataReady when content is ready
+  useEffect(() => {
+    if (contentReady && onDataReady) {
+      console.log('TrackComparisonModal: Data ready, notifying parent');
+      onDataReady();
+    }
+  }, [contentReady, onDataReady]);
 
   // Fetch user's reviewed tracks when the modal opens
   useEffect(() => {
     if (isOpen) {
-      fetchUserReviewedTracks();
-      // Reset to first comparison when modal opens
+      console.log('TrackComparisonModal: Modal opened, fetching reviewed tracks');
+      // Reset to initial state
       setCurrentTrackIndex(0);
+      setHasCalledComplete(false);
+      setNoTracksAvailable(false);
+      setAllComparisonsCompleted(false);
+      setContentReady(false); // Content not ready yet
+      setLoading(true); // Start loading
+      
+      // Fetch the data
+      fetchUserReviewedTracks();
     }
   }, [isOpen, initialTrack.spotifyId]);
 
+  // Log component remounting for debugging
+  useEffect(() => {
+    console.log('TrackComparisonModal: Component mounted/remounted');
+    return () => {
+      console.log('TrackComparisonModal: Component unmounting');
+    };
+  }, []);
+
   // Function to fetch user's reviewed tracks
   const fetchUserReviewedTracks = async () => {
-    setLoading(true);
-    setError(null);
     try {
+      console.log('TrackComparisonModal: Fetching user reviews');
       // Get user reviews from the backend
       const userReviews = await reviewApi.getUserReviews();
+      console.log('TrackComparisonModal: Received reviews count:', userReviews.length);
       
       // Create an array to hold tracks with details
       const reviewedTracks: Track[] = [];
@@ -79,23 +128,22 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
         // Use all available tracks if we have between 1-5
         setComparisonTracks(reviewedTracks);
       } else {
-        // If no reviewed tracks, show an error
-        setError("You need to review more tracks before you can make comparisons.");
-        // Close the modal after a delay
-        setTimeout(() => {
-          handleClose();
-        }, 3000);
+        // If no reviewed tracks, just show a message
+        console.log('TrackComparisonModal: No tracks available for comparison');
+        setNoTracksAvailable(true);
       }
     } catch (err) {
       console.error('Failed to fetch user reviewed tracks:', err);
       setError('Failed to load your reviewed tracks. Please try again.');
     } finally {
       setLoading(false);
+      setContentReady(true); // Content is ready to display now
     }
   };
 
   // Create a clean close handler
   const handleClose = () => {
+    console.log('TrackComparisonModal: handleClose called');
     // Reset state
     setCurrentTrackIndex(0);
     setComparisonTracks([]);
@@ -106,23 +154,31 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
 
   // Handle completion of all comparisons
   const handleCompletion = () => {
+    console.log('TrackComparisonModal: handleCompletion called');
     // Call the onComplete callback if provided
-    if (onComplete) {
+    if (onComplete && !hasCalledComplete) {
+      console.log('TrackComparisonModal: Calling onComplete callback');
+      // Mark that we've called onComplete to prevent multiple calls
+      setHasCalledComplete(true);
       onComplete();
     } else {
       // If no callback provided, just close the modal
+      console.log('TrackComparisonModal: No onComplete callback, closing modal');
       handleClose();
     }
   };
 
-  if (!isOpen) return null;
+  // Don't render anything until we're ready and should be visible
+  if (!isOpen || (!visibleWhenReady && contentReady) || (!contentReady)) return null;
 
-  // Show loading state
-  if (loading || comparisonTracks.length === 0) {
+  // Show message when no tracks are available for comparison
+  if (noTracksAvailable) {
     return (
-      <div className="modal-overlay loading-overlay">
-        <div className="loading-spinner"></div>
-        <p className="loading-text">Loading tunedIn...</p>
+      <div className={`${embedded ? 'embedded-comparison' : 'modal-overlay comparison-overlay'} ${contentReady ? 'ready' : ''} ${!visibleWhenReady ? 'prefetching' : ''}`}>
+        {!embedded && <button className="close-button" onClick={handleClose}>×</button>}
+        <div className="thank-you-container">
+          <p>Thank you for your review!</p>
+        </div>
       </div>
     );
   }
@@ -130,12 +186,22 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
   // Show error state
   if (error) {
     return (
-      <div className="modal-overlay">
-        <div className="comparison-modal-content">
-          <button className="close-button" onClick={handleClose}>×</button>
-          <div className="error-container">
-            <p>{error}</p>
-          </div>
+      <div className={`${embedded ? 'embedded-comparison' : 'modal-overlay comparison-overlay'} ${contentReady ? 'ready' : ''} ${!visibleWhenReady ? 'prefetching' : ''}`}>
+        {!embedded && <button className="close-button" onClick={handleClose}>×</button>}
+        <div className="error-container">
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message when there are no comparison tracks (but not due to an error)
+  if (comparisonTracks.length === 0) {
+    return (
+      <div className={`${embedded ? 'embedded-comparison' : 'modal-overlay comparison-overlay'} ${contentReady ? 'ready' : ''} ${!visibleWhenReady ? 'prefetching' : ''}`}>
+        {!embedded && <button className="close-button" onClick={handleClose}>×</button>}
+        <div className="thank-you-container">
+          <p>Thank you for your review!</p>
         </div>
       </div>
     );
@@ -143,20 +209,43 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
 
   const challengerTrack = comparisonTracks[currentTrackIndex];
 
+  // Show thank you message when all comparisons are completed
+  if (allComparisonsCompleted && embedded) {
+    return (
+      <div className={`embedded-comparison ${contentReady ? 'ready' : ''} ${!visibleWhenReady ? 'prefetching' : ''}`}>
+        <div className="thank-you-container">
+          <p>Thank you for your review!</p>
+        </div>
+      </div>
+    );
+  }
+
   const handleTrackSelect = (selectedTrack: Track) => {
     if (currentTrackIndex >= comparisonTracks.length - 1) {
+      // This is the last comparison, mark as completed
+      setAllComparisonsCompleted(true);
+      
+      // If embedded, we just show the thank you message
+      if (embedded) {
+        // No need to explicitly call onComparisonComplete here since
+        // it will be triggered by the useEffect when allComparisonsCompleted changes
+        return;
+      }
+      
       // All comparisons are done
       handleCompletion();
       return;
     }
+    
+    // Move to the next comparison
     setCurrentTrackIndex(prevIndex => prevIndex + 1);
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="comparison-modal-content">
-        <button className="close-button" onClick={handleClose}>×</button>
-        
+    <div className={`${embedded ? 'embedded-comparison' : 'modal-overlay comparison-overlay'} ${contentReady ? 'ready' : ''} ${!visibleWhenReady ? 'prefetching' : ''}`}>
+      {!embedded && <button className="close-button" onClick={handleClose}>×</button>}
+      
+      <div className={embedded ? 'embedded-comparison-content' : 'comparison-modal-content'}>
         <h2 className="comparison-title">Please select which track you believe is better</h2>
         
         <div className="tracks-container">

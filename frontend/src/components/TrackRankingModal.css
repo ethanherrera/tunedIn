@@ -136,4 +136,35 @@
 
 .review-input:disabled {
   background-color: #1f1f1f;
+}
+
+/* Add styles for the comparison section */
+.comparison-section {
+  width: 100%;
+  margin-top: 20px;
+}
+
+/* Adjust height of combined modal */
+.combined-modal {
+  max-height: 90vh;
+  overflow-y: auto;
+  padding-bottom: 20px;
+}
+
+/* Make the submit button more prominent */
+.combined-modal .submit-button {
+  margin-top: 25px;
+  width: 100%;
+  padding: 12px 0;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.hidden-prefetch {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  height: 0;
+  width: 0;
+  overflow: hidden;
 } 

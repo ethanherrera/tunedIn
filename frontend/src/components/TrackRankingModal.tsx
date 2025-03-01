@@ -28,6 +28,14 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
     opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
     description: string;
   } | null>(null);
+  // Flag to prevent duplicate submissions
+  const [hasSubmittedReview, setHasSubmittedReview] = useState(false);
+  // Flag to track if comparisons are complete
+  const [comparisonsComplete, setComparisonsComplete] = useState(false);
+  // Flag to track if we're prefetching comparisons
+  const [isPrefetchingComparisons, setIsPrefetchingComparisons] = useState(false);
+  // Flag to indicate when comparison data is ready
+  const [comparisonDataReady, setComparisonDataReady] = useState(false);
 
   // Reset form data when modal is closed or when track changes
   useEffect(() => {
@@ -38,8 +46,46 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
       setError(null);
       setWordCount(0);
       setPendingReview(null);
+      setHasSubmittedReview(false);
+      setShowComparison(false);
+      setComparisonsComplete(false);
+      setIsPrefetchingComparisons(false);
+      setComparisonDataReady(false);
     }
   }, [isOpen, track.spotifyId]);
+
+  // Start prefetching when rating changes
+  useEffect(() => {
+    if (rating) {
+      console.log('TrackRankingModal: Rating changed, prefetching comparisons');
+      // When rating changes, start prefetching comparisons but don't show yet
+      setIsPrefetchingComparisons(true);
+      setComparisonsComplete(false);
+      setComparisonDataReady(false);
+      // Reset the visibility flag to ensure we get a full refresh
+      setShowComparison(false);
+    } else {
+      // Reset states when rating is cleared
+      setShowComparison(false);
+      setComparisonsComplete(false);
+      setIsPrefetchingComparisons(false);
+      setComparisonDataReady(false);
+    }
+  }, [rating]);
+
+  // Handle data ready notification
+  const handleDataReady = () => {
+    console.log('TrackRankingModal: Comparison data prefetch completed');
+    setComparisonDataReady(true);
+    // Show comparison section as soon as data is ready
+    setShowComparison(true);
+  };
+
+  // Handle comparison completion
+  const handleComparisonComplete = () => {
+    console.log('TrackRankingModal: Comparisons completed');
+    setComparisonsComplete(true);
+  };
 
   // Handle clean up when modal closes
   const handleClose = () => {
@@ -88,40 +134,29 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
     try {
       setIsSubmitting(true);
       setError(null);
+      console.log('TrackRankingModal: Preparing to submit review');
 
-      // Store the review data instead of submitting it immediately
-      setPendingReview({
+      // Create the review data
+      const reviewData = {
         spotifyTrackId: track.spotifyId,
         opinion: mapRatingToOpinion(rating),
         description: review.trim()
-      });
-
-      // Show comparison modal after validation
-      setShowComparison(true);
-    } catch (err) {
-      setError('Failed to prepare review. Please try again.');
-      console.error('Error preparing review:', err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // This function will be called when all comparisons are completed
-  const handleComparisonComplete = async () => {
-    if (!pendingReview) return;
-    
-    try {
-      setIsSubmitting(true);
+      };
       
-      // Now submit the review
-      await reviewApi.createReview(pendingReview);
+      console.log('TrackRankingModal: Submitting review to API');
       
-      // Close both modals after successful submission
+      // Submit the review directly
+      await reviewApi.createReview(reviewData);
+      console.log('TrackRankingModal: Review submitted successfully');
+      
+      // Mark that we've submitted this review
+      setHasSubmittedReview(true);
+      
+      // Close modal after successful submission
       handleClose();
     } catch (err) {
       setError('Failed to submit review. Please try again.');
       console.error('Error submitting review:', err);
-      setShowComparison(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -129,7 +164,7 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content">
+      <div className="modal-content combined-modal">
         <button className="close-button" onClick={handleClose}>×</button>
         
         {/* Track Card Section */}
@@ -193,29 +228,40 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
           </button>
         </div>
 
+        {/* Prefetch and show comparisons when ready */}
+        {isPrefetchingComparisons && (
+          <div className={showComparison ? "comparison-section" : "hidden-prefetch"}>
+            {/* Using unique key based on rating and track to force complete remount when rating changes */}
+            <TrackComparisonModal
+              key={`comparison-${rating}-${track.spotifyId}`} // This forces React to remount the component when rating changes
+              isOpen={isPrefetchingComparisons}
+              onClose={() => setShowComparison(false)}
+              initialTrack={track}
+              embedded={true}
+              onComparisonComplete={handleComparisonComplete}
+              onDataReady={handleDataReady}
+              visibleWhenReady={showComparison}
+            />
+          </div>
+        )}
+
         {error && (
           <div className="error-message">
             {error}
           </div>
         )}
 
-        <button 
-          className="submit-button" 
-          onClick={handleSubmit}
-          disabled={isSubmitting || wordCount > 200 || !rating}
-        >
-          {isSubmitting ? 'Submitting...' : 'Submit Rating'}
-        </button>
+        {/* Only show submit button when comparisons are complete */}
+        {comparisonsComplete && (
+          <button 
+            className="submit-button" 
+            onClick={handleSubmit}
+            disabled={isSubmitting || wordCount > 200 || !rating}
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit Review'}
+          </button>
+        )}
       </div>
-
-      {showComparison && (
-        <TrackComparisonModal
-          isOpen={showComparison}
-          onClose={handleClose}
-          initialTrack={track}
-          onComplete={handleComparisonComplete}
-        />
-      )}
     </div>
   );
 };

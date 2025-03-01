@@ -5,6 +5,7 @@
   width: 90%;
   max-width: 800px;
   position: relative;
+  z-index: 1100;
 }
 
 .comparison-title {
@@ -60,6 +61,11 @@
   z-index: 1000;
 }
 
+/* Ensure the comparison modal overlay has a higher z-index */
+.modal-overlay.comparison-overlay {
+  z-index: 1050;
+}
+
 .close-button {
   position: absolute;
   top: 1rem;
@@ -107,4 +113,159 @@
   padding: 1.5rem;
   text-align: center;
   color: #ef4444;
+}
+
+/* Add styles for embedded comparison mode */
+.embedded-comparison {
+  margin-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 20px;
+  width: 100%;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.embedded-comparison.ready {
+  opacity: 1;
+}
+
+.embedded-comparison:not(.ready) {
+  opacity: 0;
+}
+
+.embedded-comparison-content {
+  width: 100%;
+  padding: 10px 0;
+}
+
+.embedded-comparison .comparison-title {
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.embedded-comparison .tracks-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.embedded-comparison .track-option {
+  flex: 1;
+  min-width: 200px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.embedded-comparison .track-option:hover {
+  transform: scale(1.03);
+}
+
+.embedded-comparison .track-card {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.embedded-comparison .track-card-inner {
+  display: flex;
+  align-items: center;
+}
+
+.embedded-comparison .album-cover {
+  width: 60px;
+  height: 60px;
+  margin-right: 10px;
+}
+
+.embedded-comparison .album-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.embedded-comparison .track-info {
+  flex: 1;
+}
+
+.embedded-comparison .track-name {
+  font-size: 1rem;
+  margin: 0 0 4px 0;
+}
+
+.embedded-comparison .artist-name,
+.embedded-comparison .album-name {
+  font-size: 0.8rem;
+  margin: 0;
+  opacity: 0.7;
+}
+
+.embedded-comparison .comparison-divider {
+  margin: 0 10px;
+  font-weight: bold;
+}
+
+.embedded-comparison .comparison-progress {
+  margin-top: 15px;
+  text-align: center;
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.embedded-comparison .no-tracks-container,
+.embedded-comparison .error-container {
+  text-align: center;
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  margin: 15px 0;
+}
+
+/* Update existing modal-content for combined modals */
+.combined-modal {
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Loading state for embedded comparison */
+.embedded-comparison.loading-overlay {
+  display: none; /* Hide loading overlay in embedded mode */
+}
+
+/* Hidden state while content is loading */
+.comparison-hidden {
+  display: none;
+}
+
+/* Thank you message container */
+.thank-you-container {
+  text-align: center;
+  padding: 25px;
+  background-color: rgba(34, 197, 94, 0.1);
+  border-radius: 8px;
+  margin: 15px 0;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.thank-you-container p {
+  font-size: 1.1rem;
+  color: #22c55e;
+  margin: 0;
+  font-weight: 500;
+}
+
+.embedded-comparison .thank-you-container {
+  margin: 10px 0;
+  padding: 20px;
+}
+
+/* Style for when the component is prefetching but not visible */
+.prefetching {
+  opacity: 0;
+  position: absolute;
+  pointer-events: none;
 } 
