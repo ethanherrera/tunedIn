@@ -1,40 +1,81 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import SearchContainer from './components/SearchContainer';
-import UserRankingLists from './components/UserRankingLists';
 import UserReviewedTracks from './components/UserReviewedTracks';
+import LoginPage from './components/LoginPage';
 import { spotifyApi } from './api/apiClient';
+import './App.css';
 
 function App() {
-    const handleSpotifyLogin = async () => {
-        try {
-            const { url } = await spotifyApi.login();
-            window.location.href = url;
-        } catch (error) {
-            console.error('Failed to initiate Spotify login:', error);
-        }
-    };
-
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    
+    // Combined authentication check
+    useEffect(() => {
+        const verifyAuth = async () => {
+            try {
+                // First check for cookies as a quick check
+                const cookies = document.cookie.split(';');
+                const hasDisplayNameCookie = cookies.some(cookie => 
+                    cookie.trim().startsWith('displayName=')
+                );
+                
+                if (!hasDisplayNameCookie) {
+                    // If no cookie, we know we're not authenticated
+                    setIsAuthenticated(false);
+                    setIsLoading(false);
+                    return;
+                }
+                
+                // If cookie exists, verify with backend
+                await spotifyApi.getMe();
+                setIsAuthenticated(true);
+            } catch (error) {
+                console.log('User not authenticated or token expired');
+                setIsAuthenticated(false);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        
+        verifyAuth();
+    }, []);
+    
+    // Only render content when loading is complete
+    if (isLoading) {
+        return (
+            <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <p>Loading tunedIn...</p>
+            </div>
+        );
+    }
+    
+    // If not authenticated, show login page
+    if (!isAuthenticated) {
+        return <LoginPage />;
+    }
+    
+    // If authenticated, show main app
     return (
         <div className="app">
-            <main className="app-content">
+            <header className="app-header">
+                <h1 className="app-title">tunedIn</h1>
                 <button 
-                    onClick={handleSpotifyLogin}
-                    className="spotify-login-button"
-                    style={{
-                        backgroundColor: '#1DB954',
-                        color: 'white',
-                        padding: '12px 24px',
-                        border: 'none',
-                        borderRadius: '24px',
-                        fontSize: '16px',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        margin: '20px 0',
-                        transition: 'background-color 0.2s ease',
+                    onClick={() => {
+                        // Clear cookies and reload page
+                        document.cookie.split(';').forEach(cookie => {
+                            const [name] = cookie.trim().split('=');
+                            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+                        });
+                        window.location.reload();
                     }}
+                    className="logout-button"
                 >
-                    Connect with Spotify
+                    Logout
                 </button>
+            </header>
+            
+            <main className="app-content">
                 <SearchContainer />
                 <UserReviewedTracks />
             </main>

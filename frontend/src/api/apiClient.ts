@@ -90,6 +90,18 @@ interface TrackReview {
   createdAt: number;
 }
 
+// Add User Profile interface
+interface UserProfile {
+  id: string;
+  display_name: string;
+  email: string;
+  images: Image[];
+  country: string;
+  product: string;
+  uri: string;
+  href: string;
+}
+
 const BASE_URL = 'http://localhost:8000/api';
 
 export const apiClient = axios.create({
@@ -141,6 +153,11 @@ export const spotifyApi = {
   
   getTrack: async (trackId: string) => {
     const response = await apiClient.get<Track>(`/spotify/tracks/${trackId}`);
+    return response.data;
+  },
+  
+  getMe: async () => {
+    const response = await apiClient.get<UserProfile>('/spotify/me');
     return response.data;
   }
 };
