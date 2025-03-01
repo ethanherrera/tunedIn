@@ -79,8 +79,9 @@
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   border: 1px solid #3f3f46;
+  cursor: pointer;
 }
 
 .review-item:hover {
@@ -123,6 +124,10 @@
 .review-details {
   padding: 15px;
   border-top: 1px solid #3f3f46;
+  height: 100px; /* Fixed height for consistent card sizing */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .review-description {
@@ -130,6 +135,10 @@
   font-size: 14px;
   line-height: 1.4;
   color: #e4e4e7;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* Limit to 3 lines */
+  -webkit-box-orient: vertical;
 }
 
 .review-date {

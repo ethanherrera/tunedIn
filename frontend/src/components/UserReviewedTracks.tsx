@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { reviewApi, spotifyApi } from '../api/apiClient';
 import TrackCardSearchResult from './TrackCardSearchResult';
+import TrackDetailsModal from './TrackDetailsModal';
+import TrackRankingModal from './TrackRankingModal';
 import './UserReviewedTracks.css';
 
 // Interface for the review data with track information
@@ -23,6 +25,9 @@ const UserReviewedTracks: React.FC = () => {
   const [reviews, setReviews] = useState<ReviewWithTrack[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedReview, setSelectedReview] = useState<ReviewWithTrack | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState<boolean>(false);
+  const [isReReviewModalOpen, setIsReReviewModalOpen] = useState<boolean>(false);
 
   const fetchUserReviews = async () => {
     setLoading(true);
@@ -82,9 +87,24 @@ const UserReviewedTracks: React.FC = () => {
     fetchUserReviews();
   }, []);
 
-  const handleTrackClick = (track: any) => {
-    // Open the track in Spotify
-    window.open(`https://open.spotify.com/track/${track.spotifyId}`, '_blank');
+  const handleTrackClick = (review: ReviewWithTrack, e?: React.MouseEvent) => {
+    setSelectedReview(review);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleCloseDetailsModal = () => {
+    setIsDetailsModalOpen(false);
+  };
+
+  const handleReReview = () => {
+    setIsDetailsModalOpen(false);
+    setIsReReviewModalOpen(true);
+  };
+
+  const handleCloseReReviewModal = () => {
+    setIsReReviewModalOpen(false);
+    // Refresh the reviews list after re-reviewing
+    fetchUserReviews();
   };
 
   return (
@@ -109,18 +129,29 @@ const UserReviewedTracks: React.FC = () => {
       ) : (
         <div className="reviews-list">
           {reviews.map((review) => (
-            <div key={review.id} className="review-item">
+            <div 
+              key={review.id} 
+              className="review-item"
+              onClick={(e) => handleTrackClick(review, e)}
+            >
               <div className="track-card-container">
                 <TrackCardSearchResult 
                   track={review.track} 
-                  onClick={handleTrackClick}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent double triggering
+                    handleTrackClick(review, e);
+                  }}
                 />
                 <div className={`opinion-circle opinion-circle-${review.opinion.toLowerCase()}`} 
                      title={review.opinion}>
                 </div>
               </div>
               <div className="review-details">
-                <p className="review-description">{review.description}</p>
+                <p className="review-description">
+                  {review.description.length > 100 
+                    ? `${review.description.substring(0, 100)}...` 
+                    : review.description}
+                </p>
                 <span className="review-date">
                   {new Date(review.createdAt).toLocaleDateString()}
                 </span>
@@ -128,6 +159,27 @@ const UserReviewedTracks: React.FC = () => {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Track Details Modal */}
+      {selectedReview && (
+        <TrackDetailsModal
+          isOpen={isDetailsModalOpen}
+          onClose={handleCloseDetailsModal}
+          track={selectedReview.track}
+          opinion={selectedReview.opinion}
+          onReReview={handleReReview}
+          description={selectedReview.description}
+        />
+      )}
+
+      {/* Re-Review Modal */}
+      {selectedReview && (
+        <TrackRankingModal
+          isOpen={isReReviewModalOpen}
+          onClose={handleCloseReReviewModal}
+          track={selectedReview.track}
+        />
       )}
     </div>
   );

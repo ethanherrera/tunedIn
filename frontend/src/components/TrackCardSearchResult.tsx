@@ -9,12 +9,12 @@ interface TrackCardSearchResultProps {
     trackName: string;
     spotifyId: string;
   };
-  onClick: (track: any) => void;
+  onClick: (track: any, e?: React.MouseEvent) => void;
 }
 
 const TrackCardSearchResult: React.FC<TrackCardSearchResultProps> = ({ track, onClick }) => {
   return (
-    <div className="track-card search-track-card" onClick={() => onClick(track)}>
+    <div className="track-card search-track-card" onClick={(e) => onClick(track, e)}>
       <div className="track-card-inner">
         <div className="album-cover">
           <img
