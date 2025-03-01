@@ -1,6 +1,22 @@
 version: '3.8'
 
 services:
+  mongodb:
+    build:
+      context: ./database
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=rootpassword
+      - MONGO_INITDB_DATABASE=tunedIn
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - tunedin-network
+
   backend:
     build: 
       context: ./backend
@@ -8,9 +24,14 @@ services:
       - "8000:8000"
     environment:
       - SPRING_CONFIG_LOCATION=file:/app/config/application.properties
+      - SPRING_DATA_MONGODB_URI=mongodb://tunedInUser:password@mongodb:27017/tunedIn?authSource=tunedIn
     volumes:
       - ./backend/src/main/resources/application.properties:/app/config/application.properties
     restart: unless-stopped
+    depends_on:
+      - mongodb
+    networks:
+      - tunedin-network
 
   frontend:
     build:
@@ -23,3 +44,13 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+    networks:
+      - tunedin-network
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  tunedin-network:
+    driver: bridge
