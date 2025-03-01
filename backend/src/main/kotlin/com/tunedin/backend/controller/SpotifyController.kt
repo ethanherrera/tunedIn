@@ -41,8 +41,9 @@ class SpotifyController(
         @RequestParam(required = false, defaultValue = "20") limit: Int,
         @RequestParam(required = false, defaultValue = "0") offset: Int,
         @RequestParam(required = false) market: String?,
+        @RequestParam(required = false) accessToken: String
     ): ResponseEntity<SpotifySearchResponse> {
-        val searchResponse = spotifyService.search(q, type, limit, offset, market)
+        val searchResponse = spotifyService.search(q, type, limit, offset, market, accessToken)
         return ResponseEntity.ok(searchResponse)
     }
 } 

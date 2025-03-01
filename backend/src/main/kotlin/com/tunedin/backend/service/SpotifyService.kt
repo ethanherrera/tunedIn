@@ -1,7 +1,6 @@
 package com.tunedin.backend.service
 
 import com.tunedin.backend.model.spotify.*
-import com.tunedin.backend.model.SessionEntity
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.*
 import org.springframework.stereotype.Service
@@ -18,7 +17,6 @@ class SpotifyService(
     @Value("\${spotify.client.id}") private val clientId: String,
     @Value("\${spotify.client.secret}") private val clientSecret: String,
     @Value("\${spotify.redirect.uri}") private val redirectUri: String,
-    private val sessionService: SessionService
 ) {
     companion object {
         private const val SPOTIFY_ACCESS_TOKEN = "spotify_access_token"
@@ -72,13 +70,6 @@ class SpotifyService(
 
         val tokenResponse = response.body ?: throw RuntimeException("Failed to get token response")
         
-        // Store session in database
-        val sessionEntity = SessionEntity(
-            userId = "test-user-id",
-            accessToken = tokenResponse.accessToken
-        )
-        sessionService.saveSession(sessionEntity)
-        
         return tokenResponse
     }
 
@@ -87,12 +78,9 @@ class SpotifyService(
         type: String,
         limit: Int,
         offset: Int,
-        market: String?
+        market: String?,
+        accessToken: String
     ): SpotifySearchResponse {
-        val userId = "test-user-id"
-        // Get access token from session service
-        val session = sessionService.getSession(userId) 
-            ?: throw RuntimeException("No session found for user $userId")
         
         val restTemplate = RestTemplate()
         val url = UriComponentsBuilder
@@ -110,7 +98,7 @@ class SpotifyService(
             .toUriString()
 
         val headers = HttpHeaders().apply {
-            setBearerAuth(session.accessToken)
+            setBearerAuth(accessToken)
         }
 
         val response = restTemplate.exchange(
