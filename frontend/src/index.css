@@ -2,6 +2,22 @@ body {
   background-color: #121212;
   color: white;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-gradient: linear-gradient(90deg, #6366f1, #a855f7);
+  --background-dark: #121212;
+  --background-card: #1a1a1a;
+  --border-color: #3f3f46;
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --success: #22c55e;
+  --warning: #eab308;
+  --error: #ef4444;
 }
 
 .app {
@@ -17,6 +33,10 @@ body {
 .app-header h1 {
   font-size: 2rem;
   font-weight: bold;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .app-content {
@@ -29,5 +49,24 @@ body {
   margin-top: 2rem;
   text-align: center;
   font-size: 0.875rem;
-  color: #a1a1aa;
+  color: var(--text-secondary);
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6366f1;
 }

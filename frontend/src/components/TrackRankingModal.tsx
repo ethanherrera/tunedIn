@@ -22,6 +22,37 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
   const [showComparison, setShowComparison] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Store review data to submit after comparisons
+  const [pendingReview, setPendingReview] = useState<{
+    spotifyTrackId: string;
+    opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
+    description: string;
+  } | null>(null);
+
+  // Reset form data when modal is closed or when track changes
+  useEffect(() => {
+    if (isOpen) {
+      // Track has changed, reset the form
+      setReview('');
+      setRating(null);
+      setError(null);
+      setWordCount(0);
+      setPendingReview(null);
+    }
+  }, [isOpen, track.spotifyId]);
+
+  // Handle clean up when modal closes
+  const handleClose = () => {
+    // Reset all form data
+    setReview('');
+    setRating(null);
+    setError(null);
+    setWordCount(0);
+    setShowComparison(false);
+    setPendingReview(null);
+    // Call the parent onClose function
+    onClose();
+  };
 
   useEffect(() => {
     const words = review.trim().split(/\s+/);
@@ -58,17 +89,39 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
       setIsSubmitting(true);
       setError(null);
 
-      await reviewApi.createReview({
+      // Store the review data instead of submitting it immediately
+      setPendingReview({
         spotifyTrackId: track.spotifyId,
         opinion: mapRatingToOpinion(rating),
         description: review.trim()
       });
 
-      // Show comparison modal after successful submission
+      // Show comparison modal after validation
       setShowComparison(true);
+    } catch (err) {
+      setError('Failed to prepare review. Please try again.');
+      console.error('Error preparing review:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // This function will be called when all comparisons are completed
+  const handleComparisonComplete = async () => {
+    if (!pendingReview) return;
+    
+    try {
+      setIsSubmitting(true);
+      
+      // Now submit the review
+      await reviewApi.createReview(pendingReview);
+      
+      // Close both modals after successful submission
+      handleClose();
     } catch (err) {
       setError('Failed to submit review. Please try again.');
       console.error('Error submitting review:', err);
+      setShowComparison(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -77,7 +130,7 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <button className="close-button" onClick={onClose}>×</button>
+        <button className="close-button" onClick={handleClose}>×</button>
         
         {/* Track Card Section */}
         <div className="track-card-modal">
@@ -158,11 +211,9 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
       {showComparison && (
         <TrackComparisonModal
           isOpen={showComparison}
-          onClose={() => {
-            setShowComparison(false);
-            onClose();
-          }}
+          onClose={handleClose}
           initialTrack={track}
+          onComplete={handleComparisonComplete}
         />
       )}
     </div>

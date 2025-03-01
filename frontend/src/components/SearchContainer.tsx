@@ -64,6 +64,12 @@ const SearchContainer: React.FC = () => {
     setIsFocused(false);
   };
 
+  const handleModalClose = () => {
+    // Simply close the modal - the TrackRankingModal component will handle
+    // canceling the review submission if closed prematurely
+    setIsModalOpen(false);
+  };
+
   return (
     <div className="search-container-wrapper">
       <div className="search-container">
@@ -110,7 +116,7 @@ const SearchContainer: React.FC = () => {
       {selectedTrack && (
         <TrackRankingModal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={handleModalClose}
           track={selectedTrack}
         />
       )}

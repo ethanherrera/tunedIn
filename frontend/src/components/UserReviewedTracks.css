@@ -15,44 +15,55 @@
 .user-reviewed-tracks h2 {
   margin: 0;
   font-size: 24px;
-  color: #333;
+  color: white;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .refresh-button {
-  background-color: #1DB954;
+  background-color: #27272a;
   color: white;
-  border: none;
-  border-radius: 20px;
+  border: 1px solid #3f3f46;
+  border-radius: 9999px;
   padding: 8px 16px;
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .refresh-button:hover {
-  background-color: #1ed760;
+  background-color: #3f3f46;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }
 
 .refresh-button:disabled {
-  background-color: #ccc;
+  background-color: #1f1f1f;
+  border-color: #2d2d2d;
+  color: #6c6c6c;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .error-message {
-  color: #e74c3c;
+  color: #ef4444;
   padding: 10px;
   margin-bottom: 15px;
-  background-color: #fde2e2;
-  border-radius: 4px;
+  background-color: rgba(239, 68, 68, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .no-reviews {
   text-align: center;
   padding: 30px;
-  background-color: #f8f9fa;
+  background-color: #1a1a1a;
   border-radius: 8px;
-  color: #6c757d;
+  color: #a1a1aa;
+  border: 1px solid #3f3f46;
 }
 
 .reviews-list {
@@ -64,15 +75,18 @@
 .review-item {
   display: flex;
   flex-direction: column;
-  background-color: #fff;
+  background-color: #1a1a1a;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s ease;
+  border: 1px solid #3f3f46;
 }
 
 .review-item:hover {
   transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+  border-color: #6366f1;
 }
 
 /* Track card container with opinion circle */
@@ -89,39 +103,39 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 2px solid white;
+  border: 2px solid #1a1a1a;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   z-index: 10; /* Ensure it appears above the track card */
 }
 
 .opinion-circle-liked {
-  background-color: #1DB954; /* Spotify green */
+  background-color: #22c55e; /* Green */
 }
 
 .opinion-circle-neutral {
-  background-color: #FFD700; /* Gold */
+  background-color: #eab308; /* Yellow */
 }
 
 .opinion-circle-dislike {
-  background-color: #E74C3C; /* Red */
+  background-color: #ef4444; /* Red */
 }
 
 .review-details {
   padding: 15px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid #3f3f46;
 }
 
 .review-description {
   margin: 8px 0;
   font-size: 14px;
   line-height: 1.4;
-  color: #333;
+  color: #e4e4e7;
 }
 
 .review-date {
   display: block;
   font-size: 12px;
-  color: #6c757d;
+  color: #a1a1aa;
   text-align: right;
 }
 
@@ -134,6 +148,6 @@
   .review-details {
     flex: 1;
     border-top: none;
-    border-left: 1px solid #eee;
+    border-left: 1px solid #3f3f46;
   }
 }
