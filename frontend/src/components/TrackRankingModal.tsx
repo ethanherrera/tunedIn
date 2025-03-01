@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './TrackRankingModal.css';
+import { reviewApi } from '../api/apiClient';
 import TrackComparisonModal from './TrackComparisonModal';
 
 interface TrackRankingModalProps {
@@ -19,6 +20,8 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
   const [rating, setRating] = useState<'dislike' | 'neutral' | 'like' | null>(null);
   const [wordCount, setWordCount] = useState(0);
   const [showComparison, setShowComparison] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const words = review.trim().split(/\s+/);
@@ -27,9 +30,52 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
 
   if (!isOpen) return null;
 
-  const handleSubmit = () => {
-    // Show comparison modal after submitting review
-    setShowComparison(true);
+  const mapRatingToOpinion = (rating: string): 'DISLIKE' | 'NEUTRAL' | 'LIKED' => {
+    switch (rating) {
+      case 'dislike':
+        return 'DISLIKE';
+      case 'neutral':
+        return 'NEUTRAL';
+      case 'like':
+        return 'LIKED';
+      default:
+        throw new Error('Invalid rating');
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!rating) {
+      setError('Please select a rating');
+      return;
+    }
+
+    if (wordCount > 200) {
+      setError('Review cannot exceed 200 words');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setError(null);
+
+      // TODO: Replace with actual user ID from authentication
+      const userId = "test-user-id";
+
+      await reviewApi.createReview({
+        userId,
+        spotifyTrackId: track.spotifyId,
+        opinion: mapRatingToOpinion(rating),
+        description: review.trim()
+      });
+
+      // Show comparison modal after successful submission
+      setShowComparison(true);
+    } catch (err) {
+      setError('Failed to submit review. Please try again.');
+      console.error('Error submitting review:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -64,6 +110,7 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
             placeholder="Write your review (max 200 words)..."
             maxLength={1000}
             className="review-input"
+            disabled={isSubmitting}
           />
           <div className="word-count">
             <span className={wordCount > 200 ? 'exceeded' : ''}>
@@ -77,30 +124,38 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
           <button
             className={`rating-button dislike ${rating === 'dislike' ? 'active' : ''}`}
             onClick={() => setRating('dislike')}
-            
+            disabled={isSubmitting}
           >
             Disliked It
           </button>
           <button
             className={`rating-button neutral ${rating === 'neutral' ? 'active' : ''}`}
             onClick={() => setRating('neutral')}
+            disabled={isSubmitting}
           >
             Neutral
           </button>
           <button
             className={`rating-button like ${rating === 'like' ? 'active' : ''}`}
             onClick={() => setRating('like')}
+            disabled={isSubmitting}
           >
             Liked It
           </button>
         </div>
 
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
+
         <button 
           className="submit-button" 
           onClick={handleSubmit}
-          disabled={wordCount > 200}
+          disabled={isSubmitting || wordCount > 200 || !rating}
         >
-          Submit Rating
+          {isSubmitting ? 'Submitting...' : 'Submit Rating'}
         </button>
       </div>
 

@@ -14,9 +14,10 @@ services:
       - MONGO_INITDB_DATABASE=tunedIn
     volumes:
       - mongodb_data:/data/db
+      - ./database/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
       - ./database/scripts:/scripts
     networks:
-      - tunedin-network
+      - tunedIn-network
 
   backend:
     build: 
@@ -25,14 +26,14 @@ services:
       - "8000:8000"
     environment:
       - SPRING_CONFIG_LOCATION=file:/app/config/application.properties
-      - SPRING_DATA_MONGODB_URI=mongodb://tunedInUser:password@mongodb:27017/tunedIn?authSource=tunedIn
+      - SPRING_DATA_MONGODB_URI=mongodb://root:rootpassword@mongodb:27017/tunedIn?authSource=admin
     volumes:
       - ./backend/src/main/resources/application.properties:/app/config/application.properties
     restart: unless-stopped
     depends_on:
       - mongodb
     networks:
-      - tunedin-network
+      - tunedIn-network
 
   frontend:
     build:
@@ -46,12 +47,12 @@ services:
       - backend
     restart: unless-stopped
     networks:
-      - tunedin-network
+      - tunedIn-network
 
 volumes:
   mongodb_data:
     driver: local
 
 networks:
-  tunedin-network:
+  tunedIn-network:
     driver: bridge

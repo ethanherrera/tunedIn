@@ -74,6 +74,23 @@ interface SpotifySearchResponse {
   playlists?: PagingObject<Playlist>;
 }
 
+// Review types
+interface CreateReviewRequest {
+  userId: string;
+  spotifyTrackId: string;
+  opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
+  description: string;
+}
+
+interface TrackReview {
+  id: string;
+  userId: string;
+  spotifyTrackId: string;
+  opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
+  description: string;
+  createdAt: number;
+}
+
 const BASE_URL = 'http://localhost:8000/api';
 
 export const apiClient = axios.create({
@@ -121,6 +138,13 @@ export const spotifyApi = {
         accessToken: params.accessToken
       }
     });
+    return response.data;
+  }
+};
+
+export const reviewApi = {
+  createReview: async (reviewData: CreateReviewRequest): Promise<TrackReview> => {
+    const response = await apiClient.post<TrackReview>('/reviews', reviewData);
     return response.data;
   }
 };
