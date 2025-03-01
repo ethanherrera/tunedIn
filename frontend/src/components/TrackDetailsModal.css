@@ -207,6 +207,32 @@
   text-decoration: underline;
 }
 
+/* Loading indicator */
+.loading-indicator {
+  color: #a1a1aa;
+  font-size: 0.9rem;
+  font-style: italic;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+/* Search track description section */
+.search-track-description {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #3f3f46;
+  width: 100%;
+}
+
+.search-track-description p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #e4e4e7;
+  margin: 0;
+  text-align: center;
+  font-style: italic;
+}
+
 /* Responsive adjustments */
 @media (min-width: 768px) {
   .track-details-content {
