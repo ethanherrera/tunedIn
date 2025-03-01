@@ -13,7 +13,8 @@ import org.springframework.http.HttpStatus
 data class CreateReviewRequest(
     val spotifyTrackId: String,
     val opinion: Opinion,
-    val description: String
+    val description: String,
+    val rating: Double
 )
 
 @RestController
@@ -32,7 +33,8 @@ class TrackReviewController(
             userId = userId,
             spotifyTrackId = request.spotifyTrackId,
             opinion = request.opinion,
-            description = request.description
+            description = request.description,
+            rating = request.rating
         )
         return ResponseEntity.ok(review)
     }
