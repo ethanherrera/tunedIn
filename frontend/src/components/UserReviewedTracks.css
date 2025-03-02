@@ -22,7 +22,13 @@
   background-clip: text;
 }
 
-.refresh-button {
+.header-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.refresh-button, .rerank-button {
   background-color: #27272a;
   color: white;
   border: 1px solid #3f3f46;
@@ -32,20 +38,42 @@
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.refresh-button:hover {
+.button-icon {
+  font-size: 16px;
+}
+
+.refresh-button:hover, .rerank-button:hover {
   background-color: #3f3f46;
   border-color: #6366f1;
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }
 
-.refresh-button:disabled {
+.refresh-button:disabled, .rerank-button:disabled {
   background-color: #1f1f1f;
   border-color: #2d2d2d;
   color: #6c6c6c;
   cursor: not-allowed;
   box-shadow: none;
+}
+
+.rerank-button {
+  background-color: #312e81;
+  border-color: #4f46e5;
+}
+
+.rerank-button:hover {
+  background-color: #4338ca;
+  border-color: #6366f1;
+}
+
+.rerank-button:disabled {
+  background-color: #1e1b4b;
+  border-color: #312e81;
 }
 
 .error-message {

@@ -262,7 +262,15 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
       // Determine final ranking based on the last comparison
       let newRanking: number;
       
-      if (isInitialTrack) {
+      // Special case: if low is 0 and the user selected the initial track as better,
+      // this means the track should be at the very top (rank 1)
+      if (low === 0 && isInitialTrack) {
+        // User thinks initial track is better than the highest ranked track
+        // It should get the top ranking (1)
+        newRanking = 1;
+        
+        console.log('TrackComparisonModal: Track rated better than all others, setting to top rank (1)');
+      } else if (isInitialTrack) {
         // User thinks initial track is better than the high track
         // Insert it before the high track
         newRanking = allReviewedTracks[high].ranking;

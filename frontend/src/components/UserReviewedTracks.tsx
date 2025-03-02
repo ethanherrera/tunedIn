@@ -3,6 +3,7 @@ import { reviewApi, spotifyApi } from '../api/apiClient';
 import TrackCardSearchResult from './TrackCardSearchResult';
 import TrackDetailsModal from './TrackDetailsModal';
 import TrackRankingModal from './TrackRankingModal';
+import { FiRefreshCw, FiShuffle } from 'react-icons/fi';
 import './UserReviewedTracks.css';
 
 // Interface for the review data with track information
@@ -33,6 +34,7 @@ const UserReviewedTracks: React.FC = () => {
   const [selectedReview, setSelectedReview] = useState<ReviewWithTrack | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState<boolean>(false);
   const [isReReviewModalOpen, setIsReReviewModalOpen] = useState<boolean>(false);
+  const [isRandomReviewModalOpen, setIsRandomReviewModalOpen] = useState<boolean>(false);
 
   // Function to get color based on rating value
   const getRatingColor = (rating: number): string => {
@@ -144,17 +146,50 @@ const UserReviewedTracks: React.FC = () => {
     fetchUserReviews();
   };
 
+  const handleRerankRandomTrack = () => {
+    if (reviews.length === 0) {
+      setError('No tracks available to rerank. Please review some tracks first.');
+      return;
+    }
+    
+    // Select a random track from the reviews
+    const randomIndex = Math.floor(Math.random() * reviews.length);
+    const randomReview = reviews[randomIndex];
+    
+    setSelectedReview(randomReview);
+    setIsRandomReviewModalOpen(true);
+  };
+
+  const handleCloseRandomReviewModal = () => {
+    setIsRandomReviewModalOpen(false);
+    // Refresh the reviews list after re-reviewing
+    fetchUserReviews();
+  };
+
   return (
     <div className="user-reviewed-tracks">
       <div className="header">
         <h2>Your Reviewed Tracks</h2>
-        <button 
-          onClick={fetchUserReviews}
-          disabled={loading}
-          className="refresh-button"
-        >
-          {loading ? 'Loading...' : 'Refresh'}
-        </button>
+        <div className="header-buttons">
+          <button 
+            onClick={handleRerankRandomTrack}
+            disabled={loading || reviews.length === 0}
+            className="rerank-button"
+            title="Rerank a random track from your list"
+          >
+            <FiShuffle className="button-icon" />
+            Rerank Random Track
+          </button>
+          <button 
+            onClick={fetchUserReviews}
+            disabled={loading}
+            className="refresh-button"
+            title="Refresh your reviewed tracks"
+          >
+            <FiRefreshCw className="button-icon" />
+            {loading ? 'Loading...' : 'Refresh'}
+          </button>
+        </div>
       </div>
       
       {error && <div className="error-message">{error}</div>}
@@ -242,8 +277,8 @@ const UserReviewedTracks: React.FC = () => {
       {/* Re-Review Modal */}
       {selectedReview && (
         <TrackRankingModal
-          isOpen={isReReviewModalOpen}
-          onClose={handleCloseReReviewModal}
+          isOpen={isReReviewModalOpen || isRandomReviewModalOpen}
+          onClose={isReReviewModalOpen ? handleCloseReReviewModal : handleCloseRandomReviewModal}
           track={selectedReview.track}
           existingReviewId={selectedReview.id}
         />
