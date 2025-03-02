@@ -105,7 +105,7 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
         <button className="close-button" onClick={onClose}>×</button>
         
         <div className="track-details-content">
-          <div className="track-details-album-wrapper" style={{ position: 'relative' }}>
+          <div className="track-details-album-wrapper">
             <div className="track-details-album-cover">
               <img 
                 src={track.albumImageUrl} 
@@ -131,7 +131,6 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
                 <button 
                   className="re-review-button"
                   onClick={onReview}
-                  style={{ width: '100px', height: '32px', padding: '6px 12px', fontSize: '12px' }}
                 >
                   Review
                 </button>
@@ -143,18 +142,7 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
                 <p className="ranking-label">Your tunedIn Score:</p>
                 <div 
                   className="rating-indicator" 
-                  style={{ 
-                    backgroundColor: getRatingColor(opinion),
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    marginLeft: '10px',
-                    color: 'white',
-                    fontWeight: 'bold'
-                  }}
+                  style={{ backgroundColor: getRatingColor(opinion) }}
                 >
                   {rating.toFixed(1)}
                 </div>
@@ -197,12 +185,6 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
                       className="delete-review-button"
                       onClick={handleDeleteReview}
                       disabled={isDeleting}
-                      style={{ 
-                        borderRadius: '30px',
-                        width: '110px',
-                        height: '32px',
-                        fontSize: '12px'
-                      }}
                     >
                       {isDeleting ? 'Deleting...' : 'Delete Review'}
                     </button>
@@ -210,12 +192,6 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
                       <button 
                         className="re-review-button"
                         onClick={onReReview}
-                        style={{ 
-                          borderRadius: '30px',
-                          width: '110px',
-                          height: '32px',
-                          fontSize: '12px'
-                        }}
                       >
                         Re-review
                       </button>

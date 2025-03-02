@@ -161,6 +161,21 @@ export const spotifyApi = {
   getMe: async () => {
     const response = await apiClient.get<UserProfile>('/spotify/me');
     return response.data;
+  },
+  
+  getTopItems: async (type: 'artists' | 'tracks', params?: {
+    timeRange?: 'short_term' | 'medium_term' | 'long_term';
+    limit?: number;
+    offset?: number;
+  }) => {
+    const response = await apiClient.get<PagingObject<Track | Artist>>(`/spotify/me/top/${type}`, {
+      params: {
+        time_range: params?.timeRange || 'medium_term',
+        limit: params?.limit || 20,
+        offset: params?.offset || 0
+      }
+    });
+    return response.data;
   }
 };
 

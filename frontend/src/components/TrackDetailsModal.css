@@ -32,24 +32,24 @@
   cursor: pointer;
 }
 
-/* Track details specific styles */
+/* Track details specific styles - using more specific selectors */
 .track-details-modal {
   max-width: 550px;
 }
 
-.track-details-content {
+.track-details-modal .track-details-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
 }
 
-.track-details-album-wrapper {
+.track-details-modal .track-details-album-wrapper {
   position: relative;
   margin-bottom: 30px;
 }
 
-.track-details-album-cover {
+.track-details-modal .track-details-album-cover {
   width: 200px;
   height: 200px;
   border-radius: 0.5rem;
@@ -57,47 +57,47 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-.track-details-album-cover img {
+.track-details-modal .track-details-album-cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.track-details-info {
+.track-details-modal .track-details-info {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.track-details-name {
+.track-details-modal .track-details-name {
   font-size: 1.5rem;
   font-weight: bold;
   color: white;
   margin: 0;
 }
 
-.track-details-album {
+.track-details-modal .track-details-album {
   font-size: 1rem;
   color: #a1a1aa;
   margin: 0;
 }
 
-.track-details-artist-row {
+.track-details-modal .track-details-artist-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.track-details-artist {
+.track-details-modal .track-details-artist {
   font-size: 1.1rem;
   color: #c084fc;
   margin: 0;
 }
 
-/* Common button styles for action buttons */
-.re-review-button,
-.delete-review-button {
+/* Common button styles for action buttons - with more specific selectors */
+.track-details-modal .re-review-button,
+.track-details-modal .delete-review-button {
   border: none;
   border-radius: 30px;
   padding: 6px 12px;
@@ -114,31 +114,60 @@
   box-sizing: border-box;
 }
 
-.re-review-button {
-  background-color: #6366f1;
-  color: white;
+.track-details-modal .re-review-button {
+  background-color: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #6366f1;
 }
 
-.re-review-button:hover {
-  background-color: #4f46e5;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+.track-details-modal .re-review-button:hover {
+  background-color: rgba(99, 102, 241, 0.2);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }
 
-.track-details-ranking {
+.track-details-modal .re-review-button:disabled {
+  background-color: rgba(99, 102, 241, 0.05);
+  border-color: rgba(99, 102, 241, 0.1);
+  color: rgba(99, 102, 241, 0.5);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.track-details-modal .delete-review-button {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.track-details-modal .delete-review-button:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.track-details-modal .delete-review-button:disabled {
+  background-color: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.1);
+  color: rgba(239, 68, 68, 0.5);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.track-details-modal .track-details-ranking {
   display: flex;
   align-items: center;
   gap: 1rem;
   margin-top: 0.5rem;
 }
 
-.ranking-label {
+.track-details-modal .ranking-label {
   font-size: 1rem;
   color: white;
   margin: 0;
 }
 
-.rating-indicator {
+.track-details-modal .rating-indicator {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
@@ -152,14 +181,14 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.rating-scale {
+.track-details-modal .rating-scale {
   font-size: 0.9rem;
   color: #a1a1aa;
   margin-left: 0.25rem;
   align-self: center;
 }
 
-.spotify-button {
+.track-details-modal .spotify-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -179,32 +208,32 @@
   height: 30px;
 }
 
-.spotify-button:hover {
+.track-details-modal .spotify-button:hover {
   background-color: #1ed760; /* Lighter Spotify green */
 }
 
-.spotify-icon {
+.track-details-modal .spotify-icon {
   width: 0.9rem;
   height: 0.9rem;
   fill: white;
 }
 
 /* Review description section */
-.review-description-section {
+.track-details-modal .review-description-section {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid #3f3f46;
   width: 100%;
 }
 
-.review-description-title {
+.track-details-modal .review-description-title {
   font-size: 1.1rem;
   font-weight: bold;
   color: white;
   margin: 0 0 0.75rem 0;
 }
 
-.review-description-text {
+.track-details-modal .review-description-text {
   font-size: 0.95rem;
   line-height: 1.5;
   color: #e4e4e7;
@@ -212,7 +241,7 @@
   white-space: pre-wrap;
 }
 
-.see-more-button {
+.track-details-modal .see-more-button {
   background: none;
   border: none;
   color: #6366f1;
@@ -225,13 +254,13 @@
   transition: color 0.2s;
 }
 
-.see-more-button:hover {
+.track-details-modal .see-more-button:hover {
   color: #4f46e5;
   text-decoration: underline;
 }
 
 /* Loading indicator */
-.loading-indicator {
+.track-details-modal .loading-indicator {
   color: #a1a1aa;
   font-size: 0.9rem;
   font-style: italic;
@@ -240,14 +269,14 @@
 }
 
 /* Search track description section */
-.search-track-description {
+.track-details-modal .search-track-description {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid #3f3f46;
   width: 100%;
 }
 
-.search-track-description p {
+.track-details-modal .search-track-description p {
   font-size: 0.95rem;
   line-height: 1.5;
   color: #e4e4e7;
@@ -258,17 +287,17 @@
 
 /* Responsive adjustments */
 @media (min-width: 768px) {
-  .track-details-content {
+  .track-details-modal .track-details-content {
     flex-direction: row;
     align-items: flex-start;
   }
   
-  .track-details-info {
+  .track-details-modal .track-details-info {
     flex: 1;
   }
 }
 
-.review-actions {
+.track-details-modal .review-actions {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
@@ -276,31 +305,13 @@
   align-items: center;
 }
 
-.delete-review-button {
-  background-color: #e74c3c;
-  color: white;
-}
-
-.delete-review-button:hover {
-  background-color: #c0392b;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
-}
-
-.delete-review-button:disabled {
-  background-color: #e57373;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.rank-info {
+.track-details-modal .rank-info {
   margin-left: 10px;
   font-size: 14px;
   color: #e4e4e7;
 }
 
-.rank-info-badge {
+.track-details-modal .rank-info-badge {
   background: linear-gradient(90deg, #6366f1, #a855f7);
   color: white;
   padding: 5px 10px;

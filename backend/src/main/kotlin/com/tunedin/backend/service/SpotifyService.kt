@@ -2,6 +2,7 @@ package com.tunedin.backend.service
 
 import com.tunedin.backend.model.spotify.*
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.*
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
@@ -28,7 +29,8 @@ class SpotifyService(
         "user-read-email",
         "playlist-read-private",
         "playlist-modify-public",
-        "playlist-modify-private"
+        "playlist-modify-private",
+        "user-top-read"
     )
 
     fun generateAuthUrl(): String {
@@ -165,5 +167,48 @@ class SpotifyService(
         )
         
         return response.body ?: throw RuntimeException("Failed to refresh token")
+    }
+
+    fun getUserTopItems(
+        type: String,
+        timeRange: String = "medium_term",
+        limit: Int = 20,
+        offset: Int = 0,
+        accessToken: String
+    ): Any {
+        val restTemplate = RestTemplate()
+        val url = UriComponentsBuilder
+            .fromUriString("https://api.spotify.com/v1/me/top/$type")
+            .queryParam("time_range", timeRange)
+            .queryParam("limit", limit)
+            .queryParam("offset", offset)
+            .build()
+            .toUriString()
+
+        val headers = HttpHeaders().apply {
+            setBearerAuth(accessToken)
+        }
+
+        return when (type) {
+            "artists" -> {
+                val response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    HttpEntity<Any>(headers),
+                    object : ParameterizedTypeReference<SpotifyTopItemsResponse<Artist>>() {}
+                )
+                response.body ?: throw RuntimeException("No response body from Spotify top artists API")
+            }
+            "tracks" -> {
+                val response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    HttpEntity<Any>(headers),
+                    object : ParameterizedTypeReference<SpotifyTopItemsResponse<Track>>() {}
+                )
+                response.body ?: throw RuntimeException("No response body from Spotify top tracks API")
+            }
+            else -> throw IllegalArgumentException("Invalid type: $type. Must be 'artists' or 'tracks'")
+        }
     }
 } 

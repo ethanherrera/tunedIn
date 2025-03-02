@@ -161,4 +161,34 @@ class SpotifyController(
                 .body(SpotifyErrorResponse("Failed to get track: ${e.message}. Available cookies: [$cookiesInfo]"))
         }
     }
+    
+    @GetMapping("/me/top/{type}")
+    fun getUserTopItems(
+        @PathVariable type: String,
+        @RequestParam(required = false, defaultValue = "medium_term") timeRange: String,
+        @RequestParam(required = false, defaultValue = "20") limit: Int,
+        @RequestParam(required = false, defaultValue = "0") offset: Int,
+        request: HttpServletRequest
+    ): ResponseEntity<*> {
+        try {
+            // Validate type parameter
+            if (type !in listOf("artists", "tracks")) {
+                return ResponseEntity.badRequest()
+                    .body(SpotifyErrorResponse("Invalid type parameter. Must be 'artists' or 'tracks'"))
+            }
+            
+            // Get access token from cookie
+            val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
+            val accessToken = request.cookies?.find { it.name == "accessToken" }?.value
+                ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(SpotifyErrorResponse("Access token not found in cookies. Available cookies: [$cookiesInfo]"))
+            
+            val topItems = spotifyService.getUserTopItems(type, timeRange, limit, offset, accessToken)
+            return ResponseEntity.ok(topItems)
+        } catch (e: Exception) {
+            val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(SpotifyErrorResponse("Failed to get user's top $type: ${e.message}. Available cookies: [$cookiesInfo]"))
+        }
+    }
 } 

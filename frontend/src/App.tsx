@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SearchContainer from './components/SearchContainer';
 import UserReviewedTracks from './components/UserReviewedTracks';
+import TopTracks from './components/TopTracks';
 import LoginPage from './components/LoginPage';
 import { spotifyApi } from './api/apiClient';
 import './App.css';
@@ -8,7 +9,7 @@ import './App.css';
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [activeView, setActiveView] = useState<'search' | 'reviews'>('search');
+    const [activeView, setActiveView] = useState<'search' | 'reviews' | 'top-tracks'>('search');
     
     // Combined authentication check
     useEffect(() => {
@@ -72,6 +73,18 @@ function App() {
                         Search
                     </button>
                     <button 
+                        className={`nav-button ${activeView === 'top-tracks' ? 'active' : ''}`}
+                        onClick={() => setActiveView('top-tracks')}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="nav-icon" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M8 13A5 5 0 1 1 8 3a5 5 0 0 1 0 10zm0 1A6 6 0 1 0 8 2a6 6 0 0 0 0 12z"/>
+                            <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/>
+                            <path d="M9.5 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+                        </svg>
+                        Your Top Tracks
+                    </button>
+                    <button 
                         className={`nav-button ${activeView === 'reviews' ? 'active' : ''}`}
                         onClick={() => setActiveView('reviews')}
                     >
@@ -103,6 +116,8 @@ function App() {
             <main className="app-content">
                 {activeView === 'search' ? (
                     <SearchContainer />
+                ) : activeView === 'top-tracks' ? (
+                    <TopTracks />
                 ) : (
                     <UserReviewedTracks />
                 )}

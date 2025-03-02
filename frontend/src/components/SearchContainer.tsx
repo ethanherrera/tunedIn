@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import './SearchContainer.css';
-import './TrackDetailsModal.css';
 import TrackRankingModal from './TrackRankingModal';
 import TrackCardSearchResult from './TrackCardSearchResult';
 import TrackDetailsModal from './TrackDetailsModal';

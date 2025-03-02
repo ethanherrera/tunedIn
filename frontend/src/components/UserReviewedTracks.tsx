@@ -35,6 +35,7 @@ const UserReviewedTracks: React.FC = () => {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState<boolean>(false);
   const [isReReviewModalOpen, setIsReReviewModalOpen] = useState<boolean>(false);
   const [isRandomReviewModalOpen, setIsRandomReviewModalOpen] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<{ [key: string]: boolean }>({});
 
   // Function to get color based on rating value
   const getRatingColor = (rating: number): string => {
@@ -127,6 +128,11 @@ const UserReviewedTracks: React.FC = () => {
   }, []);
 
   const handleTrackClick = (review: ReviewWithTrack, e?: React.MouseEvent) => {
+    // Don't open the modal if clicking on action buttons
+    if (e && (e.target as HTMLElement).closest('.review-actions')) {
+      return;
+    }
+    
     setSelectedReview(review);
     setIsDetailsModalOpen(true);
   };
@@ -164,6 +170,33 @@ const UserReviewedTracks: React.FC = () => {
     setIsRandomReviewModalOpen(false);
     // Refresh the reviews list after re-reviewing
     fetchUserReviews();
+  };
+
+  const handleReReviewFromList = (review: ReviewWithTrack, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening the details modal
+    setSelectedReview(review);
+    setIsReReviewModalOpen(true);
+  };
+
+  const handleDeleteReviewFromList = async (review: ReviewWithTrack, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening the details modal
+    
+    if (window.confirm('Are you sure you want to delete this review?')) {
+      // Set deleting state for this specific review
+      setIsDeleting(prev => ({ ...prev, [review.id]: true }));
+      
+      try {
+        await reviewApi.deleteReview(review.id);
+        // Refresh the reviews list after deletion
+        fetchUserReviews();
+      } catch (error) {
+        console.error('Failed to delete review:', error);
+        alert('Failed to delete review. Please try again.');
+      } finally {
+        // Clear deleting state for this review
+        setIsDeleting(prev => ({ ...prev, [review.id]: false }));
+      }
+    }
   };
 
   return (
@@ -222,7 +255,7 @@ const UserReviewedTracks: React.FC = () => {
                   {review.rank && review.totalReviews && (
                     <div className="rank-badge">
                       <span className={`opinion-${review.opinion.toLowerCase()}`}>
-                        #{review.rank} / {review.totalReviews}
+                        #{review.rank}
                       </span>
                     </div>
                   )}
@@ -252,6 +285,23 @@ const UserReviewedTracks: React.FC = () => {
                 <p className="review-date">
                   Reviewed on: {new Date(review.createdAt).toLocaleDateString()}
                 </p>
+                
+                {/* Add review action buttons */}
+                <div className="track-list-review-actions">
+                  <button 
+                    className="track-list-delete-button"
+                    onClick={(e) => handleDeleteReviewFromList(review, e)}
+                    disabled={isDeleting[review.id]}
+                  >
+                    {isDeleting[review.id] ? 'Deleting...' : 'Delete Review'}
+                  </button>
+                  <button 
+                    className="track-list-rereview-button"
+                    onClick={(e) => handleReReviewFromList(review, e)}
+                  >
+                    Re-review
+                  </button>
+                </div>
               </div>
             </div>
           ))}
