@@ -147,4 +147,29 @@ class TrackReviewController(
                 .body(SpotifyErrorResponse("Review not found"))
         }
     }
+    
+    /**
+     * Endpoint to manually trigger the rescoring of all reviews for the current user.
+     * This will redistribute ratings according to the opinion categories:
+     * - Liked reviews: 7.0-10.0
+     * - Neutral reviews: 4.0-6.9
+     * - Disliked reviews: 0.0-3.9
+     */
+    @PostMapping("/rescore")
+    fun rescoreReviews(request: HttpServletRequest): ResponseEntity<*> {
+        val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
+        val userId = request.cookies?.find { it.name == "userId" }?.value
+            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(SpotifyErrorResponse("User ID not found in cookies. Available cookies: [$cookiesInfo]"))
+        
+        trackReviewService.rescoreReviews(userId)
+        
+        // Return the updated reviews
+        val updatedReviews = trackReviewService.getReviewsByUserId(userId)
+        return ResponseEntity.ok(mapOf(
+            "success" to true, 
+            "message" to "Reviews rescored successfully",
+            "reviews" to updatedReviews
+        ))
+    }
 }

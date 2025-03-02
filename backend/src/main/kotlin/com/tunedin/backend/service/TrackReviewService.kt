@@ -11,13 +11,6 @@ class TrackReviewService(
     private val trackReviewRepository: TrackReviewRepository
 ) {
     fun createReview(userId: String, spotifyTrackId: String, opinion: Opinion, description: String, rating: Double, ranking: Int = 0): TrackReview {
-        // Set the rating based on opinion
-        val assignedRating = when (opinion) {
-            Opinion.LIKED -> 10.0
-            Opinion.NEUTRAL -> 7.0
-            Opinion.DISLIKE -> 4.0
-        }
-        
         // Check if the user has already reviewed this track
         val existingReview = trackReviewRepository.findByUserIdAndSpotifyTrackId(userId, spotifyTrackId)
         
@@ -36,10 +29,14 @@ class TrackReviewService(
             }
             
             existingReview.description = description
-            existingReview.rating = assignedRating // Use the opinion-based rating
             
             // Don't update the createdAt timestamp to preserve the original review date
-            return trackReviewRepository.save(existingReview)
+            val savedReview = trackReviewRepository.save(existingReview)
+            
+            // Rescore all reviews for this user
+            rescoreReviews(userId)
+            
+            return savedReview
         }
         
         // Get the next available rank for this opinion group
@@ -51,10 +48,15 @@ class TrackReviewService(
             spotifyTrackId = spotifyTrackId,
             opinion = opinion,
             description = description,
-            rating = assignedRating, // Use the opinion-based rating
+            rating = 5.0, // Default rating, will be updated by rescoreReviews
             ranking = nextRank // Use the appropriate rank for this opinion group
         )
-        return trackReviewRepository.save(review)
+        val savedReview = trackReviewRepository.save(review)
+        
+        // Rescore all reviews for this user
+        rescoreReviews(userId)
+        
+        return savedReview
     }
 
     /**
@@ -183,10 +185,14 @@ class TrackReviewService(
     fun deleteReview(id: UUID): Boolean {
         if (trackReviewRepository.existsById(id)) {
             val review = trackReviewRepository.findById(id).get()
+            val userId = review.userId
             trackReviewRepository.deleteById(id)
             
             // Reorder remaining reviews to maintain consistent ranking
-            reorderReviewsAfterDeletion(review.userId)
+            reorderReviewsAfterDeletion(userId)
+            
+            // Rescore all reviews for this user
+            rescoreReviews(userId)
             
             return true
         }
@@ -200,6 +206,9 @@ class TrackReviewService(
             
             // Reorder remaining reviews to maintain consistent ranking
             reorderReviewsAfterDeletion(userId)
+            
+            // Rescore all reviews for this user
+            rescoreReviews(userId)
             
             return true
         }
@@ -259,10 +268,73 @@ class TrackReviewService(
             // Then reorder other reviews if necessary
             reorderReviewsAfterOpinionChange(userId, oldOpinion, opinion)
             
+            // Rescore all reviews for this user
+            rescoreReviews(userId)
+            
             return savedReview
         } else {
             // Don't update the createdAt timestamp to preserve the original review date
-            return trackReviewRepository.save(existingReview)
+            val savedReview = trackReviewRepository.save(existingReview)
+            
+            // Rescore all reviews for this user
+            rescoreReviews(userId)
+            
+            return savedReview
+        }
+    }
+    
+    /**
+     * Rescores all reviews for a user according to their opinion category and ranking.
+     * - Liked reviews are distributed in the range 7.0-10.0
+     * - Neutral reviews are distributed in the range 4.0-6.9
+     * - Disliked reviews are distributed in the range 0.0-3.9
+     * 
+     * Within each category, reviews are evenly distributed with the highest-ranked item
+     * getting the top score for that category.
+     */
+    fun rescoreReviews(userId: String) {
+        val userReviews = trackReviewRepository.findByUserId(userId)
+        
+        // Group reviews by opinion and sort by ranking (lower ranking = higher position)
+        val likedReviews = userReviews.filter { it.opinion == Opinion.LIKED }.sortedBy { it.ranking }
+        val neutralReviews = userReviews.filter { it.opinion == Opinion.NEUTRAL }.sortedBy { it.ranking }
+        val dislikedReviews = userReviews.filter { it.opinion == Opinion.DISLIKE }.sortedBy { it.ranking }
+        
+        // Rescore liked reviews (7.0-10.0)
+        if (likedReviews.isNotEmpty()) {
+            val likedRange = 10.0 - 7.0
+            val likedStep = if (likedReviews.size > 1) likedRange / (likedReviews.size - 1) else 0.0
+            
+            likedReviews.forEachIndexed { index, review ->
+                // Lower index (lower ranking) gets higher score
+                // For example, with 3 reviews: index 0 gets 10.0, index 1 gets 8.5, index 2 gets 7.0
+                review.rating = 10.0 - (index * likedStep)
+                trackReviewRepository.save(review)
+            }
+        }
+        
+        // Rescore neutral reviews (4.0-6.9)
+        if (neutralReviews.isNotEmpty()) {
+            val neutralRange = 6.9 - 4.0
+            val neutralStep = if (neutralReviews.size > 1) neutralRange / (neutralReviews.size - 1) else 0.0
+            
+            neutralReviews.forEachIndexed { index, review ->
+                // Lower index (lower ranking) gets higher score
+                review.rating = 6.9 - (index * neutralStep)
+                trackReviewRepository.save(review)
+            }
+        }
+        
+        // Rescore disliked reviews (0.0-3.9)
+        if (dislikedReviews.isNotEmpty()) {
+            val dislikedRange = 3.9 - 0.0
+            val dislikedStep = if (dislikedReviews.size > 1) dislikedRange / (dislikedReviews.size - 1) else 0.0
+            
+            dislikedReviews.forEachIndexed { index, review ->
+                // Lower index (lower ranking) gets higher score
+                review.rating = 3.9 - (index * dislikedStep)
+                trackReviewRepository.save(review)
+            }
         }
     }
 } 
