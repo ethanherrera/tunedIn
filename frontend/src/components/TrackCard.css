@@ -11,11 +11,12 @@
   border-radius: 0.5rem;
   overflow: hidden;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .track-card-inner:hover {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
 }
 
 .album-cover {
@@ -33,7 +34,7 @@
 
 .track-info {
   flex: 1;
-  padding: 0.75rem;
+  padding: 0.75rem 1rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -41,27 +42,77 @@
 }
 
 .track-name {
-  font-weight: bold;
-  font-size: 0.875rem;
+  font-weight: 600;
+  font-size: 0.95rem;
   color: white;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin: 0 0 0.25rem 0;
+  letter-spacing: 0.01em;
 }
 
 .artist-name {
   color: #c084fc;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin: 0 0 0.15rem 0;
+  font-weight: 500;
 }
 
 .album-name {
-  color: #71717a;
+  color: #a1a1aa;
   font-size: 0.75rem;
-  margin-top: 0.25rem;
+  margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-weight: 400;
+}
+
+/* Search result specific styles */
+.search-track-card {
+  margin: 0;
+  max-width: none;
+  width: 100%;
+}
+
+.search-track-card .track-card-inner {
+  background-color: transparent;
+  box-shadow: none;
+  width: 100%;
+  padding: 0.5rem 0;
+}
+
+.search-track-card .track-card-inner:hover {
+  box-shadow: none;
+  background-color: rgba(99, 102, 241, 0.1);
+  transform: none;
+  border-left: 3px solid #6366f1;
+}
+
+.search-track-card .album-cover {
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-left: 0.5rem;
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+.search-track-card .album-cover img {
+  border-radius: 0.25rem;
+}
+
+.search-track-card .track-name {
+  font-size: 0.9rem;
+}
+
+.search-track-card .artist-name {
+  font-size: 0.75rem;
+}
+
+.search-track-card .album-name {
+  font-size: 0.7rem;
 } 
