@@ -8,13 +8,15 @@ import './UserReviewedTracks.css';
 // Interface for the review data with track information
 interface ReviewWithTrack {
   id: string;
+  userId?: string;
   spotifyTrackId: string;
   opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
   description: string;
   rating: number;
+  ranking: number;
   createdAt: number;
-  rank?: number;
-  totalReviews?: number;
+  rank?: number; // For display purposes
+  totalReviews?: number; // For display purposes
   track: {
     albumImageUrl: string;
     albumName: string;
@@ -80,21 +82,32 @@ const UserReviewedTracks: React.FC = () => {
         }
       }
       
-      // Sort reviews by rating (highest to lowest), then by date for equal ratings
+      // Sort reviews by opinion buckets (LIKED first, then NEUTRAL, then DISLIKE)
+      // Within each bucket, sort by ranking (lowest to highest)
       reviewsWithTracks.sort((a, b) => {
-        // First sort by rating
-        if (b.rating !== a.rating) {
-          return b.rating - a.rating;
+        // First sort by opinion buckets
+        const opinionOrder = { 'LIKED': 1, 'NEUTRAL': 2, 'DISLIKE': 3 };
+        const opinionComparison = opinionOrder[a.opinion] - opinionOrder[b.opinion];
+        
+        if (opinionComparison !== 0) {
+          return opinionComparison; // Different opinion buckets
         }
-        // If ratings are equal, sort by date (newest first)
-        return b.createdAt - a.createdAt;
+        
+        // Within the same opinion bucket, sort by ranking (lowest to highest)
+        return a.ranking - b.ranking;
       });
       
-      // Add ranking information
-      const totalReviews = reviewsWithTracks.length;
+      // Update totalReviews counts for each opinion bucket
+      const likedReviews = reviewsWithTracks.filter(r => r.opinion === 'LIKED');
+      const neutralReviews = reviewsWithTracks.filter(r => r.opinion === 'NEUTRAL');
+      const dislikeReviews = reviewsWithTracks.filter(r => r.opinion === 'DISLIKE');
+      
+      // Update the display information for each review
       reviewsWithTracks.forEach((review, index) => {
+        // Set the total count to the total number of reviews
+        review.totalReviews = reviewsWithTracks.length;
+        // Set the rank to the overall position in the list (1-based index)
         review.rank = index + 1;
-        review.totalReviews = totalReviews;
       });
       
       setReviews(reviewsWithTracks);
@@ -173,7 +186,9 @@ const UserReviewedTracks: React.FC = () => {
                   </div>
                   {review.rank && review.totalReviews && (
                     <div className="rank-badge">
-                      #{review.rank} / {review.totalReviews}
+                      <span className={`opinion-${review.opinion.toLowerCase()}`}>
+                        #{review.rank} / {review.totalReviews}
+                      </span>
                     </div>
                   )}
                 </div>

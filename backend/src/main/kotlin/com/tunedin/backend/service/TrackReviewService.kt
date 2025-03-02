@@ -24,23 +24,53 @@ class TrackReviewService(
         if (existingReview != null) {
             // Update the existing review
             existingReview.opinion = opinion
+            
+            // If opinion changed, recalculate the ranking
+            if (existingReview.opinion != opinion) {
+                val nextRank = getNextRankForOpinion(userId, opinion)
+                existingReview.ranking = nextRank
+            }
+            
             existingReview.description = description
             existingReview.rating = assignedRating // Use the opinion-based rating
-            existingReview.ranking = ranking
+            
             // Don't update the createdAt timestamp to preserve the original review date
             return trackReviewRepository.save(existingReview)
         }
         
-        // Create a new review if one doesn't exist
+        // Get the next available rank for this opinion type
+        val nextRank = getNextRankForOpinion(userId, opinion)
+        
+        // Create a new review
         val review = TrackReview(
             userId = userId,
             spotifyTrackId = spotifyTrackId,
             opinion = opinion,
             description = description,
             rating = assignedRating, // Use the opinion-based rating
-            ranking = ranking
+            ranking = nextRank // Use the next available rank for this opinion
         )
         return trackReviewRepository.save(review)
+    }
+
+    /**
+     * Gets the next available rank for a specific opinion type for a user
+     * Ranks start at 1 for each opinion bucket
+     */
+    private fun getNextRankForOpinion(userId: String, opinion: Opinion): Int {
+        val userReviewsWithSameOpinion = trackReviewRepository.findByUserId(userId)
+            .filter { it.opinion == opinion }
+        
+        // If no reviews with this opinion, start at 1
+        if (userReviewsWithSameOpinion.isEmpty()) {
+            return 1
+        }
+        
+        // Find the highest current rank for this opinion
+        val highestRank = userReviewsWithSameOpinion.maxOfOrNull { it.ranking } ?: 0
+        
+        // Return the next rank (highest + 1)
+        return highestRank + 1
     }
 
     fun getReviewById(id: UUID): TrackReview? {
@@ -88,12 +118,19 @@ class TrackReviewService(
             Opinion.DISLIKE -> 4.0
         }
         
+        // If opinion changed, recalculate the ranking
+        val assignedRanking = if (existingReview.opinion != opinion) {
+            getNextRankForOpinion(userId, opinion)
+        } else {
+            existingReview.ranking // Keep the existing ranking if opinion didn't change
+        }
+        
         // Update the review fields
         existingReview.spotifyTrackId = spotifyTrackId
         existingReview.opinion = opinion
         existingReview.description = description
         existingReview.rating = assignedRating // Use the opinion-based rating
-        existingReview.ranking = ranking
+        existingReview.ranking = assignedRanking
         // Don't update the createdAt timestamp to preserve the original review date
         
         return trackReviewRepository.save(existingReview)

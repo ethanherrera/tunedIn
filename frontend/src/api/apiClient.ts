@@ -88,6 +88,7 @@ interface TrackReview {
   opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
   description: string;
   rating: number;
+  ranking: number;
   createdAt: number;
 }
 
