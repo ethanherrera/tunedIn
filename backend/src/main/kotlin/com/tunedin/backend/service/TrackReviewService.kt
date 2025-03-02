@@ -51,8 +51,13 @@ class TrackReviewService(
         return trackReviewRepository.findBySpotifyTrackId(spotifyTrackId)
     }
 
-    fun getReviewsByUserId(userId: String): List<TrackReview> {
-        return trackReviewRepository.findByUserId(userId)
+    fun getReviewsByUserId(userId: String, opinions: List<Opinion>? = null): List<TrackReview> {
+        val allUserReviews = trackReviewRepository.findByUserId(userId)
+        return if (opinions.isNullOrEmpty()) {
+            allUserReviews
+        } else {
+            allUserReviews.filter { review -> review.opinion in opinions }
+        }
     }
     
     fun deleteReview(id: UUID): Boolean {

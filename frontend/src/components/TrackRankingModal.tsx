@@ -297,6 +297,7 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
             onComparisonComplete={handleComparisonComplete}
             embedded={true}
             visibleWhenReady={true}
+            selectedOpinion={mapRatingToOpinion(rating)}
           />
         )}
 

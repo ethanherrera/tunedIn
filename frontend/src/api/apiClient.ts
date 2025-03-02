@@ -169,8 +169,9 @@ export const reviewApi = {
     return response.data;
   },
   
-  getUserReviews: async (): Promise<TrackReview[]> => {
-    const response = await apiClient.get<TrackReview[]>('/reviews/user');
+  getUserReviews: async (opinions?: ('DISLIKE' | 'NEUTRAL' | 'LIKED')[]): Promise<TrackReview[]> => {
+    const params = opinions ? { opinions: opinions.join(',') } : undefined;
+    const response = await apiClient.get<TrackReview[]>('/reviews/user', { params });
     return response.data;
   },
   

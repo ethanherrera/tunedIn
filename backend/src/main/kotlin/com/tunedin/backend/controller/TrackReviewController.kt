@@ -91,13 +91,16 @@ class TrackReviewController(
     }
 
     @GetMapping("/user")
-    fun getReviewsByUserId(request: HttpServletRequest): ResponseEntity<*> {
+    fun getReviewsByUserId(
+        request: HttpServletRequest,
+        @RequestParam(required = false) opinions: List<Opinion>?
+    ): ResponseEntity<*> {
         val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
         val userId = request.cookies?.find { it.name == "userId" }?.value
             ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(SpotifyErrorResponse("User ID not found in cookies. Available cookies: [$cookiesInfo]"))
         
-        val reviews = trackReviewService.getReviewsByUserId(userId)
+        val reviews = trackReviewService.getReviewsByUserId(userId, opinions)
         return ResponseEntity.ok(reviews)
     }
     

@@ -19,6 +19,7 @@ interface TrackComparisonModalProps {
   onComparisonComplete?: () => void; // Called when comparisons are complete or none available
   onDataReady?: () => void; // Callback for when data is ready but before showing the modal
   visibleWhenReady?: boolean; // Whether the modal should be visible when data is ready
+  selectedOpinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED'; // The selected opinion to filter comparisons
 }
 
 const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
@@ -29,7 +30,8 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
   embedded = false,
   onComparisonComplete,
   onDataReady,
-  visibleWhenReady = true
+  visibleWhenReady = true,
+  selectedOpinion
 }) => {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [comparisonTracks, setComparisonTracks] = useState<Track[]>([]);
@@ -90,8 +92,8 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
   const fetchUserReviewedTracks = async () => {
     try {
       console.log('TrackComparisonModal: Fetching user reviews');
-      // Get user reviews from the backend
-      const userReviews = await reviewApi.getUserReviews();
+      // Get user reviews from the backend filtered by opinion
+      const userReviews = await reviewApi.getUserReviews([selectedOpinion]);
       console.log('TrackComparisonModal: Received reviews count:', userReviews.length);
       
       // Create an array to hold tracks with details
