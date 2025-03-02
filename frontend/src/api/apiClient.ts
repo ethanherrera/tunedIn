@@ -170,7 +170,7 @@ export const spotifyApi = {
   }) => {
     const response = await apiClient.get<PagingObject<Track | Artist>>(`/spotify/me/top/${type}`, {
       params: {
-        time_range: params?.timeRange || 'medium_term',
+        timeRange: params?.timeRange || 'medium_term',
         limit: params?.limit || 20,
         offset: params?.offset || 0
       }
