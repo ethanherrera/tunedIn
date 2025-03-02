@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './AlbumDetailsModal.css';
 import { spotifyApi } from '../api/apiClient';
+import TrackDetailsModal from './TrackDetailsModal';
+import TrackRankingModal from './TrackRankingModal';
 
 interface Track {
   albumImageUrl: string;
@@ -38,6 +40,9 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
 }) => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
+  const [isTrackDetailsModalOpen, setIsTrackDetailsModalOpen] = useState(false);
+  const [isTrackRankingModalOpen, setIsTrackRankingModalOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen && album.id) {
@@ -72,6 +77,28 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
     }
   };
 
+  const handleTrackClick = (track: Track, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event from bubbling up to album modal overlay
+    setSelectedTrack(track);
+    setIsTrackDetailsModalOpen(true);
+  };
+
+  const handleTrackModalClose = () => {
+    setIsTrackDetailsModalOpen(false);
+  };
+
+  const handleReviewTrack = () => {
+    // Close the track details modal
+    setIsTrackDetailsModalOpen(false);
+    // Open the track ranking modal
+    setIsTrackRankingModalOpen(true);
+  };
+
+  const handleRankingModalClose = () => {
+    setIsTrackRankingModalOpen(false);
+    setSelectedTrack(null);
+  };
+
   if (!isOpen) return null;
 
   // Get the album cover image (use the first image or a placeholder)
@@ -95,75 +122,98 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
   };
 
   return (
-    <div className="album-details-modal-overlay" onClick={onClose}>
-      <div className="album-details-modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="album-details-modal-close-button" onClick={onClose}>×</button>
-        
-        <div className="album-details-modal-content-inner">
-          <div className="album-details-modal-album-wrapper">
-            <div className="album-details-modal-album-cover">
-              <img 
-                src={albumCoverUrl} 
-                alt={`${album.name} by ${artistName}`} 
-              />
-            </div>
-          </div>
+    <>
+      <div className="album-details-modal-overlay" onClick={onClose}>
+        <div className="album-details-modal-content" onClick={(e) => e.stopPropagation()}>
+          <button className="album-details-modal-close-button" onClick={onClose}>×</button>
           
-          <div className="album-details-modal-info">
-            <h2 className="album-details-modal-name">{album.name}</h2>
-            
-            <div className="album-details-modal-artist-row">
-              <p className="album-details-modal-artist">{artistName}</p>
+          <div className="album-details-modal-content-inner">
+            <div className="album-details-modal-album-wrapper">
+              <div className="album-details-modal-album-cover">
+                <img 
+                  src={albumCoverUrl} 
+                  alt={`${album.name} by ${artistName}`} 
+                />
+              </div>
             </div>
             
-            <div className="album-details-modal-details">
-              <p className="album-details-modal-type">
-                <span className="album-details-modal-label">Type:</span> 
-                <span className="album-details-modal-value">{album.album_type}</span>
-              </p>
-              <p className="album-details-modal-tracks">
-                <span className="album-details-modal-label">Tracks:</span> 
-                <span className="album-details-modal-value">{album.total_tracks}</span>
-              </p>
-              <p className="album-details-modal-release-date">
-                <span className="album-details-modal-label">Released:</span> 
-                <span className="album-details-modal-value">{formatReleaseDate(album.release_date)}</span>
-              </p>
+            <div className="album-details-modal-info">
+              <h2 className="album-details-modal-name">{album.name}</h2>
+              
+              <div className="album-details-modal-artist-row">
+                <p className="album-details-modal-artist">{artistName}</p>
+              </div>
+              
+              <div className="album-details-modal-details">
+                <p className="album-details-modal-type">
+                  <span className="album-details-modal-label">Type:</span> 
+                  <span className="album-details-modal-value">{album.album_type}</span>
+                </p>
+                <p className="album-details-modal-tracks">
+                  <span className="album-details-modal-label">Tracks:</span> 
+                  <span className="album-details-modal-value">{album.total_tracks}</span>
+                </p>
+                <p className="album-details-modal-release-date">
+                  <span className="album-details-modal-label">Released:</span> 
+                  <span className="album-details-modal-value">{formatReleaseDate(album.release_date)}</span>
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="album-details-modal-tracks-container">
-          <h3 className="album-details-modal-tracks-title">Tracks</h3>
-          
-          {isLoading ? (
-            <div className="album-details-modal-loading">Loading tracks...</div>
-          ) : tracks.length > 0 ? (
-            <div className="album-details-modal-tracks-list">
-              {tracks.map(track => (
-                <div key={track.spotifyId} className="album-details-modal-track-card">
-                  <div className="album-details-modal-track-card-inner">
-                    <div className="album-details-modal-track-cover">
-                      <img
-                        src={track.albumImageUrl}
-                        alt={`${track.albumName} by ${track.artistName}`}
-                      />
-                    </div>
-                    <div className="album-details-modal-track-info">
-                      <div>
-                        <h3 className="album-details-modal-track-name">{track.trackName}</h3>
+          <div className="album-details-modal-tracks-container">
+            <h3 className="album-details-modal-tracks-title">Tracks</h3>
+            
+            {isLoading ? (
+              <div className="album-details-modal-loading">Loading tracks...</div>
+            ) : tracks.length > 0 ? (
+              <div className="album-details-modal-tracks-list">
+                {tracks.map(track => (
+                  <div 
+                    key={track.spotifyId} 
+                    className="album-details-modal-track-card"
+                    onClick={(e) => handleTrackClick(track, e)}
+                  >
+                    <div className="album-details-modal-track-card-inner">
+                      <div className="album-details-modal-track-cover">
+                        <img
+                          src={track.albumImageUrl}
+                          alt={`${track.albumName} by ${track.artistName}`}
+                        />
+                      </div>
+                      <div className="album-details-modal-track-info">
+                        <div>
+                          <h3 className="album-details-modal-track-name">{track.trackName}</h3>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="album-details-modal-no-tracks">No tracks found for this album.</div>
-          )}
+                ))}
+              </div>
+            ) : (
+              <div className="album-details-modal-no-tracks">No tracks found for this album.</div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      {selectedTrack && isTrackDetailsModalOpen && (
+        <TrackDetailsModal
+          isOpen={isTrackDetailsModalOpen}
+          onClose={handleTrackModalClose}
+          track={selectedTrack}
+          onReview={handleReviewTrack}
+        />
+      )}
+
+      {selectedTrack && isTrackRankingModalOpen && (
+        <TrackRankingModal
+          isOpen={isTrackRankingModalOpen}
+          onClose={handleRankingModalClose}
+          track={selectedTrack}
+        />
+      )}
+    </>
   );
 };
 
