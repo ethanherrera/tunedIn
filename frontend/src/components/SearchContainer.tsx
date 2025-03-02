@@ -206,6 +206,7 @@ const SearchContainer: React.FC = () => {
             rank={reviewData?.rank}
             totalReviews={reviewData?.totalReviews}
             isLoading={isLoading}
+            onReviewDeleted={() => fetchReviewData(selectedTrack.spotifyId)}
           />
           <TrackRankingModal
             isOpen={isModalOpen}
