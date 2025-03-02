@@ -105,11 +105,18 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
         <button className="close-button" onClick={onClose}>×</button>
         
         <div className="track-details-content">
-          <div className="track-details-album-cover">
-            <img 
-              src={track.albumImageUrl} 
-              alt={`${track.albumName} by ${track.artistName}`} 
-            />
+          <div className="track-details-album-wrapper" style={{ position: 'relative' }}>
+            <div className="track-details-album-cover">
+              <img 
+                src={track.albumImageUrl} 
+                alt={`${track.albumName} by ${track.artistName}`} 
+              />
+            </div>
+            {rank && totalReviews && (
+              <div className="rank-info-badge">
+                Rank: #{rank}
+              </div>
+            )}
           </div>
           
           <div className="track-details-info">
@@ -120,17 +127,11 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
               <p className="track-details-artist">{track.artistName}</p>
               {isLoading ? (
                 <div className="loading-indicator">Loading...</div>
-              ) : hasReview ? (
-                <button 
-                  className="re-review-button"
-                  onClick={onReReview}
-                >
-                  Re-review
-                </button>
-              ) : onReview && (
+              ) : !hasReview && onReview && (
                 <button 
                   className="re-review-button"
                   onClick={onReview}
+                  style={{ width: '100px', height: '32px', padding: '6px 12px', fontSize: '12px' }}
                 >
                   Review
                 </button>
@@ -157,11 +158,6 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
                 >
                   {rating.toFixed(1)}
                 </div>
-                {rank && totalReviews && (
-                  <div className="rank-info-badge">
-                    Rank: #{rank}
-                  </div>
-                )}
               </div>
             )}
             
@@ -180,16 +176,20 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
                 <p>Loading review information...</p>
               </div>
             ) : hasReview ? (
-              <div className="review-description-section">
-                <h3 className="review-description-title">Your Review:</h3>
-                <p className="review-description-text">{displayDescription}</p>
-                {description.length > 150 && (
-                  <button 
-                    className="see-more-button" 
-                    onClick={toggleDescription}
-                  >
-                    {showFullDescription ? 'See less' : 'See more'}
-                  </button>
+              <>
+                {description && description.trim() !== '' && (
+                  <div className="review-description-section">
+                    <h3 className="review-description-title">Review Description:</h3>
+                    <p className="review-description-text">{displayDescription}</p>
+                    {description.length > 150 && (
+                      <button 
+                        className="see-more-button" 
+                        onClick={toggleDescription}
+                      >
+                        {showFullDescription ? 'See less' : 'See more'}
+                      </button>
+                    )}
+                  </div>
                 )}
                 {onReviewDeleted && (
                   <div className="review-actions">
@@ -197,12 +197,32 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
                       className="delete-review-button"
                       onClick={handleDeleteReview}
                       disabled={isDeleting}
+                      style={{ 
+                        borderRadius: '30px',
+                        width: '110px',
+                        height: '32px',
+                        fontSize: '12px'
+                      }}
                     >
                       {isDeleting ? 'Deleting...' : 'Delete Review'}
                     </button>
+                    {onReReview && (
+                      <button 
+                        className="re-review-button"
+                        onClick={onReReview}
+                        style={{ 
+                          borderRadius: '30px',
+                          width: '110px',
+                          height: '32px',
+                          fontSize: '12px'
+                        }}
+                      >
+                        Re-review
+                      </button>
+                    )}
                   </div>
                 )}
-              </div>
+              </>
             ) : (
               <div className="search-track-description">
                 <p>This track hasn't been reviewed yet. Click the Review button to add your review!</p>
