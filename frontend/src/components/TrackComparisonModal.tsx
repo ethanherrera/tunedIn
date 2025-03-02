@@ -8,6 +8,12 @@ interface Track {
   artistName: string;
   trackName: string;
   spotifyId: string;
+  ranking?: number; // Add ranking property for binary search
+}
+
+interface ReviewWithTrack extends Track {
+  ranking: number;
+  reviewId: string;
 }
 
 interface TrackComparisonModalProps {
@@ -16,7 +22,7 @@ interface TrackComparisonModalProps {
   initialTrack: Track;
   onComplete?: () => void; // Optional callback for when all comparisons are done
   embedded?: boolean; // Whether this modal is embedded within another component
-  onComparisonComplete?: () => void; // Called when comparisons are complete or none available
+  onComparisonComplete?: (finalRanking?: number) => void; // Called when comparisons are complete with final ranking
   onDataReady?: () => void; // Callback for when data is ready but before showing the modal
   visibleWhenReady?: boolean; // Whether the modal should be visible when data is ready
   selectedOpinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED'; // The selected opinion to filter comparisons
@@ -33,8 +39,18 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
   visibleWhenReady = true,
   selectedOpinion
 }) => {
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [comparisonTracks, setComparisonTracks] = useState<Track[]>([]);
+  // State for binary search
+  const [low, setLow] = useState<number>(0);
+  const [high, setHigh] = useState<number>(0);
+  const [mid, setMid] = useState<number>(0);
+  const [finalRanking, setFinalRanking] = useState<number | null>(null);
+  
+  // State for all tracks in the opinion bucket, sorted by ranking
+  const [allReviewedTracks, setAllReviewedTracks] = useState<ReviewWithTrack[]>([]);
+  
+  // Current comparison track (will be the mid point in binary search)
+  const [currentComparisonTrack, setCurrentComparisonTrack] = useState<Track | null>(null);
+  
   const [loading, setLoading] = useState(true); // Start as loading
   const [error, setError] = useState<string | null>(null);
   const [hasCalledComplete, setHasCalledComplete] = useState(false);
@@ -48,12 +64,12 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
     // 1. No tracks are available
     // 2. All comparisons have been completed
     if (contentReady && onComparisonComplete) {
-      if (noTracksAvailable || allComparisonsCompleted || comparisonTracks.length === 0) {
-        console.log('TrackComparisonModal: Notifying comparison completion');
-        onComparisonComplete();
+      if (noTracksAvailable || allComparisonsCompleted) {
+        console.log('TrackComparisonModal: Notifying comparison completion with ranking:', finalRanking);
+        onComparisonComplete(finalRanking !== null ? finalRanking : undefined);
       }
     }
-  }, [contentReady, noTracksAvailable, allComparisonsCompleted, comparisonTracks.length, onComparisonComplete]);
+  }, [contentReady, noTracksAvailable, allComparisonsCompleted, finalRanking, onComparisonComplete]);
 
   // Call onDataReady when content is ready
   useEffect(() => {
@@ -68,12 +84,12 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
     if (isOpen) {
       console.log('TrackComparisonModal: Modal opened, fetching reviewed tracks');
       // Reset to initial state
-      setCurrentTrackIndex(0);
       setHasCalledComplete(false);
       setNoTracksAvailable(false);
       setAllComparisonsCompleted(false);
       setContentReady(false); // Content not ready yet
       setLoading(true); // Start loading
+      setFinalRanking(null); // Reset final ranking
       
       // Fetch the data
       fetchUserReviewedTracks();
@@ -88,16 +104,40 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
     };
   }, []);
 
-  // Function to fetch user's reviewed tracks
+  // Update mid point when low or high changes (binary search)
+  useEffect(() => {
+    if (allReviewedTracks.length > 0) {
+      const newMid = Math.floor((low + high) / 2);
+      setMid(newMid);
+      
+      // Set the current comparison track to the track at the mid point
+      if (newMid >= 0 && newMid < allReviewedTracks.length) {
+        setCurrentComparisonTrack(allReviewedTracks[newMid]);
+      }
+    }
+  }, [low, high, allReviewedTracks]);
+
+  // Function to fetch user's reviewed tracks and set up binary search
   const fetchUserReviewedTracks = async () => {
     try {
-      console.log('TrackComparisonModal: Fetching user reviews');
+      console.log('TrackComparisonModal: Fetching user reviews for binary search');
       // Get user reviews from the backend filtered by opinion
       const userReviews = await reviewApi.getUserReviews([selectedOpinion]);
       console.log('TrackComparisonModal: Received reviews count:', userReviews.length);
       
+      // If no reviews, show message and exit early
+      if (userReviews.length === 0) {
+        console.log('TrackComparisonModal: No tracks available for comparison');
+        setNoTracksAvailable(true);
+        setFinalRanking(1); // First track gets ranking 1
+        setLoading(false);
+        setContentReady(true);
+        setAllComparisonsCompleted(true);
+        return;
+      }
+      
       // Create an array to hold tracks with details
-      const reviewedTracks: Track[] = [];
+      const reviewedTracks: ReviewWithTrack[] = [];
       
       // Fetch track details for each review
       for (const review of userReviews) {
@@ -114,7 +154,9 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
             albumName: trackData.album.name,
             artistName: trackData.artists[0].name,
             trackName: trackData.name,
-            spotifyId: trackData.id
+            spotifyId: trackData.id,
+            ranking: review.ranking,
+            reviewId: review.id
           });
         } catch (trackError) {
           console.error(`Failed to fetch track ${review.spotifyTrackId}:`, trackError);
@@ -122,18 +164,43 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
         }
       }
       
-      // If we have more than 5 tracks, randomly select 5 for comparison
-      if (reviewedTracks.length > 5) {
-        const shuffled = [...reviewedTracks].sort(() => 0.5 - Math.random());
-        setComparisonTracks(shuffled.slice(0, 5));
-      } else if (reviewedTracks.length > 0) {
-        // Use all available tracks if we have between 1-5
-        setComparisonTracks(reviewedTracks);
-      } else {
+      if (reviewedTracks.length === 0) {
         // If no reviewed tracks, just show a message
-        console.log('TrackComparisonModal: No tracks available for comparison');
+        console.log('TrackComparisonModal: No tracks available for comparison after filtering');
         setNoTracksAvailable(true);
+        setFinalRanking(1); // First track gets ranking 1
+        setLoading(false);
+        setContentReady(true);
+        setAllComparisonsCompleted(true);
+        return;
       }
+      
+      // Sort tracks by ranking (lowest to highest)
+      const sortedTracks = [...reviewedTracks].sort((a, b) => a.ranking - b.ranking);
+      setAllReviewedTracks(sortedTracks);
+      
+      // If there's only one track, we need a special comparison
+      if (sortedTracks.length === 1) {
+        console.log('TrackComparisonModal: Only one track for comparison, setting up direct comparison');
+        setLow(0);
+        setHigh(0);
+        setMid(0);
+        setCurrentComparisonTrack(sortedTracks[0]);
+      } else {
+        // Initialize binary search pointers
+        setLow(0); // Start at the highest ranked track (lowest index)
+        setHigh(sortedTracks.length - 1); // End at the lowest ranked track (highest index)
+        
+        // Set initial mid point
+        const initialMid = Math.floor((0 + (sortedTracks.length - 1)) / 2);
+        setMid(initialMid);
+        
+        // Set initial comparison track
+        setCurrentComparisonTrack(sortedTracks[initialMid]);
+      }
+      
+      console.log('TrackComparisonModal: Binary search initialized with', sortedTracks.length, 'tracks');
+      
     } catch (err) {
       console.error('Failed to fetch user reviewed tracks:', err);
       setError('Failed to load your reviewed tracks. Please try again.');
@@ -147,8 +214,6 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
   const handleClose = () => {
     console.log('TrackComparisonModal: handleClose called');
     // Reset state
-    setCurrentTrackIndex(0);
-    setComparisonTracks([]);
     setError(null);
     // Call parent onClose
     onClose();
@@ -167,6 +232,62 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
       // If no callback provided, just close the modal
       console.log('TrackComparisonModal: No onComplete callback, closing modal');
       handleClose();
+    }
+  };
+
+  // Handle track selection for binary search
+  const handleTrackSelect = (selectedTrack: Track, isInitialTrack: boolean) => {
+    // Special case for single track comparison
+    if (allReviewedTracks.length === 1) {
+      let newRanking: number;
+      
+      if (isInitialTrack) {
+        // User thinks initial track is better than the only track
+        // Insert it before that track
+        newRanking = allReviewedTracks[0].ranking;
+      } else {
+        // User thinks the only track is better than initial track
+        // Insert initial track after that track
+        newRanking = allReviewedTracks[0].ranking + 1;
+      }
+      
+      console.log('TrackComparisonModal: Single track comparison complete, final ranking:', newRanking);
+      setFinalRanking(newRanking);
+      setAllComparisonsCompleted(true);
+      return;
+    }
+    
+    // If binary search is complete (low >= high - 1), we've found our insertion point
+    if (low >= high - 1) {
+      // Determine final ranking based on the last comparison
+      let newRanking: number;
+      
+      if (isInitialTrack) {
+        // User thinks initial track is better than the high track
+        // Insert it before the high track
+        newRanking = allReviewedTracks[high].ranking;
+      } else {
+        // User thinks high track is better than initial track
+        // Insert initial track after the high track
+        newRanking = allReviewedTracks[high].ranking + 1;
+      }
+      
+      console.log('TrackComparisonModal: Binary search complete, final ranking:', newRanking);
+      setFinalRanking(newRanking);
+      setAllComparisonsCompleted(true);
+      
+      return;
+    }
+    
+    // Update pointers based on selection
+    if (isInitialTrack) {
+      // User thinks initial track is better than mid track
+      // Search in the lower half (better rankings)
+      setHigh(mid);
+    } else {
+      // User thinks mid track is better than initial track
+      // Search in the upper half (worse rankings)
+      setLow(mid + 1);
     }
   };
 
@@ -198,7 +319,7 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
   }
 
   // Show message when there are no comparison tracks (but not due to an error)
-  if (comparisonTracks.length === 0) {
+  if (allReviewedTracks.length === 0) {
     return (
       <div className={`${embedded ? 'embedded-comparison' : 'modal-overlay comparison-overlay'} ${contentReady ? 'ready' : ''} ${!visibleWhenReady ? 'prefetching' : ''}`}>
         {!embedded && <button className="close-button" onClick={handleClose}>×</button>}
@@ -208,8 +329,6 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
       </div>
     );
   }
-
-  const challengerTrack = comparisonTracks[currentTrackIndex];
 
   // Show thank you message when all comparisons are completed
   if (allComparisonsCompleted && embedded) {
@@ -222,26 +341,17 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
     );
   }
 
-  const handleTrackSelect = (selectedTrack: Track) => {
-    if (currentTrackIndex >= comparisonTracks.length - 1) {
-      // This is the last comparison, mark as completed
-      setAllComparisonsCompleted(true);
-      
-      // If embedded, we just show the thank you message
-      if (embedded) {
-        // No need to explicitly call onComparisonComplete here since
-        // it will be triggered by the useEffect when allComparisonsCompleted changes
-        return;
-      }
-      
-      // All comparisons are done
-      handleCompletion();
-      return;
-    }
-    
-    // Move to the next comparison
-    setCurrentTrackIndex(prevIndex => prevIndex + 1);
-  };
+  // If no current comparison track, show loading
+  if (!currentComparisonTrack) {
+    return (
+      <div className={`${embedded ? 'embedded-comparison' : 'modal-overlay comparison-overlay'} ${contentReady ? 'ready' : ''} ${!visibleWhenReady ? 'prefetching' : ''}`}>
+        {!embedded && <button className="close-button" onClick={handleClose}>×</button>}
+        <div className="loading-container">
+          <p>Loading comparison...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`${embedded ? 'embedded-comparison' : 'modal-overlay comparison-overlay'} ${contentReady ? 'ready' : ''} ${!visibleWhenReady ? 'prefetching' : ''}`}>
@@ -253,7 +363,7 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
         <div className="tracks-container">
           <div 
             className="track-option"
-            onClick={() => handleTrackSelect(initialTrack)}
+            onClick={() => handleTrackSelect(initialTrack, true)}
           >
             <div className="track-card">
               <div className="track-card-inner">
@@ -278,21 +388,21 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
 
           <div 
             className="track-option"
-            onClick={() => handleTrackSelect(challengerTrack)}
+            onClick={() => handleTrackSelect(currentComparisonTrack, false)}
           >
             <div className="track-card">
               <div className="track-card-inner">
                 <div className="album-cover">
                   <img
-                    src={challengerTrack.albumImageUrl}
-                    alt={`${challengerTrack.albumName} by ${challengerTrack.artistName}`}
+                    src={currentComparisonTrack.albumImageUrl}
+                    alt={`${currentComparisonTrack.albumName} by ${currentComparisonTrack.artistName}`}
                   />
                 </div>
                 <div className="track-info">
                   <div>
-                    <h3 className="track-name">{challengerTrack.trackName}</h3>
-                    <p className="artist-name">{challengerTrack.artistName}</p>
-                    <p className="album-name">{challengerTrack.albumName}</p>
+                    <h3 className="track-name">{currentComparisonTrack.trackName}</h3>
+                    <p className="artist-name">{currentComparisonTrack.artistName}</p>
+                    <p className="album-name">{currentComparisonTrack.albumName}</p>
                   </div>
                 </div>
               </div>
@@ -301,7 +411,15 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
         </div>
 
         <div className="comparison-progress">
-          {currentTrackIndex + 1} of {comparisonTracks.length} comparisons
+          <div className="progress-label">Finding the perfect spot for your review...</div>
+          <div className="progress-bar-container">
+            <div 
+              className="progress-bar-fill"
+              style={{ 
+                width: `${Math.round(((high - low) === 0 ? 100 : (1 - (high - low) / (allReviewedTracks.length - 1)) * 100))}%` 
+              }}
+            ></div>
+          </div>
         </div>
       </div>
     </div>

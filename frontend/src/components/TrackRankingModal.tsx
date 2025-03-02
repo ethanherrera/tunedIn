@@ -38,6 +38,8 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
   const [isPrefetchingComparisons, setIsPrefetchingComparisons] = useState(false);
   // Flag to indicate when comparison data is ready
   const [comparisonDataReady, setComparisonDataReady] = useState(false);
+  // Store the final ranking determined by binary search
+  const [finalRanking, setFinalRanking] = useState<number | null>(null);
 
   // Reset form data when modal is closed or when track changes
   useEffect(() => {
@@ -53,6 +55,7 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
       setComparisonsComplete(false);
       setIsPrefetchingComparisons(false);
       setComparisonDataReady(false);
+      setFinalRanking(null);
     }
   }, [isOpen, track.spotifyId]);
 
@@ -84,9 +87,12 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
   };
 
   // Handle comparison completion
-  const handleComparisonComplete = () => {
-    console.log('TrackRankingModal: Comparisons completed');
+  const handleComparisonComplete = (ranking?: number) => {
+    console.log('TrackRankingModal: Comparisons completed with ranking:', ranking);
     setComparisonsComplete(true);
+    if (ranking !== undefined) {
+      setFinalRanking(ranking);
+    }
   };
 
   // Handle clean up when modal closes
@@ -161,51 +167,39 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
   };
 
   const handleSubmit = async () => {
-    if (!rating) {
-      setError('Please select a rating');
-      return;
-    }
-
-    if (wordCount > 200) {
-      setError('Review cannot exceed 200 words');
-      return;
-    }
-
+    if (isSubmitting || !rating || wordCount > 200) return;
+    
+    setIsSubmitting(true);
+    setError(null);
+    
     try {
-      setIsSubmitting(true);
-      setError(null);
-      console.log('TrackRankingModal: Preparing to submit review');
-
-      // Generate a random rating
-      const randomRating = generateRandomRating();
-      console.log('TrackRankingModal: Generated random rating:', randomRating);
-
+      const opinionValue = mapRatingToOpinion(rating);
+      
       // Create the review data
       const reviewData = {
         spotifyTrackId: track.spotifyId,
-        opinion: mapRatingToOpinion(rating),
-        description: review.trim(),
+        opinion: opinionValue,
+        description: review,
+        rating: 0, // Rating will be calculated on the backend
+        ranking: finalRanking || 0 // Use the ranking from binary search if available
       };
       
-      console.log('TrackRankingModal: Submitting review to API');
-      
-      // Submit the review based on whether it's a new review or an update
+      // If we have an existing review ID, update it
       if (existingReviewId) {
         await reviewApi.updateReview(existingReviewId, reviewData);
-        console.log('TrackRankingModal: Review updated successfully');
       } else {
+        // Otherwise create a new review
         await reviewApi.createReview(reviewData);
-        console.log('TrackRankingModal: Review created successfully');
       }
       
-      // Mark that we've submitted this review
+      // Mark as submitted to prevent duplicate submissions
       setHasSubmittedReview(true);
       
-      // Close modal after successful submission
-      handleClose();
+      // Close the modal
+      onClose();
     } catch (err) {
-      setError('Failed to submit review. Please try again.');
-      console.error('Error submitting review:', err);
+      console.error('Failed to submit review:', err);
+      setError('Failed to submit your review. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

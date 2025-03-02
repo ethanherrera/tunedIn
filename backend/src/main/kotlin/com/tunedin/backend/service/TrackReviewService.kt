@@ -39,8 +39,16 @@ class TrackReviewService(
             return savedReview
         }
         
-        // Get the next available rank for this opinion group
-        val nextRank = getNextRankForOpinionGroup(userId, opinion)
+        // Use the provided ranking if it's greater than 0, otherwise calculate the next rank
+        val nextRank = if (ranking > 0) {
+            // If a specific ranking is provided (from binary search), use it
+            // and shift other reviews to make room
+            shiftReviewsForInsertion(userId, opinion, ranking)
+            ranking
+        } else {
+            // Otherwise get the next available rank for this opinion group
+            getNextRankForOpinionGroup(userId, opinion)
+        }
         
         // Create a new review
         val review = TrackReview(
@@ -260,13 +268,39 @@ class TrackReviewService(
         
         // If opinion changed, recalculate the ranking
         if (oldOpinion != opinion) {
-            existingReview.ranking = getNextRankForOpinionGroup(userId, opinion)
+            // If a specific ranking is provided (from binary search), use it
+            existingReview.ranking = if (ranking > 0) {
+                // Shift other reviews to make room for this ranking
+                shiftReviewsForInsertion(userId, opinion, ranking)
+                ranking
+            } else {
+                // Otherwise calculate the next rank for this opinion group
+                getNextRankForOpinionGroup(userId, opinion)
+            }
             
             // Save the review first
             val savedReview = trackReviewRepository.save(existingReview)
             
             // Then reorder other reviews if necessary
             reorderReviewsAfterOpinionChange(userId, oldOpinion, opinion)
+            
+            // Rescore all reviews for this user
+            rescoreReviews(userId)
+            
+            return savedReview
+        } else if (ranking > 0 && ranking != existingReview.ranking) {
+            // Opinion didn't change but ranking did - update the ranking
+            // Remove the review from its current position
+            val oldRanking = existingReview.ranking
+            
+            // Update the ranking
+            existingReview.ranking = ranking
+            
+            // Save the review
+            val savedReview = trackReviewRepository.save(existingReview)
+            
+            // Reorder other reviews to maintain consistent ranking
+            reorderReviewsAfterRankingChange(userId, opinion, oldRanking, ranking)
             
             // Rescore all reviews for this user
             rescoreReviews(userId)
@@ -280,6 +314,36 @@ class TrackReviewService(
             rescoreReviews(userId)
             
             return savedReview
+        }
+    }
+    
+    /**
+     * Reorders reviews after a ranking change within the same opinion group
+     */
+    private fun reorderReviewsAfterRankingChange(userId: String, opinion: Opinion, oldRanking: Int, newRanking: Int) {
+        val userReviews = trackReviewRepository.findByUserId(userId)
+        
+        // Get reviews with the same opinion
+        val sameOpinionReviews = userReviews.filter { it.opinion == opinion }
+        
+        if (oldRanking < newRanking) {
+            // Moving down in the list (higher ranking number)
+            // Shift reviews between old and new position up by 1
+            sameOpinionReviews.filter { 
+                it.ranking > oldRanking && it.ranking <= newRanking 
+            }.forEach { 
+                it.ranking -= 1
+                trackReviewRepository.save(it)
+            }
+        } else if (oldRanking > newRanking) {
+            // Moving up in the list (lower ranking number)
+            // Shift reviews between new and old position down by 1
+            sameOpinionReviews.filter { 
+                it.ranking >= newRanking && it.ranking < oldRanking 
+            }.forEach { 
+                it.ranking += 1
+                trackReviewRepository.save(it)
+            }
         }
     }
     
@@ -336,5 +400,26 @@ class TrackReviewService(
                 trackReviewRepository.save(review)
             }
         }
+    }
+
+    /**
+     * Shifts existing reviews to make room for a new review at the specified ranking
+     * Returns the provided ranking for insertion
+     */
+    private fun shiftReviewsForInsertion(userId: String, opinion: Opinion, ranking: Int): Int {
+        val userReviews = trackReviewRepository.findByUserId(userId)
+        
+        // Get reviews with the same opinion that need to be shifted
+        val reviewsToShift = userReviews.filter { 
+            it.opinion == opinion && it.ranking >= ranking 
+        }.sortedBy { it.ranking }
+        
+        // Shift rankings of affected reviews
+        for (review in reviewsToShift) {
+            review.ranking += 1
+            trackReviewRepository.save(review)
+        }
+        
+        return ranking
     }
 } 

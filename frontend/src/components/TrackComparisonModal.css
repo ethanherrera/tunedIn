@@ -41,10 +41,35 @@
 }
 
 .comparison-progress {
+  margin-top: 15px;
   text-align: center;
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.progress-label {
+  font-size: 0.85rem;
   color: #a1a1aa;
-  font-size: 0.875rem;
-  margin-top: 1rem;
+  margin-bottom: 5px;
+  font-style: italic;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 10px 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease-in-out;
+  box-shadow: 0 0 5px rgba(124, 58, 237, 0.5);
 }
 
 /* Inherit existing modal overlay styles */
@@ -268,4 +293,20 @@
   opacity: 0;
   position: absolute;
   pointer-events: none;
+}
+
+.embedded-comparison .progress-bar-container {
+  margin: 15px 0 5px;
+}
+
+/* Responsive adjustments for the progress bar */
+@media (max-width: 768px) {
+  .progress-bar-container {
+    height: 6px;
+    margin: 8px 0;
+  }
+  
+  .progress-label {
+    font-size: 0.8rem;
+  }
 } 
