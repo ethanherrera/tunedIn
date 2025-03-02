@@ -189,9 +189,14 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
       
       console.log('TrackRankingModal: Submitting review to API');
       
-      // Submit the review directly
-      await reviewApi.createReview(reviewData);
-      console.log('TrackRankingModal: Review submitted successfully');
+      // Submit the review based on whether it's a new review or an update
+      if (existingReviewId) {
+        await reviewApi.updateReview(existingReviewId, reviewData);
+        console.log('TrackRankingModal: Review updated successfully');
+      } else {
+        await reviewApi.createReview(reviewData);
+        console.log('TrackRankingModal: Review created successfully');
+      }
       
       // Mark that we've submitted this review
       setHasSubmittedReview(true);

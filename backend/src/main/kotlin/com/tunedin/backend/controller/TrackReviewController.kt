@@ -14,7 +14,8 @@ data class CreateReviewRequest(
     val spotifyTrackId: String,
     val opinion: Opinion,
     val description: String,
-    val rating: Double
+    val rating: Double,
+    val ranking: Int = 0
 )
 
 @RestController
@@ -34,9 +35,43 @@ class TrackReviewController(
             spotifyTrackId = request.spotifyTrackId,
             opinion = request.opinion,
             description = request.description,
-            rating = request.rating
+            rating = request.rating,
+            ranking = request.ranking
         )
         return ResponseEntity.ok(review)
+    }
+
+    @PutMapping("/{id}")
+    fun updateReview(
+        @PathVariable id: UUID,
+        @RequestBody request: CreateReviewRequest,
+        httpRequest: HttpServletRequest
+    ): ResponseEntity<Any> {
+        val cookiesInfo = httpRequest.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
+        val userId = httpRequest.cookies?.find { it.name == "userId" }?.value
+            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(SpotifyErrorResponse("User ID not found in cookies. Available cookies: [$cookiesInfo]"))
+
+        // Get the review to check if it exists and belongs to the user
+        val existingReview = trackReviewService.getReviewById(id)
+            ?: return ResponseEntity.notFound().build()
+
+        // Check if the review belongs to the user
+        if (existingReview.userId != userId) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(SpotifyErrorResponse("You are not authorized to update this review"))
+        }
+
+        val updatedReview = trackReviewService.updateReview(
+            id = id,
+            userId = userId,
+            spotifyTrackId = request.spotifyTrackId,
+            opinion = request.opinion,
+            description = request.description,
+            rating = request.rating,
+            ranking = request.ranking
+        )
+        return ResponseEntity.ok(updatedReview)
     }
 
     @GetMapping("/{id}")

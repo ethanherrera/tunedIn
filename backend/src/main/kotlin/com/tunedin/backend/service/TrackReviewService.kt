@@ -10,7 +10,7 @@ import java.util.UUID
 class TrackReviewService(
     private val trackReviewRepository: TrackReviewRepository
 ) {
-    fun createReview(userId: String, spotifyTrackId: String, opinion: Opinion, description: String, rating: Double): TrackReview {
+    fun createReview(userId: String, spotifyTrackId: String, opinion: Opinion, description: String, rating: Double, ranking: Int = 0): TrackReview {
         // Set the rating based on opinion
         val assignedRating = when (opinion) {
             Opinion.LIKED -> 10.0
@@ -26,6 +26,7 @@ class TrackReviewService(
             existingReview.opinion = opinion
             existingReview.description = description
             existingReview.rating = assignedRating // Use the opinion-based rating
+            existingReview.ranking = ranking
             // Don't update the createdAt timestamp to preserve the original review date
             return trackReviewRepository.save(existingReview)
         }
@@ -36,7 +37,8 @@ class TrackReviewService(
             spotifyTrackId = spotifyTrackId,
             opinion = opinion,
             description = description,
-            rating = assignedRating // Use the opinion-based rating
+            rating = assignedRating, // Use the opinion-based rating
+            ranking = ranking
         )
         return trackReviewRepository.save(review)
     }
@@ -68,5 +70,27 @@ class TrackReviewService(
             return true
         }
         return false
+    }
+
+    fun updateReview(id: UUID, userId: String, spotifyTrackId: String, opinion: Opinion, description: String, rating: Double, ranking: Int = 0): TrackReview? {
+        // Get the existing review
+        val existingReview = trackReviewRepository.findById(id).orElse(null) ?: return null
+        
+        // Set the rating based on opinion
+        val assignedRating = when (opinion) {
+            Opinion.LIKED -> 10.0
+            Opinion.NEUTRAL -> 7.0
+            Opinion.DISLIKE -> 4.0
+        }
+        
+        // Update the review fields
+        existingReview.spotifyTrackId = spotifyTrackId
+        existingReview.opinion = opinion
+        existingReview.description = description
+        existingReview.rating = assignedRating // Use the opinion-based rating
+        existingReview.ranking = ranking
+        // Don't update the createdAt timestamp to preserve the original review date
+        
+        return trackReviewRepository.save(existingReview)
     }
 } 

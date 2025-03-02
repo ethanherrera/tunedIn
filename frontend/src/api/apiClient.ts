@@ -187,5 +187,10 @@ export const reviewApi = {
   deleteReviewByTrackId: async (spotifyTrackId: string): Promise<{ success: boolean, message: string }> => {
     const response = await apiClient.delete<{ success: boolean, message: string }>(`/reviews/track/${spotifyTrackId}`);
     return response.data;
+  },
+
+  updateReview: async (reviewId: string, reviewData: CreateReviewRequest): Promise<TrackReview> => {
+    const response = await apiClient.put<TrackReview>(`/reviews/${reviewId}`, reviewData);
+    return response.data;
   }
 };

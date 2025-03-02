@@ -15,6 +15,7 @@ data class TrackReview(
     var opinion: Opinion,
     var description: String,
     var rating: Double = 5.0,
+    var ranking: Int = 0,
     var createdAt: Long = System.currentTimeMillis()
 ) {
     init {
@@ -23,6 +24,9 @@ data class TrackReview(
         }
         require(rating in 0.0..10.0) {
             "Rating must be between 0.0 and 10.0"
+        }
+        require(ranking >= 0) {
+            "Ranking must be a non-negative integer"
         }
     }
 }
