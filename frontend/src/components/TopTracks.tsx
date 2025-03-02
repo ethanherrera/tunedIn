@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { spotifyApi, reviewApi } from '../api/apiClient';
 import TrackDetailsModal from './TrackDetailsModal';
 import TrackRankingModal from './TrackRankingModal';
@@ -35,6 +35,8 @@ interface FilterOptions {
 const TopTracks: React.FC = () => {
   const [topTracks, setTopTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
+  const [hasMore, setHasMore] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState<boolean>(false);
@@ -47,10 +49,30 @@ const TopTracks: React.FC = () => {
     limit: 10,
     offset: 0
   });
+  
+  // Reference to the observer and the loading element
+  const observer = useRef<IntersectionObserver | null>(null);
+  const loadingElementRef = useCallback((node: HTMLDivElement | null) => {
+    if (loading || loadingMore) return;
+    if (observer.current) observer.current.disconnect();
+    
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        loadMoreTracks();
+      }
+    }, { threshold: 0.5 });
+    
+    if (node) observer.current.observe(node);
+  }, [loading, loadingMore, hasMore]);
 
-  const fetchTopTracks = async () => {
-    setLoading(true);
-    setError(null);
+  const fetchTopTracks = async (isInitialLoad = true) => {
+    if (isInitialLoad) {
+      setLoading(true);
+      setError(null);
+    } else {
+      setLoadingMore(true);
+    }
+    
     try {
       console.log('Fetching top tracks with filters:', filters);
       
@@ -76,20 +98,51 @@ const TopTracks: React.FC = () => {
         albumImageUrl: item.album.images[0]?.url || 'https://via.placeholder.com/300'
       }));
       
-      setTopTracks(tracks);
+      // Check if we've reached the end of available tracks
+      setHasMore(tracks.length === filters.limit);
+      
+      // If this is an initial load, replace tracks; otherwise append
+      if (isInitialLoad) {
+        setTopTracks(tracks);
+      } else {
+        setTopTracks(prevTracks => [...prevTracks, ...tracks]);
+      }
     } catch (err) {
       console.error('Failed to fetch top tracks:', err);
       setError('Failed to load your top tracks. Please try again.');
     } finally {
-      setLoading(false);
+      if (isInitialLoad) {
+        setLoading(false);
+      } else {
+        setLoadingMore(false);
+      }
     }
+  };
+
+  // Load more tracks when user scrolls to bottom
+  const loadMoreTracks = () => {
+    if (loading || loadingMore || !hasMore) return;
+    
+    setFilters(prev => ({
+      ...prev,
+      offset: prev.offset + prev.limit
+    }));
   };
 
   // Fetch top tracks when component mounts or filters change
   useEffect(() => {
-    console.log('Filters changed, current state:', filters);
-    fetchTopTracks();
+    // If offset is 0, it's an initial load (either first load or filter change)
+    // Otherwise, it's a "load more" action
+    const isInitialLoad = filters.offset === 0;
+    fetchTopTracks(isInitialLoad);
   }, [filters]);
+
+  // Reset tracks when time range or limit changes
+  useEffect(() => {
+    // This effect will run when timeRange or limit changes
+    // We don't need to do anything here as the filters effect will handle it
+    // Just making it explicit that we're watching these values
+  }, [filters.timeRange, filters.limit]);
 
   const handleTrackClick = async (track: Track) => {
     setSelectedTrack(track);
@@ -153,6 +206,8 @@ const TopTracks: React.FC = () => {
         [name]: value,
         offset: 0
       }));
+      // Reset hasMore when changing filters
+      setHasMore(true);
     } else {
       setFilters(prev => ({
         ...prev,
@@ -245,7 +300,10 @@ const TopTracks: React.FC = () => {
               Filters
             </button>
             <button 
-              onClick={fetchTopTracks}
+              onClick={() => {
+                setFilters(prev => ({ ...prev, offset: 0 }));
+                setHasMore(true);
+              }}
               disabled={loading}
               className="refresh-button"
               title="Refresh your top tracks"
@@ -258,7 +316,7 @@ const TopTracks: React.FC = () => {
         
         {error && <div className="error-message">{error}</div>}
         
-        {loading ? (
+        {loading && topTracks.length === 0 ? (
           <div className="loading-container">
             <div className="loading-spinner"></div>
             <p>Loading your top tracks...</p>
@@ -271,7 +329,7 @@ const TopTracks: React.FC = () => {
           <div className="tracks-list">
             {topTracks.map((track, index) => (
               <div 
-                key={track.spotifyId} 
+                key={`${track.spotifyId}-${index}`} 
                 className="track-item"
                 onClick={() => handleTrackClick(track)}
               >
@@ -285,7 +343,7 @@ const TopTracks: React.FC = () => {
                     </div>
                     <div className="rank-badge">
                       <span>
-                        #{filters.offset + index + 1}
+                        #{index + 1}
                       </span>
                     </div>
                   </div>
@@ -298,6 +356,21 @@ const TopTracks: React.FC = () => {
                 </div>
               </div>
             ))}
+            
+            {/* Loading indicator at the bottom */}
+            {!loading && (
+              <div 
+                ref={loadingElementRef} 
+                className="loading-more-container"
+              >
+                {loadingMore && (
+                  <div className="loading-spinner-small"></div>
+                )}
+                {!hasMore && topTracks.length > 0 && (
+                  <p className="end-message">You've reached the end of your top tracks!</p>
+                )}
+              </div>
+            )}
           </div>
         )}
 
