@@ -145,6 +145,49 @@ class SpotifyService(
         return response.body ?: throw RuntimeException("Failed to get track details")
     }
 
+    /**
+     * Get multiple tracks in a single request using Spotify's batch API
+     * @param trackIds List of Spotify track IDs (maximum 50)
+     * @param accessToken Spotify access token
+     * @param market Optional market code (ISO 3166-1 alpha-2 country code)
+     * @return List of Track objects
+     */
+    fun getTracksBatch(trackIds: List<String>, accessToken: String, market: String? = null): List<Track> {
+        if (trackIds.isEmpty()) {
+            return emptyList()
+        }
+        
+        if (trackIds.size > 50) {
+            throw IllegalArgumentException("Maximum of 50 track IDs allowed per request")
+        }
+        
+        val restTemplate = RestTemplate()
+        val headers = HttpHeaders().apply {
+            setBearerAuth(accessToken)
+        }
+        
+        val url = UriComponentsBuilder
+            .fromUriString("https://api.spotify.com/v1/tracks")
+            .queryParam("ids", trackIds.joinToString(","))
+            .apply { 
+                if (market != null) {
+                    queryParam("market", market)
+                }
+            }
+            .build()
+            .toUriString()
+        
+        val response = restTemplate.exchange(
+            url,
+            HttpMethod.GET,
+            HttpEntity<Any>(headers),
+            object : ParameterizedTypeReference<Map<String, List<Track>>>() {}
+        )
+        
+        val responseBody = response.body ?: throw RuntimeException("Failed to get tracks details")
+        return responseBody["tracks"] ?: throw RuntimeException("No tracks found in response")
+    }
+
     fun refreshAccessToken(refreshToken: String): SpotifyTokenResponse {
         val restTemplate = RestTemplate()
         

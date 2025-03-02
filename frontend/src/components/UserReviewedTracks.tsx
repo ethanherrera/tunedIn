@@ -50,15 +50,60 @@ const UserReviewedTracks: React.FC = () => {
     try {
       const userReviews = await reviewApi.getUserReviews();
       
-      // Create an array to hold reviews with track details
-      const reviewsWithTracks: ReviewWithTrack[] = [];
+      // If there are no reviews, return early
+      if (userReviews.length === 0) {
+        setReviews([]);
+        setLoading(false);
+        return;
+      }
       
-      // Fetch track details for each review
-      for (const review of userReviews) {
-        try {
-          const trackData = await spotifyApi.getTrack(review.spotifyTrackId);
-          
-          reviewsWithTracks.push({
+      // Extract all track IDs from the reviews
+      const trackIds = userReviews.map(review => review.spotifyTrackId);
+      
+      // Use the batch API to fetch all tracks at once
+      let tracksData: Record<string, any> = {};
+      
+      try {
+        // Fetch tracks in batches of 50 (Spotify API limit)
+        const batchSize = 50;
+        const trackBatches = [];
+        
+        for (let i = 0; i < trackIds.length; i += batchSize) {
+          trackBatches.push(trackIds.slice(i, i + batchSize));
+        }
+        
+        // Fetch all batches in parallel
+        const batchResults = await Promise.all(
+          trackBatches.map(batch => spotifyApi.getTracksBatch(batch))
+        );
+        
+        // Combine all batch results
+        const allTracks = batchResults.flatMap(result => result.tracks);
+        
+        // Create a map of track ID to track data for easy lookup
+        tracksData = allTracks.reduce((acc, track) => {
+          acc[track.id] = track;
+          return acc;
+        }, {} as Record<string, any>);
+      } catch (batchError) {
+        console.error('Failed to fetch tracks in batch:', batchError);
+        // Fall back to individual fetches if batch fails
+        for (const review of userReviews) {
+          try {
+            const trackData = await spotifyApi.getTrack(review.spotifyTrackId);
+            tracksData[review.spotifyTrackId] = trackData;
+          } catch (trackError) {
+            console.error(`Failed to fetch track ${review.spotifyTrackId}:`, trackError);
+          }
+        }
+      }
+      
+      // Create an array to hold reviews with track details
+      const reviewsWithTracks: ReviewWithTrack[] = userReviews.map(review => {
+        const trackData = tracksData[review.spotifyTrackId];
+        
+        if (trackData) {
+          return {
             ...review,
             track: {
               albumImageUrl: trackData.album.images[0]?.url || 'https://via.placeholder.com/300',
@@ -67,12 +112,10 @@ const UserReviewedTracks: React.FC = () => {
               trackName: trackData.name,
               spotifyId: trackData.id
             }
-          });
-        } catch (trackError) {
-          console.error(`Failed to fetch track ${review.spotifyTrackId}:`, trackError);
-          
-          // Add the review with placeholder track data
-          reviewsWithTracks.push({
+          };
+        } else {
+          // Fallback for tracks that couldn't be fetched
+          return {
             ...review,
             track: {
               albumImageUrl: 'https://via.placeholder.com/300',
@@ -81,9 +124,9 @@ const UserReviewedTracks: React.FC = () => {
               trackName: 'Unknown Track',
               spotifyId: review.spotifyTrackId
             }
-          });
+          };
         }
-      }
+      });
       
       // Sort reviews by opinion buckets (LIKED first, then NEUTRAL, then DISLIKE)
       // Within each bucket, sort by ranking (lowest to highest)

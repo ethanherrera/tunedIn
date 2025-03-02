@@ -162,6 +162,41 @@ class SpotifyController(
         }
     }
     
+    @GetMapping("/tracks")
+    fun getTracksBatch(
+        @RequestParam ids: String,
+        @RequestParam(required = false) market: String?,
+        request: HttpServletRequest
+    ): ResponseEntity<*> {
+        try {
+            // Get access token from cookie
+            val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
+            val accessToken = request.cookies?.find { it.name == "accessToken" }?.value
+                ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(SpotifyErrorResponse("Access token not found in cookies. Available cookies: [$cookiesInfo]"))
+            
+            // Split the comma-separated IDs into a list
+            val trackIds = ids.split(",").map { it.trim() }
+            
+            if (trackIds.isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(SpotifyErrorResponse("No track IDs provided"))
+            }
+            
+            if (trackIds.size > 50) {
+                return ResponseEntity.badRequest()
+                    .body(SpotifyErrorResponse("Maximum of 50 track IDs allowed per request"))
+            }
+            
+            val tracks = spotifyService.getTracksBatch(trackIds, accessToken, market)
+            return ResponseEntity.ok(mapOf("tracks" to tracks))
+        } catch (e: Exception) {
+            val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(SpotifyErrorResponse("Failed to get tracks: ${e.message}. Available cookies: [$cookiesInfo]"))
+        }
+    }
+    
     @GetMapping("/me/top/{type}")
     fun getUserTopItems(
         @PathVariable type: String,

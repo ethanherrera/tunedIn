@@ -158,6 +158,23 @@ export const spotifyApi = {
     return response.data;
   },
   
+  getTracksBatch: async (trackIds: string[]) => {
+    if (trackIds.length === 0) {
+      return { tracks: [] };
+    }
+    
+    if (trackIds.length > 50) {
+      throw new Error('Maximum of 50 track IDs allowed per request');
+    }
+    
+    const response = await apiClient.get<{ tracks: Track[] }>('/spotify/tracks', {
+      params: {
+        ids: trackIds.join(',')
+      }
+    });
+    return response.data;
+  },
+  
   getMe: async () => {
     const response = await apiClient.get<UserProfile>('/spotify/me');
     return response.data;

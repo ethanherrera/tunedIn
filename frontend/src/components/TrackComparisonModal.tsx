@@ -136,19 +136,70 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
         return;
       }
       
+      // Filter out the current track being reviewed if it's in the user's reviews
+      const filteredReviews = userReviews.filter(review => 
+        review.spotifyTrackId !== initialTrack.spotifyId
+      );
+      
+      if (filteredReviews.length === 0) {
+        // If no reviewed tracks after filtering, just show a message
+        console.log('TrackComparisonModal: No tracks available for comparison after filtering');
+        setNoTracksAvailable(true);
+        setFinalRanking(1); // First track gets ranking 1
+        setLoading(false);
+        setContentReady(true);
+        setAllComparisonsCompleted(true);
+        return;
+      }
+      
+      // Extract all track IDs from the filtered reviews
+      const trackIds = filteredReviews.map(review => review.spotifyTrackId);
+      
+      // Create a map to store track data
+      const tracksDataMap: Record<string, any> = {};
+      
+      try {
+        // Fetch tracks in batches of 50 (Spotify API limit)
+        const batchSize = 50;
+        const trackBatches = [];
+        
+        for (let i = 0; i < trackIds.length; i += batchSize) {
+          trackBatches.push(trackIds.slice(i, i + batchSize));
+        }
+        
+        // Fetch all batches in parallel
+        const batchResults = await Promise.all(
+          trackBatches.map(batch => spotifyApi.getTracksBatch(batch))
+        );
+        
+        // Combine all batch results
+        const allTracks = batchResults.flatMap(result => result.tracks);
+        
+        // Create a map of track ID to track data for easy lookup
+        allTracks.forEach(track => {
+          tracksDataMap[track.id] = track;
+        });
+      } catch (batchError) {
+        console.error('Failed to fetch tracks in batch:', batchError);
+        // Fall back to individual fetches if batch fails
+        for (const trackId of trackIds) {
+          try {
+            const trackData = await spotifyApi.getTrack(trackId);
+            tracksDataMap[trackId] = trackData;
+          } catch (trackError) {
+            console.error(`Failed to fetch track ${trackId}:`, trackError);
+          }
+        }
+      }
+      
       // Create an array to hold tracks with details
       const reviewedTracks: ReviewWithTrack[] = [];
       
-      // Fetch track details for each review
-      for (const review of userReviews) {
-        // Skip the current track being reviewed if it's in the user's reviews
-        if (review.spotifyTrackId === initialTrack.spotifyId) {
-          continue;
-        }
+      // Map the reviews to tracks with details
+      for (const review of filteredReviews) {
+        const trackData = tracksDataMap[review.spotifyTrackId];
         
-        try {
-          const trackData = await spotifyApi.getTrack(review.spotifyTrackId);
-          
+        if (trackData) {
           reviewedTracks.push({
             albumImageUrl: trackData.album.images[0]?.url || '',
             albumName: trackData.album.name,
@@ -158,15 +209,12 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
             ranking: review.ranking,
             reviewId: review.id
           });
-        } catch (trackError) {
-          console.error(`Failed to fetch track ${review.spotifyTrackId}:`, trackError);
-          // Skip tracks that fail to load
         }
       }
       
       if (reviewedTracks.length === 0) {
-        // If no reviewed tracks, just show a message
-        console.log('TrackComparisonModal: No tracks available for comparison after filtering');
+        // If no reviewed tracks after fetching data, just show a message
+        console.log('TrackComparisonModal: No tracks available for comparison after fetching data');
         setNoTracksAvailable(true);
         setFinalRanking(1); // First track gets ranking 1
         setLoading(false);
