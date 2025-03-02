@@ -164,7 +164,7 @@ const TopTracks: React.FC = () => {
   const timeRangeOptions = [
     { value: 'short_term', label: 'Last 4 Weeks' },
     { value: 'medium_term', label: 'Last 6 Months' },
-    { value: 'long_term', label: 'All Time' }
+    { value: 'long_term', label: 'Last Year' }
   ];
 
   const limitOptions = [5, 10, 20, 50];
@@ -194,7 +194,7 @@ const TopTracks: React.FC = () => {
           </div>
           
           <div className="filter-section">
-            <label>Number of Tracks</label>
+            <label>Number of Tracks Per Page</label>
             <div className="filter-options">
               {limitOptions.map(limit => (
                 <button
@@ -209,7 +209,7 @@ const TopTracks: React.FC = () => {
           </div>
           
           <div className="filter-section">
-            <label>Offset</label>
+            <label>Page</label>
             <div className="offset-controls">
               <button 
                 className="offset-button"

@@ -287,7 +287,7 @@ const UserReviewedTracks: React.FC = () => {
                 </p>
                 
                 {/* Add review action buttons */}
-                <div className="track-list-review-actions">
+                <div className="review-actions">
                   <button 
                     className="track-list-delete-button"
                     onClick={(e) => handleDeleteReviewFromList(review, e)}
