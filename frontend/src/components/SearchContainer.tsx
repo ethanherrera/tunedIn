@@ -36,6 +36,24 @@ const SearchContainer: React.FC = () => {
   const [reviewData, setReviewData] = useState<ReviewData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Example album IDs for testing
+  const exampleAlbumIds = [
+    '382ObEPsp2rxGrnsizN5TX', // Kendrick Lamar - DAMN.
+    '1A2GTWGtFfWp7KSQTwWOyo', // Taylor Swift - 1989
+    '2noRn2Aes5aoNVsU6iWThc'  // The Weeknd - After Hours
+  ];
+
+  // Function to test the albums batch API
+  const testAlbumsBatchApi = async () => {
+    try {
+      console.log('Fetching albums batch with IDs:', exampleAlbumIds);
+      const response = await spotifyApi.getAlbumsBatch(exampleAlbumIds);
+      console.log('Albums batch response:', response);
+    } catch (error) {
+      console.error('Failed to fetch albums batch:', error);
+    }
+  };
+
   useEffect(() => {
     const searchSpotify = async () => {
       if (searchTerm.trim() === '') {
@@ -176,6 +194,24 @@ const SearchContainer: React.FC = () => {
           </svg>
         </div>
       </div>
+      
+      {/* Temporary button for testing albums batch API */}
+      <button 
+        className="test-albums-button"
+        onClick={testAlbumsBatchApi}
+        style={{
+          marginTop: '10px',
+          padding: '8px 16px',
+          backgroundColor: '#1DB954',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontWeight: 'bold'
+        }}
+      >
+        Test Albums Batch API
+      </button>
       
       {searchResults.length > 0 && isFocused && (
         <div className="search-results">

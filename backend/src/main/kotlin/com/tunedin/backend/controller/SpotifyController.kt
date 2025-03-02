@@ -226,4 +226,39 @@ class SpotifyController(
                 .body(SpotifyErrorResponse("Failed to get user's top $type: ${e.message}. Available cookies: [$cookiesInfo]"))
         }
     }
+    
+    @GetMapping("/albums")
+    fun getAlbumsBatch(
+        @RequestParam ids: String,
+        @RequestParam(required = false) market: String?,
+        request: HttpServletRequest
+    ): ResponseEntity<*> {
+        try {
+            // Get access token from cookie
+            val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
+            val accessToken = request.cookies?.find { it.name == "accessToken" }?.value
+                ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(SpotifyErrorResponse("Access token not found in cookies. Available cookies: [$cookiesInfo]"))
+            
+            // Split the comma-separated IDs into a list
+            val albumIds = ids.split(",").map { it.trim() }
+            
+            if (albumIds.isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(SpotifyErrorResponse("No album IDs provided"))
+            }
+            
+            if (albumIds.size > 20) {
+                return ResponseEntity.badRequest()
+                    .body(SpotifyErrorResponse("Maximum of 20 album IDs allowed per request"))
+            }
+            
+            val albums = spotifyService.getAlbumsBatch(albumIds, accessToken, market)
+            return ResponseEntity.ok(mapOf("albums" to albums))
+        } catch (e: Exception) {
+            val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(SpotifyErrorResponse("Failed to get albums: ${e.message}. Available cookies: [$cookiesInfo]"))
+        }
+    }
 } 

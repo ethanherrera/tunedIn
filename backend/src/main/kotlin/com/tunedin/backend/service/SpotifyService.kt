@@ -251,7 +251,50 @@ class SpotifyService(
                 )
                 response.body ?: throw RuntimeException("No response body from Spotify top tracks API")
             }
-            else -> throw IllegalArgumentException("Invalid type: $type. Must be 'artists' or 'tracks'")
+            else -> throw IllegalArgumentException("Invalid type parameter. Must be 'artists' or 'tracks'")
         }
+    }
+    
+    /**
+     * Get multiple albums in a single request using Spotify's batch API
+     * @param albumIds List of Spotify album IDs (maximum 20)
+     * @param accessToken Spotify access token
+     * @param market Optional market code (ISO 3166-1 alpha-2 country code)
+     * @return List of Album objects
+     */
+    fun getAlbumsBatch(albumIds: List<String>, accessToken: String, market: String? = null): List<Album> {
+        if (albumIds.isEmpty()) {
+            return emptyList()
+        }
+        
+        if (albumIds.size > 20) {
+            throw IllegalArgumentException("Maximum of 20 album IDs allowed per request")
+        }
+        
+        val restTemplate = RestTemplate()
+        val headers = HttpHeaders().apply {
+            setBearerAuth(accessToken)
+        }
+        
+        val url = UriComponentsBuilder
+            .fromUriString("https://api.spotify.com/v1/albums")
+            .queryParam("ids", albumIds.joinToString(","))
+            .apply { 
+                if (market != null) {
+                    queryParam("market", market)
+                }
+            }
+            .build()
+            .toUriString()
+        
+        val response = restTemplate.exchange(
+            url,
+            HttpMethod.GET,
+            HttpEntity<Any>(headers),
+            object : ParameterizedTypeReference<Map<String, List<Album>>>() {}
+        )
+        
+        val responseBody = response.body ?: throw RuntimeException("Failed to get albums details")
+        return responseBody["albums"] ?: throw RuntimeException("No albums found in response")
     }
 } 

@@ -193,6 +193,27 @@ export const spotifyApi = {
       }
     });
     return response.data;
+  },
+  
+  getAlbumsBatch: async (albumIds: string[], market?: string) => {
+    if (albumIds.length === 0) {
+      return { albums: [] };
+    }
+    
+    if (albumIds.length > 20) {
+      throw new Error('Maximum of 20 album IDs allowed per request');
+    }
+    
+    const params: { ids: string; market?: string } = {
+      ids: albumIds.join(',')
+    };
+    
+    if (market) {
+      params.market = market;
+    }
+    
+    const response = await apiClient.get<{ albums: Album[] }>('/spotify/albums', { params });
+    return response.data;
   }
 };
 
