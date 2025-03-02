@@ -297,4 +297,36 @@ class SpotifyService(
         val responseBody = response.body ?: throw RuntimeException("Failed to get albums details")
         return responseBody["albums"] ?: throw RuntimeException("No albums found in response")
     }
+    
+    /**
+     * Get a single album with its tracks
+     * @param albumId Spotify album ID
+     * @param accessToken Spotify access token
+     * @param market Optional market code (ISO 3166-1 alpha-2 country code)
+     * @return Album object with tracks
+     */
+    fun getAlbum(albumId: String, accessToken: String, market: String? = null): Album {
+        val restTemplate = RestTemplate()
+        val headers = HttpHeaders().apply {
+            setBearerAuth(accessToken)
+        }
+        
+        val urlBuilder = UriComponentsBuilder
+            .fromUriString("https://api.spotify.com/v1/albums/$albumId")
+        
+        if (market != null) {
+            urlBuilder.queryParam("market", market)
+        }
+        
+        val url = urlBuilder.build().toUriString()
+        
+        val response = restTemplate.exchange(
+            url,
+            HttpMethod.GET,
+            HttpEntity<Any>(headers),
+            Album::class.java
+        )
+        
+        return response.body ?: throw RuntimeException("Failed to get album details")
+    }
 } 

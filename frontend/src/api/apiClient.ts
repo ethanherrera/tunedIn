@@ -33,6 +33,21 @@ interface Album {
   release_date: string;
   images: Image[];
   artists: Artist[];
+  tracks?: {
+    href: string;
+    items: Array<{
+      id: string;
+      name: string;
+      artists: Artist[];
+      uri: string;
+      href: string;
+    }>;
+    limit: number;
+    next: string | null;
+    offset: number;
+    previous: string | null;
+    total: number;
+  };
 }
 
 interface Track {
@@ -213,6 +228,13 @@ export const spotifyApi = {
     }
     
     const response = await apiClient.get<{ albums: Album[] }>('/spotify/albums', { params });
+    return response.data;
+  },
+  
+  getAlbum: async (albumId: string, market?: string) => {
+    const response = await apiClient.get<Album>(`/spotify/albums/${albumId}`, {
+      params: market ? { market } : undefined
+    });
     return response.data;
   }
 };

@@ -19,6 +19,8 @@
   width: 90%;
   max-width: 550px;
   position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .album-details-modal-close-button {
@@ -120,6 +122,101 @@
   color: white;
 }
 
+/* Tracks section styles */
+.album-details-modal-tracks-container {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #3f3f46;
+  width: 100%;
+}
+
+.album-details-modal-tracks-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.album-details-modal-loading {
+  color: #a1a1aa;
+  text-align: center;
+  padding: 1rem;
+}
+
+.album-details-modal-no-tracks {
+  color: #a1a1aa;
+  text-align: center;
+  padding: 1rem;
+}
+
+.album-details-modal-tracks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.album-details-modal-track-card {
+  width: 100%;
+}
+
+.album-details-modal-track-card-inner {
+  display: flex;
+  align-items: center;
+  background-color: #27272a;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.album-details-modal-track-card-inner:hover {
+  background-color: #323238;
+  transform: translateY(-2px);
+}
+
+.album-details-modal-track-cover {
+  position: relative;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+}
+
+.album-details-modal-track-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.album-details-modal-track-info {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.album-details-modal-track-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: white;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0 0 0.25rem 0;
+  letter-spacing: 0.01em;
+}
+
+.album-details-modal-track-artist {
+  color: #c084fc;
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+  font-weight: 500;
+}
+
 /* Responsive adjustments */
 @media (min-width: 768px) {
   .album-details-modal-content-inner {
@@ -129,5 +226,9 @@
   
   .album-details-modal-info {
     flex: 1;
+  }
+  
+  .album-details-modal-content {
+    max-width: 650px;
   }
 } 
