@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import './SearchContainer.css';
 import TrackRankingModal from './TrackRankingModal';
 import TrackCardSearchResult from './TrackCardSearchResult';
+import AlbumCard from './AlbumCard';
 import TrackDetailsModal from './TrackDetailsModal';
+import AlbumDetailsModal from './AlbumDetailsModal';
 import { spotifyApi, reviewApi } from '../api/apiClient';
 
 // Updated Track interface to match what we need from Spotify's response
@@ -13,6 +15,71 @@ interface Track {
   trackName: string;
   spotifyId: string;
 }
+
+// Interface for album search results
+interface Album {
+  id: string;
+  name: string;
+  uri: string;
+  href: string;
+  album_type: string;
+  release_date: string;
+  release_date_precision: string;
+  total_tracks: number;
+  available_markets: string[];
+  images: Array<{
+    url: string;
+    height?: number;
+    width?: number;
+  }>;
+  artists: Array<{
+    id: string;
+    name: string;
+    uri: string;
+    href: string;
+  }>;
+  external_urls: { [key: string]: string };
+  type: string;
+  copyrights?: Array<{
+    text: string;
+    type: string;
+  }>;
+  external_ids?: { [key: string]: string };
+  genres?: string[];
+  label?: string;
+  popularity?: number;
+  restrictions?: {
+    reason: string;
+  };
+  tracks?: {
+    href: string;
+    items: Array<any>;
+    limit: number;
+    next: string | null;
+    offset: number;
+    previous: string | null;
+    total: number;
+  };
+}
+
+// Interface for search result items
+interface SearchResultItem {
+  type: 'track' | 'album';
+  data: Track | Album;
+}
+
+// Alternative approach with discriminated union
+interface TrackSearchResult {
+  type: 'track';
+  data: Track;
+}
+
+interface AlbumSearchResult {
+  type: 'album';
+  data: Album;
+}
+
+type SearchResult = TrackSearchResult | AlbumSearchResult;
 
 // Interface for review data
 interface ReviewData {
@@ -28,31 +95,15 @@ interface ReviewData {
 
 const SearchContainer: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<Track[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
+  const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isAlbumDetailsModalOpen, setIsAlbumDetailsModalOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [reviewData, setReviewData] = useState<ReviewData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Example album IDs for testing
-  const exampleAlbumIds = [
-    '382ObEPsp2rxGrnsizN5TX', // Kendrick Lamar - DAMN.
-    '1A2GTWGtFfWp7KSQTwWOyo', // Taylor Swift - 1989
-    '2noRn2Aes5aoNVsU6iWThc'  // The Weeknd - After Hours
-  ];
-
-  // Function to test the albums batch API
-  const testAlbumsBatchApi = async () => {
-    try {
-      console.log('Fetching albums batch with IDs:', exampleAlbumIds);
-      const response = await spotifyApi.getAlbumsBatch(exampleAlbumIds);
-      console.log('Albums batch response:', response);
-    } catch (error) {
-      console.error('Failed to fetch albums batch:', error);
-    }
-  };
 
   useEffect(() => {
     const searchSpotify = async () => {
@@ -64,22 +115,40 @@ const SearchContainer: React.FC = () => {
       try {
         const response = await spotifyApi.search({
           q: searchTerm,
-          type: 'track', // Only search for tracks
+          type: 'track,album', // Search for both tracks and albums
           limit: 5      // Limit to top 5 results
         });
 
-        // Transform Spotify track results to match our Track interface
-        const transformedTracks: Track[] = response.tracks?.items.map(track => ({
-          spotifyId: track.id,
-          trackName: track.name,
-          artistName: track.artists[0].name,
-          albumName: track.album.name,
-          albumImageUrl: track.album.images[0]?.url || ''
-        })) || [];
+        const results: SearchResult[] = [];
 
-        setSearchResults(transformedTracks);
+        // Transform Spotify track results
+        if (response.tracks?.items) {
+          const transformedTracks: TrackSearchResult[] = response.tracks.items.map(track => ({
+            type: 'track',
+            data: {
+              spotifyId: track.id,
+              trackName: track.name,
+              artistName: track.artists[0].name,
+              albumName: track.album.name,
+              albumImageUrl: track.album.images[0]?.url || ''
+            }
+          }));
+          results.push(...transformedTracks);
+        }
+
+        // Transform Spotify album results
+        if (response.albums?.items) {
+          const transformedAlbums = response.albums.items.map(album => ({
+            type: 'album' as const,
+            data: album as Album
+          }));
+          results.push(...transformedAlbums);
+        }
+
+        // Sort results to interleave tracks and albums
+        setSearchResults(results);
       } catch (error) {
-        console.error('Failed to search tracks:', error);
+        console.error('Failed to search:', error);
         setSearchResults([]);
       }
     };
@@ -140,9 +209,21 @@ const SearchContainer: React.FC = () => {
     setIsFocused(false);
   };
 
+  const handleAlbumClick = (album: Album) => {
+    setSelectedAlbum(album);
+    setIsAlbumDetailsModalOpen(true);
+    setSearchTerm('');
+    setSearchResults([]);
+    setIsFocused(false);
+  };
+
   const handleDetailsModalClose = () => {
     setIsDetailsModalOpen(false);
     setReviewData(null);
+  };
+
+  const handleAlbumDetailsModalClose = () => {
+    setIsAlbumDetailsModalOpen(false);
   };
 
   const handleReviewClick = () => {
@@ -171,7 +252,7 @@ const SearchContainer: React.FC = () => {
         <input
           type="text"
           className="search-input"
-          placeholder="Search for your song..."
+          placeholder="Search for songs or albums..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onFocus={() => setIsFocused(true)}
@@ -195,32 +276,21 @@ const SearchContainer: React.FC = () => {
         </div>
       </div>
       
-      {/* Temporary button for testing albums batch API */}
-      <button 
-        className="test-albums-button"
-        onClick={testAlbumsBatchApi}
-        style={{
-          marginTop: '10px',
-          padding: '8px 16px',
-          backgroundColor: '#1DB954',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          fontWeight: 'bold'
-        }}
-      >
-        Test Albums Batch API
-      </button>
-      
       {searchResults.length > 0 && isFocused && (
         <div className="search-results">
-          {searchResults.map((track) => (
-            <div key={track.spotifyId} className="search-result-item">
-              <TrackCardSearchResult 
-                track={track} 
-                onClick={handleTrackClick}
-              />
+          {searchResults.map((item) => (
+            <div key={item.type === 'track' ? `track-${(item.data as Track).spotifyId}` : `album-${(item.data as Album).id}`} className="search-result-item">
+              {item.type === 'track' ? (
+                <TrackCardSearchResult 
+                  track={item.data as Track} 
+                  onClick={handleTrackClick}
+                />
+              ) : (
+                <AlbumCard 
+                  album={item.data as Album} 
+                  onClick={handleAlbumClick}
+                />
+              )}
             </div>
           ))}
         </div>
@@ -249,6 +319,14 @@ const SearchContainer: React.FC = () => {
             track={selectedTrack}
           />
         </>
+      )}
+
+      {selectedAlbum && (
+        <AlbumDetailsModal
+          isOpen={isAlbumDetailsModalOpen}
+          onClose={handleAlbumDetailsModalClose}
+          album={selectedAlbum}
+        />
       )}
     </div>
   );

@@ -99,4 +99,70 @@
 .search-track-card .album-cover {
   width: 3rem;
   height: 3rem;
+}
+
+/* Album card styles in search results */
+.search-results .album-card {
+  margin: 0;
+  max-width: none;
+  width: 100%;
+}
+
+.search-results .album-card .album-card-inner {
+  background-color: transparent;
+  box-shadow: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+}
+
+.search-results .album-card .album-card-inner:hover {
+  box-shadow: none;
+}
+
+.search-results .album-card .album-card-cover {
+  width: 3rem;
+  height: 3rem;
+  min-width: 3rem;
+  margin-right: 1rem;
+}
+
+.search-results .album-card .album-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0.25rem;
+}
+
+.search-results .album-card .album-card-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.search-results .album-card .album-card-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-results .album-card .album-card-artist {
+  font-size: 0.8rem;
+  color: #a1a1aa;
+  margin: 0.25rem 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-results .album-card .album-card-type {
+  font-size: 0.7rem;
+  color: #71717a;
+  margin: 0.25rem 0 0;
+  text-transform: capitalize;
 } 

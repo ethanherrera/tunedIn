@@ -144,7 +144,7 @@ export const spotifyApi = {
     const response = await apiClient.get<SpotifySearchResponse>('/spotify/search', {
       params: {
         q: params.q,
-        type: params.type || 'track,album,artist,playlist',
+        type: params.type || 'track,album',
         limit: params.limit || 20,
         offset: params.offset || 0,
         market: params.market
