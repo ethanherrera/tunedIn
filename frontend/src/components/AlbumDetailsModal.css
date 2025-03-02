@@ -207,16 +207,6 @@
   letter-spacing: 0.01em;
 }
 
-.album-details-modal-track-artist {
-  color: #c084fc;
-  font-size: 0.8rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin: 0;
-  font-weight: 500;
-}
-
 /* Responsive adjustments */
 @media (min-width: 768px) {
   .album-details-modal-content-inner {

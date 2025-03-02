@@ -152,7 +152,6 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
                     <div className="album-details-modal-track-info">
                       <div>
                         <h3 className="album-details-modal-track-name">{track.trackName}</h3>
-                        <p className="album-details-modal-track-artist">{track.artistName}</p>
                       </div>
                     </div>
                   </div>
