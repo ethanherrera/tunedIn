@@ -1,5 +1,5 @@
 import React from 'react';
-import { spotifyApi } from '../api/apiClient';
+import { spotifyApi } from '../../api/apiClient';
 import './LoginPage.css';
 
 const LoginPage: React.FC = () => {

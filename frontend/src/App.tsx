@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import SearchContainer from './components/SearchContainer';
-import UserReviewedTracks from './components/UserReviewedTracks';
-import TopTracks from './components/TopTracks';
-import LoginPage from './components/LoginPage';
+import SearchContainer from './components/searchComponents/SearchContainer';
+import UserReviewedTracks from './components/reviewComponents/UserReviewedTracks';
+import TopTracks from './components/topTracksComponents/TopTracks';
+import LoginPage from './components/loginComponents/LoginPage';
 import { spotifyApi } from './api/apiClient';
 import './App.css';
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './TrackCard.css';
 import TrackRankingModal from './TrackRankingModal';
-import trackData from '../data/hard-coded-tracks.json';
+import trackData from '../../data/hard-coded-tracks.json';
 
 const TrackCard = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './AlbumDetailsModal.css';
-import { spotifyApi } from '../api/apiClient';
-import TrackDetailsModal from './TrackDetailsModal';
-import TrackRankingModal from './TrackRankingModal';
+import { spotifyApi } from '../../api/apiClient';
+import TrackDetailsModal from '../trackComponents/TrackDetailsModal';
+import TrackRankingModal from '../trackComponents/TrackRankingModal';
 
 interface Track {
   albumImageUrl: string;

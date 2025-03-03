@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './TrackRankingModal.css';
-import { reviewApi } from '../api/apiClient';
+import { reviewApi } from '../../api/apiClient';
 import TrackComparisonModal from './TrackComparisonModal';
 
 interface TrackRankingModalProps {

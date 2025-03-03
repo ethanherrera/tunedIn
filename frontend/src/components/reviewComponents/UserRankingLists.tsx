@@ -1,6 +1,6 @@
 import React from 'react';
 import './UserRankingLists.css';
-import userRankings from '../data/user-rankings.json';
+import userRankings from '../../data/user-rankings.json';
 
 const UserRankingLists: React.FC = () => {
   return (

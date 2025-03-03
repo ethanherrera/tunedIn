@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { reviewApi, spotifyApi } from '../api/apiClient';
-import TrackCardSearchResult from './TrackCardSearchResult';
-import TrackDetailsModal from './TrackDetailsModal';
-import TrackRankingModal from './TrackRankingModal';
+import { reviewApi, spotifyApi } from '../../api/apiClient';
+import TrackCardSearchResult from '../searchComponents/TrackCardSearchResult';
+import TrackDetailsModal from '../trackComponents/TrackDetailsModal';
+import TrackRankingModal from '../trackComponents/TrackRankingModal';
 import { FiRefreshCw, FiShuffle } from 'react-icons/fi';
 import './UserReviewedTracks.css';
 

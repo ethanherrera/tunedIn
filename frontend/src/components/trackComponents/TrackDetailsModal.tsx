@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './TrackDetailsModal.css';
-import { reviewApi } from '../api/apiClient';
+import { reviewApi } from '../../api/apiClient';
 
 interface TrackDetailsModalProps {
   isOpen: boolean;

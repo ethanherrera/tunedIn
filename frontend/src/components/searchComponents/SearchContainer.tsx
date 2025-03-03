@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './SearchContainer.css';
-import TrackRankingModal from './TrackRankingModal';
+import TrackRankingModal from '../trackComponents/TrackRankingModal';
 import TrackCardSearchResult from './TrackCardSearchResult';
-import AlbumCard from './AlbumCard';
-import TrackDetailsModal from './TrackDetailsModal';
-import AlbumDetailsModal from './AlbumDetailsModal';
-import { spotifyApi, reviewApi } from '../api/apiClient';
+import AlbumCard from '../albumComponents/AlbumCard';
+import TrackDetailsModal from '../trackComponents/TrackDetailsModal';
+import AlbumDetailsModal from '../albumComponents/AlbumDetailsModal';
+import { spotifyApi, reviewApi } from '../../api/apiClient';
 
 // Updated Track interface to match what we need from Spotify's response
 interface Track {

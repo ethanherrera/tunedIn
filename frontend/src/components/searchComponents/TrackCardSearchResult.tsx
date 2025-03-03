@@ -1,5 +1,5 @@
 import React from 'react';
-import './TrackCard.css';
+import '../trackComponents/TrackCard.css';
 
 interface TrackCardSearchResultProps {
   track: {

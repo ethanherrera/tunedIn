@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { spotifyApi, reviewApi } from '../api/apiClient';
-import TrackDetailsModal from './TrackDetailsModal';
-import TrackRankingModal from './TrackRankingModal';
+import { spotifyApi, reviewApi } from '../../api/apiClient';
+import TrackDetailsModal from '../trackComponents/TrackDetailsModal';
+import TrackRankingModal from '../trackComponents/TrackRankingModal';
 import { FiRefreshCw, FiFilter, FiChevronRight, FiChevronLeft } from 'react-icons/fi';
 import './TopTracks.css';
 

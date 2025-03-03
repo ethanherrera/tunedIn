@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './TrackComparisonModal.css';
-import { reviewApi, spotifyApi } from '../api/apiClient';
+import { reviewApi, spotifyApi } from '../../api/apiClient';
 
 interface Track {
   albumImageUrl: string;
