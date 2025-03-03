@@ -104,6 +104,24 @@
   border-top: 1px solid #3f3f46;
 }
 
+.album-details-modal-details-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.album-details-modal-details-left {
+  flex: 1;
+}
+
+.album-details-modal-details-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-left: 1rem;
+  min-width: 120px;
+}
+
 .album-details-modal-type,
 .album-details-modal-tracks,
 .album-details-modal-release-date {
@@ -120,6 +138,20 @@
 
 .album-details-modal-value {
   color: white;
+}
+
+.album-details-modal-score-placeholder {
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+}
+
+.album-details-modal-score-unlock-text {
+  font-size: 0.75rem;
+  color: #a1a1aa;
+  margin: 0.5rem 0 0;
+  font-style: italic;
+  text-align: center;
 }
 
 /* Tracks section styles */
@@ -241,5 +273,25 @@
   
   .album-details-modal-content {
     max-width: 650px;
+  }
+}
+
+@media (max-width: 480px) {
+  .album-details-modal-details-row {
+    flex-direction: column;
+  }
+  
+  .album-details-modal-details-right {
+    flex-direction: row;
+    margin-left: 0;
+    margin-top: 1rem;
+    width: 100%;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  
+  .album-details-modal-score-unlock-text {
+    margin: 0 0 0 0.75rem;
+    text-align: left;
   }
 } 

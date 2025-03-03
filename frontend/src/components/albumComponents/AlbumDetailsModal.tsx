@@ -44,6 +44,9 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
   const [isTrackDetailsModalOpen, setIsTrackDetailsModalOpen] = useState(false);
   const [isTrackRankingModalOpen, setIsTrackRankingModalOpen] = useState(false);
   const [trackReviews, setTrackReviews] = useState<Record<string, any | null>>({});
+  const [albumAverageScore, setAlbumAverageScore] = useState<number | null>(null);
+  const [reviewedTracksCount, setReviewedTracksCount] = useState(0);
+  const [tracksNeededForScore, setTracksNeededForScore] = useState(0);
 
   useEffect(() => {
     if (isOpen && album.id) {
@@ -56,6 +59,10 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
       fetchTrackReviews();
     }
   }, [tracks]);
+
+  useEffect(() => {
+    calculateAlbumScore();
+  }, [trackReviews]);
 
   const fetchAlbumTracks = async () => {
     setIsLoading(true);
@@ -112,6 +119,37 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
     }
   };
 
+  const calculateAlbumScore = () => {
+    if (!tracks.length) return;
+    
+    let reviewedCount = 0;
+    let totalScore = 0;
+    
+    // Count reviewed tracks and sum up their scores
+    tracks.forEach(track => {
+      const trackReview = trackReviews[track.spotifyId];
+      if (Array.isArray(trackReview) && trackReview.length > 0 && trackReview[0].rating !== undefined) {
+        reviewedCount++;
+        totalScore += trackReview[0].rating;
+      }
+    });
+    
+    setReviewedTracksCount(reviewedCount);
+    
+    // Calculate how many more tracks need to be reviewed to reach half
+    const halfTracks = Math.ceil(tracks.length / 2);
+    const neededTracks = Math.max(0, halfTracks - reviewedCount);
+    setTracksNeededForScore(neededTracks);
+    
+    // Check if at least half of the tracks are reviewed
+    if (reviewedCount >= halfTracks) {
+      const averageScore = totalScore / reviewedCount;
+      setAlbumAverageScore(averageScore);
+    } else {
+      setAlbumAverageScore(null);
+    }
+  };
+
   const handleTrackClick = (track: Track, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent event from bubbling up to album modal overlay
     setSelectedTrack(track);
@@ -132,6 +170,8 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
   const handleRankingModalClose = () => {
     setIsTrackRankingModalOpen(false);
     setSelectedTrack(null);
+    // Refresh track reviews to show the newly submitted review
+    fetchTrackReviews();
   };
 
   if (!isOpen) return null;
@@ -159,7 +199,7 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
   // Function to get color based on rating value
   const getRatingColor = (rating: number): string => {
     if (rating < 4.0) return '#e74c3c'; // Red for low ratings (dislike range: 0.0-3.9)
-    if (rating < 8.0) return '#f39c12'; // Yellow/orange for mid ratings (neutral range: 4.0-7.9)
+    if (rating < 7.0) return '#f39c12'; // Yellow/orange for mid ratings (neutral range: 4.0-7.9)
     return '#2ecc71'; // Green for high ratings (like range: 8.0-10.0)
   };
 
@@ -187,18 +227,54 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
               </div>
               
               <div className="album-details-modal-details">
-                <p className="album-details-modal-type">
-                  <span className="album-details-modal-label">Type:</span> 
-                  <span className="album-details-modal-value">{album.album_type}</span>
-                </p>
-                <p className="album-details-modal-tracks">
-                  <span className="album-details-modal-label">Tracks:</span> 
-                  <span className="album-details-modal-value">{album.total_tracks}</span>
-                </p>
-                <p className="album-details-modal-release-date">
-                  <span className="album-details-modal-label">Released:</span> 
-                  <span className="album-details-modal-value">{formatReleaseDate(album.release_date)}</span>
-                </p>
+                <div className="album-details-modal-details-row">
+                  <div className="album-details-modal-details-left">
+                    <p className="album-details-modal-type">
+                      <span className="album-details-modal-label">Type:</span> 
+                      <span className="album-details-modal-value">{album.album_type}</span>
+                    </p>
+                    <p className="album-details-modal-tracks">
+                      <span className="album-details-modal-label">Tracks:</span> 
+                      <span className="album-details-modal-value">{album.total_tracks}</span>
+                    </p>
+                    <p className="album-details-modal-release-date">
+                      <span className="album-details-modal-label">Released:</span> 
+                      <span className="album-details-modal-value">{formatReleaseDate(album.release_date)}</span>
+                    </p>
+                  </div>
+                  
+                  {albumAverageScore === null && tracks.length > 0 && (
+                    <div className="album-details-modal-details-right">
+                      <span 
+                        className="album-details-modal-rating-circle"
+                        style={{
+                          backgroundColor: '#888888'
+                        }}
+                      >
+                        ~
+                      </span>
+                      <p className="album-details-modal-score-unlock-text">
+                        Rate {tracksNeededForScore} more track{tracksNeededForScore !== 1 ? 's' : ''} to unlock score
+                      </p>
+                    </div>
+                  )}
+
+                  {albumAverageScore !== null && (
+                    <div className="album-details-modal-details-right">
+                      <span 
+                        className="album-details-modal-rating-circle"
+                        style={{
+                          backgroundColor: getRatingColor(albumAverageScore)
+                        }}
+                      >
+                        {albumAverageScore.toFixed(1)}
+                      </span>
+                      <p className="album-details-modal-score-unlock-text">
+                        Your tunedIn score
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -253,6 +329,11 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
           onClose={handleTrackModalClose}
           track={selectedTrack}
           onReview={handleReviewTrack}
+          onReReview={handleReviewTrack}
+          onReviewDeleted={() => {
+            fetchTrackReviews();
+            handleTrackModalClose();
+          }}
           opinion={trackReviews[selectedTrack.spotifyId]?.[0]?.opinion}
           description={trackReviews[selectedTrack.spotifyId]?.[0]?.description}
           rating={trackReviews[selectedTrack.spotifyId]?.[0]?.rating}
