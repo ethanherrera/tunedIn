@@ -14,6 +14,7 @@ interface Track {
   artistName: string;
   trackName: string;
   spotifyId: string;
+  albumId: string;
 }
 
 // Interface for album search results
@@ -130,7 +131,8 @@ const SearchContainer: React.FC = () => {
               trackName: track.name,
               artistName: track.artists[0].name,
               albumName: track.album.name,
-              albumImageUrl: track.album.images[0]?.url || ''
+              albumImageUrl: track.album.images[0]?.url || '',
+              albumId: track.album.id
             }
           }));
           results.push(...transformedTracks);
@@ -278,11 +280,11 @@ const SearchContainer: React.FC = () => {
       
       {searchResults.length > 0 && isFocused && (
         <div className="search-results">
-          <div className="search-results-horizontal">
-            {/* Tracks Section - Left */}
-            <div className={`search-results-section search-results-tracks ${!searchResults.some(item => item.type === 'track') ? 'search-results-empty' : ''}`}>
-              <div className="search-results-section-header">Tracks</div>
-              <div className="search-results-section-content">
+          {/* Tracks Section - Top */}
+          <div className={`search-results-section search-results-tracks ${!searchResults.some(item => item.type === 'track') ? 'search-results-empty' : ''}`}>
+            <div className="search-results-section-header">Tracks</div>
+            <div className="search-results-section-content">
+              <div className="search-results-horizontal-scroll">
                 {searchResults
                   .filter(item => item.type === 'track')
                   .map((item) => (
@@ -299,11 +301,13 @@ const SearchContainer: React.FC = () => {
                 )}
               </div>
             </div>
-            
-            {/* Albums Section - Right */}
-            <div className={`search-results-section search-results-albums ${!searchResults.some(item => item.type === 'album') ? 'search-results-empty' : ''}`}>
-              <div className="search-results-section-header">Albums</div>
-              <div className="search-results-section-content">
+          </div>
+          
+          {/* Albums Section - Bottom */}
+          <div className={`search-results-section search-results-albums ${!searchResults.some(item => item.type === 'album') ? 'search-results-empty' : ''}`}>
+            <div className="search-results-section-header">Albums</div>
+            <div className="search-results-section-content">
+              <div className="search-results-horizontal-scroll">
                 {searchResults
                   .filter(item => item.type === 'album')
                   .map((item) => (

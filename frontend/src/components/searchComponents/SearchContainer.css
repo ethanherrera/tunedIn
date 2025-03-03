@@ -64,35 +64,44 @@
   overflow: hidden;
   width: 100%;
   max-width: 600px;
-  max-height: 400px;
+  max-height: 500px;
   overflow-y: auto;
   scroll-behavior: smooth;
 }
 
-.search-results-horizontal {
-  display: flex;
-  width: 100%;
-  min-height: 100px;
-}
-
 .search-results-section {
-  flex: 1;
-  min-width: 0; /* Ensures flex items can shrink below content size */
   display: flex;
   flex-direction: column;
-}
-
-.search-results-tracks,
-.search-results-albums {
-  width: 50%;
+  width: 100%;
 }
 
 .search-results-tracks {
-  border-right: 1px solid #3f3f46;
+  border-bottom: 1px solid #3f3f46;
 }
 
 .search-results-section-content {
-  flex: 1;
+  padding: 0.5rem;
+}
+
+.search-results-horizontal-scroll {
+  display: flex;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.search-results-horizontal-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.search-results-horizontal-scroll::-webkit-scrollbar-track {
+  background: #27272a;
+}
+
+.search-results-horizontal-scroll::-webkit-scrollbar-thumb {
+  background-color: #3f3f46;
+  border-radius: 6px;
 }
 
 .search-results-section:not(:last-child) {
@@ -113,22 +122,25 @@
   z-index: 1;
 }
 
-/* Common styles for both track and album cards */
 .search-results .search-result-item {
   cursor: pointer;
   transition: background-color 0.2s ease;
   padding: 0.5rem;
-  height: 80px; /* Fixed height for all cards */
-  display: flex;
-  align-items: center;
+  min-width: 120px;
+  max-width: 120px;
+  height: 160px;
+  margin-right: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #3f3f46;
+  overflow: hidden;
 }
 
 .search-results .search-result-item:hover {
   background-color: #323232;
 }
 
-.search-results .search-result-item:not(:last-child) {
-  border-bottom: 1px solid #3f3f46;
+.search-results .search-result-item:last-child {
+  margin-right: 0;
 }
 
 .search-results .search-track-card,
@@ -137,6 +149,8 @@
   max-width: none;
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .search-results .search-track-card .track-card-inner,
@@ -146,8 +160,8 @@
   width: 100%;
   height: 100%;
   display: flex;
-  align-items: center;
-  padding: 0.5rem;
+  flex-direction: column;
+  padding: 0;
 }
 
 .search-results .search-track-card .track-card-inner:hover,
@@ -157,10 +171,11 @@
 
 .search-results .search-track-card .album-cover,
 .search-results .album-card .album-card-cover {
-  width: 50px;
-  height: 50px;
-  min-width: 50px;
-  margin-right: 0.75rem;
+  width: 100%;
+  height: 100px;
+  min-width: auto;
+  margin-right: 0;
+  margin-bottom: 0.5rem;
 }
 
 .search-results .album-card .album-card-cover img,
@@ -175,9 +190,10 @@
 .search-results .album-card .album-card-info {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   overflow: hidden;
-  width: calc(100% - 60px); /* Account for image width + margin */
+  width: 100%;
+  padding: 0 0.25rem;
 }
 
 .search-results .search-track-card .track-name,
@@ -214,6 +230,7 @@
   color: #71717a;
   font-size: 0.9rem;
   font-style: italic;
+  width: 100%;
 }
 
 .search-results-empty {

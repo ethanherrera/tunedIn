@@ -87,10 +87,8 @@
 }
 
 .search-track-card .track-card-inner:hover {
-  box-shadow: none;
-  background-color: rgba(99, 102, 241, 0.1);
-  transform: none;
-  border-left: 3px solid #6366f1;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
 }
 
 .search-track-card .album-cover {
