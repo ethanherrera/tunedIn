@@ -4,6 +4,7 @@ import TrackCardSearchResult from '../searchComponents/TrackCardSearchResult';
 import TrackDetailsModal from '../trackComponents/TrackDetailsModal';
 import TrackRankingModal from '../trackComponents/TrackRankingModal';
 import { FiRefreshCw, FiShuffle } from 'react-icons/fi';
+import GenreSearch from './GenreSearch';
 import './UserReviewedTracks.css';
 
 // Interface for the review data with track information
@@ -18,6 +19,7 @@ interface ReviewWithTrack {
   createdAt: number;
   rank?: number; // For display purposes
   totalReviews?: number; // For display purposes
+  genres?: string[]; // Track genres
   track: {
     albumImageUrl: string;
     albumName: string;
@@ -36,6 +38,9 @@ const UserReviewedTracks: React.FC = () => {
   const [isReReviewModalOpen, setIsReReviewModalOpen] = useState<boolean>(false);
   const [isRandomReviewModalOpen, setIsRandomReviewModalOpen] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<{ [key: string]: boolean }>({});
+  const [selectedGenre, setSelectedGenre] = useState<{ id: number; name: string } | null>(null);
+  const [allReviews, setAllReviews] = useState<ReviewWithTrack[]>([]);
+  const [filteredReviews, setFilteredReviews] = useState<ReviewWithTrack[]>([]);
 
   // Function to get color based on rating value
   const getRatingColor = (rating: number): string => {
@@ -62,6 +67,7 @@ const UserReviewedTracks: React.FC = () => {
       
       // Use the batch API to fetch all tracks at once
       let tracksData: Record<string, any> = {};
+      let artistsData: Record<string, any> = {};
       
       try {
         // Fetch tracks in batches of 50 (Spotify API limit)
@@ -85,6 +91,35 @@ const UserReviewedTracks: React.FC = () => {
           acc[track.id] = track;
           return acc;
         }, {} as Record<string, any>);
+        
+        // Collect all artist IDs to fetch their genres
+        const artistIds = new Set<string>();
+        allTracks.forEach(track => {
+          track.artists.forEach(artist => {
+            artistIds.add(artist.id);
+          });
+        });
+        
+        // Fetch artist data to get genres (in batches of 50)
+        const artistIdArray = Array.from(artistIds);
+        const artistBatches = [];
+        
+        for (let i = 0; i < artistIdArray.length; i += batchSize) {
+          artistBatches.push(artistIdArray.slice(i, i + batchSize));
+        }
+        
+        // Fetch artist data sequentially to avoid rate limiting
+        for (const batch of artistBatches) {
+          for (const artistId of batch) {
+            try {
+              const artistData = await spotifyApi.getArtist(artistId);
+              artistsData[artistId] = artistData;
+            } catch (error) {
+              console.error(`Failed to fetch artist ${artistId}:`, error);
+            }
+          }
+        }
+        
       } catch (batchError) {
         console.error('Failed to fetch tracks in batch:', batchError);
         // Fall back to individual fetches if batch fails
@@ -92,6 +127,16 @@ const UserReviewedTracks: React.FC = () => {
           try {
             const trackData = await spotifyApi.getTrack(review.spotifyTrackId);
             tracksData[review.spotifyTrackId] = trackData;
+            
+            // Fetch artist data for genres
+            for (const artist of trackData.artists) {
+              try {
+                const artistData = await spotifyApi.getArtist(artist.id);
+                artistsData[artist.id] = artistData;
+              } catch (error) {
+                console.error(`Failed to fetch artist ${artist.id}:`, error);
+              }
+            }
           } catch (trackError) {
             console.error(`Failed to fetch track ${review.spotifyTrackId}:`, trackError);
           }
@@ -103,8 +148,18 @@ const UserReviewedTracks: React.FC = () => {
         const trackData = tracksData[review.spotifyTrackId];
         
         if (trackData) {
+          // Collect genres from all artists of the track
+          const genres = new Set<string>();
+          trackData.artists.forEach((artist: any) => {
+            const artistData = artistsData[artist.id];
+            if (artistData && artistData.genres) {
+              artistData.genres.forEach((genre: string) => genres.add(genre));
+            }
+          });
+          
           return {
             ...review,
+            genres: Array.from(genres),
             track: {
               albumImageUrl: trackData.album.images[0]?.url || 'https://via.placeholder.com/300',
               albumName: trackData.album.name,
@@ -117,6 +172,7 @@ const UserReviewedTracks: React.FC = () => {
           // Fallback for tracks that couldn't be fetched
           return {
             ...review,
+            genres: [],
             track: {
               albumImageUrl: 'https://via.placeholder.com/300',
               albumName: 'Unknown Album',
@@ -156,6 +212,8 @@ const UserReviewedTracks: React.FC = () => {
         review.rank = index + 1;
       });
       
+      setAllReviews(reviewsWithTracks);
+      setFilteredReviews(reviewsWithTracks);
       setReviews(reviewsWithTracks);
     } catch (err) {
       console.error('Failed to fetch user reviews:', err);
@@ -242,11 +300,39 @@ const UserReviewedTracks: React.FC = () => {
     }
   };
 
+  const handleGenreSelect = (genre: { id: number; name: string }) => {
+    setSelectedGenre(genre);
+    console.log('Selected genre in parent component:', genre);
+    
+    // Filter reviews by the selected genre
+    if (allReviews.length > 0) {
+      const filtered = allReviews.filter(review => 
+        review.genres && review.genres.some(g => 
+          g.toLowerCase() === genre.name.toLowerCase() || 
+          g.toLowerCase().includes(genre.name.toLowerCase())
+        )
+      );
+      setFilteredReviews(filtered);
+    }
+  };
+
+  const clearGenreFilter = () => {
+    setSelectedGenre(null);
+    setFilteredReviews(allReviews);
+    setReviews(allReviews);
+  };
+
   return (
     <div className="user-reviewed-tracks">
       <div className="header">
         <h2>Your Reviewed Tracks</h2>
         <div className="header-buttons">
+          <GenreSearch 
+            onGenreSelect={handleGenreSelect}
+            buttonText="Filter by Genre"
+            className="genre-filter"
+            reviews={allReviews}
+          />
           <button 
             onClick={handleRerankRandomTrack}
             disabled={loading || reviews.length === 0}
@@ -268,6 +354,18 @@ const UserReviewedTracks: React.FC = () => {
         </div>
       </div>
       
+      {selectedGenre && (
+        <div className="active-filter">
+          <p>Filtering by genre: <strong>{selectedGenre.name}</strong></p>
+          <button 
+            className="clear-filter-button"
+            onClick={clearGenreFilter}
+          >
+            Clear Filter
+          </button>
+        </div>
+      )}
+      
       {error && <div className="error-message">{error}</div>}
       
       {loading ? (
@@ -275,13 +373,17 @@ const UserReviewedTracks: React.FC = () => {
           <div className="loading-spinner"></div>
           <p>Loading your reviewed tracks...</p>
         </div>
-      ) : reviews.length === 0 ? (
+      ) : filteredReviews.length === 0 ? (
         <div className="no-reviews">
-          <p>You haven't reviewed any tracks yet. Search for tracks to review them!</p>
+          {selectedGenre ? (
+            <p>No reviews found with the genre "{selectedGenre.name}". Try another genre or clear the filter.</p>
+          ) : (
+            <p>You haven't reviewed any tracks yet. Search for tracks to review them!</p>
+          )}
         </div>
       ) : (
         <div className="reviews-list">
-          {reviews.map((review) => (
+          {filteredReviews.map((review) => (
             <div 
               key={review.id} 
               className="review-item"

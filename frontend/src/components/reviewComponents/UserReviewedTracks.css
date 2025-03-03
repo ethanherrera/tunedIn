@@ -24,14 +24,19 @@
 
 .header-buttons {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
 }
 
+.refresh-button, .rerank-button, .genre-search-button {
+  min-width: 160px;
+  justify-content: center;
+}
+
 .refresh-button, .rerank-button {
-  background-color: #27272a;
+  background-color: #312e81;
   color: white;
-  border: 1px solid #3f3f46;
+  border: 1px solid #4f46e5;
   border-radius: 9999px;
   padding: 8px 16px;
   font-size: 14px;
@@ -48,7 +53,7 @@
 }
 
 .refresh-button:hover, .rerank-button:hover {
-  background-color: #3f3f46;
+  background-color: #4338ca;
   border-color: #6366f1;
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }
@@ -59,21 +64,6 @@
   color: #6c6c6c;
   cursor: not-allowed;
   box-shadow: none;
-}
-
-.rerank-button {
-  background-color: #312e81;
-  border-color: #4f46e5;
-}
-
-.rerank-button:hover {
-  background-color: #4338ca;
-  border-color: #6366f1;
-}
-
-.rerank-button:disabled {
-  background-color: #1e1b4b;
-  border-color: #312e81;
 }
 
 .error-message {
@@ -342,4 +332,41 @@
   color: rgba(239, 68, 68, 0.5);
   cursor: not-allowed;
   box-shadow: none;
+}
+
+.reviews-controls {
+  display: none; /* Hide this since we're using header-buttons */
+}
+
+.genre-filter {
+  margin-right: 0;
+}
+
+.active-filter {
+  display: flex;
+  align-items: center;
+  background-color: rgba(79, 70, 229, 0.1);
+  border-radius: 4px;
+  padding: 8px 16px;
+  margin-bottom: 16px;
+}
+
+.active-filter p {
+  margin: 0;
+  flex-grow: 1;
+}
+
+.clear-filter-button {
+  background-color: transparent;
+  color: #4f46e5;
+  border: 1px solid #4f46e5;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clear-filter-button:hover {
+  background-color: rgba(79, 70, 229, 0.1);
 }
