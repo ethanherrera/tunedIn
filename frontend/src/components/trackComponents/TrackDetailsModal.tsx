@@ -100,9 +100,9 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
     : description;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content track-details-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="close-button" onClick={onClose}>×</button>
+    <div className="track-details-modal-overlay" onClick={onClose}>
+      <div className="track-details-modal-content track-details-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="track-details-modal-close-button" onClick={onClose}>×</button>
         
         <div className="track-details-content">
           <div className="track-details-album-wrapper">

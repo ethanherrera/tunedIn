@@ -353,9 +353,9 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
   // Show message when no tracks are available for comparison
   if (noTracksAvailable) {
     return (
-      <div className={`${embedded ? 'embedded-comparison' : 'modal-overlay comparison-overlay'} ${contentReady ? 'ready' : ''} ${!visibleWhenReady ? 'prefetching' : ''}`}>
-        {!embedded && <button className="close-button" onClick={handleClose}>×</button>}
-        <div className="thank-you-container">
+      <div className={`${embedded ? 'track-comparison-modal-embedded' : 'track-comparison-modal-overlay track-comparison-modal-comparison-overlay'} ${contentReady ? 'track-comparison-modal-ready' : ''} ${!visibleWhenReady ? 'track-comparison-modal-prefetching' : ''}`}>
+        {!embedded && <button className="track-comparison-modal-close-button" onClick={handleClose}>×</button>}
+        <div className="track-comparison-modal-thank-you-container">
           <p>Thank you for your review!</p>
         </div>
       </div>
@@ -365,9 +365,9 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
   // Show error state
   if (error) {
     return (
-      <div className={`${embedded ? 'embedded-comparison' : 'modal-overlay comparison-overlay'} ${contentReady ? 'ready' : ''} ${!visibleWhenReady ? 'prefetching' : ''}`}>
-        {!embedded && <button className="close-button" onClick={handleClose}>×</button>}
-        <div className="error-container">
+      <div className={`${embedded ? 'track-comparison-modal-embedded' : 'track-comparison-modal-overlay track-comparison-modal-comparison-overlay'} ${contentReady ? 'track-comparison-modal-ready' : ''} ${!visibleWhenReady ? 'track-comparison-modal-prefetching' : ''}`}>
+        {!embedded && <button className="track-comparison-modal-close-button" onClick={handleClose}>×</button>}
+        <div className="track-comparison-modal-error-container">
           <p>{error}</p>
         </div>
       </div>
@@ -377,9 +377,9 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
   // Show message when there are no comparison tracks (but not due to an error)
   if (allReviewedTracks.length === 0) {
     return (
-      <div className={`${embedded ? 'embedded-comparison' : 'modal-overlay comparison-overlay'} ${contentReady ? 'ready' : ''} ${!visibleWhenReady ? 'prefetching' : ''}`}>
-        {!embedded && <button className="close-button" onClick={handleClose}>×</button>}
-        <div className="thank-you-container">
+      <div className={`${embedded ? 'track-comparison-modal-embedded' : 'track-comparison-modal-overlay track-comparison-modal-comparison-overlay'} ${contentReady ? 'track-comparison-modal-ready' : ''} ${!visibleWhenReady ? 'track-comparison-modal-prefetching' : ''}`}>
+        {!embedded && <button className="track-comparison-modal-close-button" onClick={handleClose}>×</button>}
+        <div className="track-comparison-modal-thank-you-container">
           <p>Thank you for your review!</p>
         </div>
       </div>
@@ -389,8 +389,8 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
   // Show thank you message when all comparisons are completed
   if (allComparisonsCompleted && embedded) {
     return (
-      <div className={`embedded-comparison ${contentReady ? 'ready' : ''} ${!visibleWhenReady ? 'prefetching' : ''}`}>
-        <div className="thank-you-container">
+      <div className={`track-comparison-modal-embedded ${contentReady ? 'track-comparison-modal-ready' : ''} ${!visibleWhenReady ? 'track-comparison-modal-prefetching' : ''}`}>
+        <div className="track-comparison-modal-thank-you-container">
           <p>Thank you for your review!</p>
         </div>
       </div>
@@ -400,9 +400,9 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
   // If no current comparison track, show loading
   if (!currentComparisonTrack) {
     return (
-      <div className={`${embedded ? 'embedded-comparison' : 'modal-overlay comparison-overlay'} ${contentReady ? 'ready' : ''} ${!visibleWhenReady ? 'prefetching' : ''}`}>
-        {!embedded && <button className="close-button" onClick={handleClose}>×</button>}
-        <div className="loading-container">
+      <div className={`${embedded ? 'track-comparison-modal-embedded' : 'track-comparison-modal-overlay track-comparison-modal-comparison-overlay'} ${contentReady ? 'track-comparison-modal-ready' : ''} ${!visibleWhenReady ? 'track-comparison-modal-prefetching' : ''}`}>
+        {!embedded && <button className="track-comparison-modal-close-button" onClick={handleClose}>×</button>}
+        <div className="track-comparison-modal-loading-container">
           <p>Loading comparison...</p>
         </div>
       </div>
@@ -410,55 +410,55 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
   }
 
   return (
-    <div className={`${embedded ? 'embedded-comparison' : 'modal-overlay comparison-overlay'} ${contentReady ? 'ready' : ''} ${!visibleWhenReady ? 'prefetching' : ''}`}>
-      {!embedded && <button className="close-button" onClick={handleClose}>×</button>}
+    <div className={`${embedded ? 'track-comparison-modal-embedded' : 'track-comparison-modal-overlay track-comparison-modal-comparison-overlay'} ${contentReady ? 'track-comparison-modal-ready' : ''} ${!visibleWhenReady ? 'track-comparison-modal-prefetching' : ''}`}>
+      {!embedded && <button className="track-comparison-modal-close-button" onClick={handleClose}>×</button>}
       
-      <div className={embedded ? 'embedded-comparison-content' : 'comparison-modal-content'}>
-        <h2 className="comparison-title">Please select which track you believe is better</h2>
+      <div className={embedded ? 'track-comparison-modal-embedded-content' : 'track-comparison-modal-content'}>
+        <h2 className="track-comparison-modal-title">Please select which track you believe is better</h2>
         
-        <div className="tracks-container">
+        <div className="track-comparison-modal-tracks-container">
           <div 
-            className="track-option"
+            className="track-comparison-modal-track-option"
             onClick={() => handleTrackSelect(initialTrack, true)}
           >
-            <div className="track-card">
-              <div className="track-card-inner">
-                <div className="album-cover">
+            <div className="track-comparison-modal-track-card">
+              <div className="track-comparison-modal-track-card-inner">
+                <div className="track-comparison-modal-album-cover">
                   <img
                     src={initialTrack.albumImageUrl}
                     alt={`${initialTrack.albumName} by ${initialTrack.artistName}`}
                   />
                 </div>
-                <div className="track-info">
+                <div className="track-comparison-modal-track-info">
                   <div>
-                    <h3 className="track-name">{initialTrack.trackName}</h3>
-                    <p className="artist-name">{initialTrack.artistName}</p>
-                    <p className="album-name">{initialTrack.albumName}</p>
+                    <h3 className="track-comparison-modal-track-name">{initialTrack.trackName}</h3>
+                    <p className="track-comparison-modal-artist-name">{initialTrack.artistName}</p>
+                    <p className="track-comparison-modal-album-name">{initialTrack.albumName}</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="comparison-divider">OR</div>
+          <div className="track-comparison-modal-divider">OR</div>
 
           <div 
-            className="track-option"
+            className="track-comparison-modal-track-option"
             onClick={() => handleTrackSelect(currentComparisonTrack, false)}
           >
-            <div className="track-card">
-              <div className="track-card-inner">
-                <div className="album-cover">
+            <div className="track-comparison-modal-track-card">
+              <div className="track-comparison-modal-track-card-inner">
+                <div className="track-comparison-modal-album-cover">
                   <img
                     src={currentComparisonTrack.albumImageUrl}
                     alt={`${currentComparisonTrack.albumName} by ${currentComparisonTrack.artistName}`}
                   />
                 </div>
-                <div className="track-info">
+                <div className="track-comparison-modal-track-info">
                   <div>
-                    <h3 className="track-name">{currentComparisonTrack.trackName}</h3>
-                    <p className="artist-name">{currentComparisonTrack.artistName}</p>
-                    <p className="album-name">{currentComparisonTrack.albumName}</p>
+                    <h3 className="track-comparison-modal-track-name">{currentComparisonTrack.trackName}</h3>
+                    <p className="track-comparison-modal-artist-name">{currentComparisonTrack.artistName}</p>
+                    <p className="track-comparison-modal-album-name">{currentComparisonTrack.albumName}</p>
                   </div>
                 </div>
               </div>
@@ -466,11 +466,11 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
           </div>
         </div>
 
-        <div className="comparison-progress">
-          <div className="progress-label">Finding the perfect spot for your review...</div>
-          <div className="progress-bar-container">
+        <div className="track-comparison-modal-progress">
+          <div className="track-comparison-modal-progress-label">Finding the perfect spot for your review...</div>
+          <div className="track-comparison-modal-progress-bar-container">
             <div 
-              className="progress-bar-fill"
+              className="track-comparison-modal-progress-bar-fill"
               style={{ 
                 width: `${Math.round(((high - low) === 0 ? 100 : (1 - (high - low) / (allReviewedTracks.length - 1)) * 100))}%` 
               }}

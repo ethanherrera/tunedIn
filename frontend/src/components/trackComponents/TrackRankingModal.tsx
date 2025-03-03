@@ -206,9 +206,9 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content combined-modal">
-        <button className="close-button" onClick={handleClose}>×</button>
+    <div className="track-ranking-modal-overlay">
+      <div className="track-ranking-modal-content track-ranking-modal-combined-modal">
+        <button className="track-ranking-modal-close-button" onClick={handleClose}>×</button>
         
         {/* Track Card Section */}
         <div className="track-card-modal">
@@ -230,16 +230,16 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
         </div>
 
         {/* Review Section */}
-        <div className="review-section">
+        <div className="track-ranking-modal-review-section">
           <textarea
             value={review}
             onChange={(e) => setReview(e.target.value)}
             placeholder="Write your review (max 200 words)..."
             maxLength={1000}
-            className="review-input"
+            className="track-ranking-modal-review-input"
             disabled={isSubmitting || isDeleting}
           />
-          <div className="word-count">
+          <div className="track-ranking-modal-word-count">
             <span className={wordCount > 200 ? 'exceeded' : ''}>
               {wordCount} / 200 words
             </span>
@@ -247,27 +247,27 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
         </div>
 
         {/* Rating Buttons */}
-        <div className="rating-buttons">
-          <div className="rating-button-container">
-            <span className="rating-label">I didn't like it...</span>
+        <div className="track-ranking-modal-rating-buttons">
+          <div className="track-ranking-modal-rating-button-container">
+            <span className="track-ranking-modal-rating-label">I didn't like it...</span>
             <button
-              className={`rating-button dislike ${rating === 'dislike' ? 'active' : ''}`}
+              className={`track-ranking-modal-rating-button dislike ${rating === 'dislike' ? 'active' : ''}`}
               onClick={() => setRating('dislike')}
               disabled={isSubmitting || isDeleting}
             />
           </div>
-          <div className="rating-button-container">
-            <span className="rating-label">It was fine.</span>
+          <div className="track-ranking-modal-rating-button-container">
+            <span className="track-ranking-modal-rating-label">It was fine.</span>
             <button
-              className={`rating-button neutral ${rating === 'neutral' ? 'active' : ''}`}
+              className={`track-ranking-modal-rating-button neutral ${rating === 'neutral' ? 'active' : ''}`}
               onClick={() => setRating('neutral')}
               disabled={isSubmitting || isDeleting}
             />
           </div>
-          <div className="rating-button-container">
-            <span className="rating-label">I liked it!</span>
+          <div className="track-ranking-modal-rating-button-container">
+            <span className="track-ranking-modal-rating-label">I liked it!</span>
             <button
-              className={`rating-button like ${rating === 'like' ? 'active' : ''}`}
+              className={`track-ranking-modal-rating-button like ${rating === 'like' ? 'active' : ''}`}
               onClick={() => setRating('like')}
               disabled={isSubmitting || isDeleting}
             />
@@ -275,7 +275,7 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
         </div>
 
         {/* Error Message */}
-        {error && <div className="error-message">{error}</div>}
+        {error && <div className="track-ranking-modal-error-message">{error}</div>}
 
         {/* Comparison Modal */}
         {rating && (
@@ -296,11 +296,11 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
         )}
 
         {/* Action Buttons */}
-        <div className="action-buttons">
+        <div className="track-ranking-modal-action-buttons">
           {/* Only show submit button when comparisons are complete */}
           {comparisonsComplete && (
             <button
-              className="submit-button"
+              className="track-ranking-modal-submit-button"
               onClick={handleSubmit}
               disabled={isSubmitting || isDeleting || !rating || wordCount > 200}
             >

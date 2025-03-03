@@ -1,4 +1,4 @@
-.comparison-modal-content {
+.track-comparison-modal-content {
   background-color: #1a1a1a;
   padding: 2rem;
   border-radius: 0.5rem;
@@ -8,14 +8,14 @@
   z-index: 1100;
 }
 
-.comparison-title {
+.track-comparison-modal-title {
   text-align: center;
   margin-bottom: 2rem;
   font-size: 1.5rem;
   color: white;
 }
 
-.tracks-container {
+.track-comparison-modal-tracks-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -23,38 +23,38 @@
   margin-bottom: 1.5rem;
 }
 
-.track-option {
+.track-comparison-modal-track-option {
   flex: 1;
   cursor: pointer;
   transition: transform 0.2s ease;
 }
 
-.track-option:hover {
+.track-comparison-modal-track-option:hover {
   transform: scale(1.02);
 }
 
-.comparison-divider {
+.track-comparison-modal-divider {
   font-size: 1.25rem;
   font-weight: bold;
   color: #a1a1aa;
   padding: 0 1rem;
 }
 
-.comparison-progress {
+.track-comparison-modal-progress {
   margin-top: 15px;
   text-align: center;
   font-size: 0.9rem;
   opacity: 0.7;
 }
 
-.progress-label {
+.track-comparison-modal-progress-label {
   font-size: 0.85rem;
   color: #a1a1aa;
   margin-bottom: 5px;
   font-style: italic;
 }
 
-.progress-bar-container {
+.track-comparison-modal-progress-bar-container {
   width: 100%;
   height: 8px;
   background-color: rgba(255, 255, 255, 0.1);
@@ -64,7 +64,7 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.progress-bar-fill {
+.track-comparison-modal-progress-bar-fill {
   height: 100%;
   background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
   border-radius: 4px;
@@ -73,7 +73,7 @@
 }
 
 /* Inherit existing modal overlay styles */
-.modal-overlay {
+.track-comparison-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -87,11 +87,11 @@
 }
 
 /* Ensure the comparison modal overlay has a higher z-index */
-.modal-overlay.comparison-overlay {
+.track-comparison-modal-overlay.track-comparison-modal-comparison-overlay {
   z-index: 1050;
 }
 
-.close-button {
+.track-comparison-modal-close-button {
   position: absolute;
   top: 1rem;
   right: 1rem;
@@ -103,17 +103,17 @@
 }
 
 /* Loading overlay specific styles */
-.loading-overlay {
+.track-comparison-modal-loading-overlay {
   flex-direction: column;
 }
 
-.loading-text {
+.track-comparison-modal-loading-text {
   color: white;
   margin-top: 20px;
   font-size: 16px;
 }
 
-.loading-spinner {
+.track-comparison-modal-loading-spinner {
   width: 50px;
   height: 50px;
   border: 5px solid rgba(255, 255, 255, 0.1);
@@ -129,19 +129,19 @@
 }
 
 /* Remove the old loading container styles */
-.loading-container {
+.track-comparison-modal-loading-container {
   display: none;
 }
 
 /* Error container */
-.error-container {
+.track-comparison-modal-error-container {
   padding: 1.5rem;
   text-align: center;
   color: #ef4444;
 }
 
 /* Add styles for embedded comparison mode */
-.embedded-comparison {
+.track-comparison-modal-embedded {
   margin-top: 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 20px;
@@ -149,26 +149,26 @@
   transition: opacity 0.3s ease-in-out;
 }
 
-.embedded-comparison.ready {
+.track-comparison-modal-embedded.track-comparison-modal-ready {
   opacity: 1;
 }
 
-.embedded-comparison:not(.ready) {
+.track-comparison-modal-embedded:not(.track-comparison-modal-ready) {
   opacity: 0;
 }
 
-.embedded-comparison-content {
+.track-comparison-modal-embedded-content {
   width: 100%;
   padding: 10px 0;
 }
 
-.embedded-comparison .comparison-title {
+.track-comparison-modal-embedded .track-comparison-modal-title {
   font-size: 1.2rem;
   margin-bottom: 15px;
   text-align: center;
 }
 
-.embedded-comparison .tracks-container {
+.track-comparison-modal-embedded .track-comparison-modal-tracks-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -176,72 +176,72 @@
   gap: 10px;
 }
 
-.embedded-comparison .track-option {
+.track-comparison-modal-embedded .track-comparison-modal-track-option {
   flex: 1;
   min-width: 200px;
   cursor: pointer;
   transition: transform 0.2s ease;
 }
 
-.embedded-comparison .track-option:hover {
+.track-comparison-modal-embedded .track-comparison-modal-track-option:hover {
   transform: scale(1.03);
 }
 
-.embedded-comparison .track-card {
+.track-comparison-modal-embedded .track-comparison-modal-track-card {
   width: 100%;
   padding: 10px;
   border-radius: 8px;
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-.embedded-comparison .track-card-inner {
+.track-comparison-modal-embedded .track-comparison-modal-track-card-inner {
   display: flex;
   align-items: center;
 }
 
-.embedded-comparison .album-cover {
+.track-comparison-modal-embedded .track-comparison-modal-album-cover {
   width: 60px;
   height: 60px;
   margin-right: 10px;
 }
 
-.embedded-comparison .album-cover img {
+.track-comparison-modal-embedded .track-comparison-modal-album-cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 4px;
 }
 
-.embedded-comparison .track-info {
+.track-comparison-modal-embedded .track-comparison-modal-track-info {
   flex: 1;
 }
 
-.embedded-comparison .track-name {
+.track-comparison-modal-embedded .track-comparison-modal-track-name {
   font-size: 1rem;
   margin: 0 0 4px 0;
 }
 
-.embedded-comparison .artist-name,
-.embedded-comparison .album-name {
+.track-comparison-modal-embedded .track-comparison-modal-artist-name,
+.track-comparison-modal-embedded .track-comparison-modal-album-name {
   font-size: 0.8rem;
   margin: 0;
   opacity: 0.7;
 }
 
-.embedded-comparison .comparison-divider {
+.track-comparison-modal-embedded .track-comparison-modal-divider {
   margin: 0 10px;
   font-weight: bold;
 }
 
-.embedded-comparison .comparison-progress {
+.track-comparison-modal-embedded .track-comparison-modal-progress {
   margin-top: 15px;
   text-align: center;
   font-size: 0.9rem;
   opacity: 0.7;
 }
 
-.embedded-comparison .no-tracks-container,
-.embedded-comparison .error-container {
+.track-comparison-modal-embedded .track-comparison-modal-no-tracks-container,
+.track-comparison-modal-embedded .track-comparison-modal-error-container {
   text-align: center;
   padding: 20px;
   background-color: rgba(0, 0, 0, 0.2);
@@ -250,24 +250,24 @@
 }
 
 /* Update existing modal-content for combined modals */
-.combined-modal {
+.track-comparison-modal-combined {
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
 }
 
 /* Loading state for embedded comparison */
-.embedded-comparison.loading-overlay {
+.track-comparison-modal-embedded.track-comparison-modal-loading-overlay {
   display: none; /* Hide loading overlay in embedded mode */
 }
 
 /* Hidden state while content is loading */
-.comparison-hidden {
+.track-comparison-modal-hidden {
   display: none;
 }
 
 /* Thank you message container */
-.thank-you-container {
+.track-comparison-modal-thank-you-container {
   text-align: center;
   padding: 25px;
   background-color: rgba(34, 197, 94, 0.1);
@@ -276,37 +276,37 @@
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
-.thank-you-container p {
+.track-comparison-modal-thank-you-container p {
   font-size: 1.1rem;
   color: #22c55e;
   margin: 0;
   font-weight: 500;
 }
 
-.embedded-comparison .thank-you-container {
+.track-comparison-modal-embedded .track-comparison-modal-thank-you-container {
   margin: 10px 0;
   padding: 20px;
 }
 
 /* Style for when the component is prefetching but not visible */
-.prefetching {
+.track-comparison-modal-prefetching {
   opacity: 0;
   position: absolute;
   pointer-events: none;
 }
 
-.embedded-comparison .progress-bar-container {
+.track-comparison-modal-embedded .track-comparison-modal-progress-bar-container {
   margin: 15px 0 5px;
 }
 
 /* Responsive adjustments for the progress bar */
 @media (max-width: 768px) {
-  .progress-bar-container {
+  .track-comparison-modal-progress-bar-container {
     height: 6px;
     margin: 8px 0;
   }
   
-  .progress-label {
+  .track-comparison-modal-progress-label {
     font-size: 0.8rem;
   }
 } 

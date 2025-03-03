@@ -1,5 +1,5 @@
 /* Reusing modal overlay and base modal styles from TrackRankingModal.css */
-.modal-overlay {
+.track-details-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -12,7 +12,7 @@
   z-index: 1000;
 }
 
-.modal-content {
+.track-details-modal-content {
   background-color: #1a1a1a;
   padding: 2rem;
   border-radius: 0.5rem;
@@ -21,7 +21,7 @@
   position: relative;
 }
 
-.close-button {
+.track-details-modal-close-button {
   position: absolute;
   top: 1rem;
   right: 1rem;

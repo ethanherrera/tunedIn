@@ -225,21 +225,21 @@ const TopTracks: React.FC = () => {
   const limitOptions = [5, 10, 20, 50];
 
   return (
-    <div className="top-tracks-container">
-      <div className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
-        <div className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+    <div className="top-rated-top-tracks-container">
+      <div className={`top-rated-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+        <div className="top-rated-sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
           {sidebarOpen ? <FiChevronLeft /> : <FiChevronRight />}
         </div>
-        <div className="sidebar-content">
+        <div className="top-rated-sidebar-content">
           <h3>Filter Options</h3>
           
-          <div className="filter-section">
+          <div className="top-rated-filter-section">
             <label>Time Range</label>
-            <div className="filter-options">
+            <div className="top-rated-filter-options">
               {timeRangeOptions.map(option => (
                 <button
                   key={option.value}
-                  className={`filter-button ${filters.timeRange === option.value ? 'active' : ''}`}
+                  className={`top-rated-filter-button ${filters.timeRange === option.value ? 'active' : ''}`}
                   onClick={() => handleFilterChange('timeRange', option.value)}
                 >
                   {option.label}
@@ -248,13 +248,13 @@ const TopTracks: React.FC = () => {
             </div>
           </div>
           
-          <div className="filter-section">
+          <div className="top-rated-filter-section">
             <label>Number of Tracks Per Page</label>
-            <div className="filter-options">
+            <div className="top-rated-filter-options">
               {limitOptions.map(limit => (
                 <button
                   key={limit}
-                  className={`filter-button ${filters.limit === limit ? 'active' : ''}`}
+                  className={`top-rated-filter-button ${filters.limit === limit ? 'active' : ''}`}
                   onClick={() => handleFilterChange('limit', limit)}
                 >
                   {limit}
@@ -263,21 +263,21 @@ const TopTracks: React.FC = () => {
             </div>
           </div>
           
-          <div className="filter-section">
+          <div className="top-rated-filter-section">
             <label>Page</label>
-            <div className="offset-controls">
+            <div className="top-rated-offset-controls">
               <button 
-                className="offset-button"
+                className="top-rated-offset-button"
                 disabled={filters.offset === 0}
                 onClick={() => handleFilterChange('offset', Math.max(0, filters.offset - filters.limit))}
               >
                 Previous
               </button>
-              <span className="offset-display">
+              <span className="top-rated-offset-display">
                 {filters.offset} - {filters.offset + filters.limit}
               </span>
               <button 
-                className="offset-button"
+                className="top-rated-offset-button"
                 onClick={() => handleFilterChange('offset', filters.offset + filters.limit)}
               >
                 Next
@@ -287,16 +287,16 @@ const TopTracks: React.FC = () => {
         </div>
       </div>
       
-      <div className="top-tracks">
-        <div className="header">
+      <div className="top-rated-top-tracks">
+        <div className="top-rated-header">
           <h2>Your Top Tracks</h2>
-          <div className="header-buttons">
+          <div className="top-rated-header-buttons">
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="filter-toggle-button"
+              className="top-rated-filter-toggle-button"
               title="Toggle filter options"
             >
-              <FiFilter className="button-icon" />
+              <FiFilter className="top-rated-button-icon" />
               Filters
             </button>
             <button 
@@ -305,53 +305,53 @@ const TopTracks: React.FC = () => {
                 setHasMore(true);
               }}
               disabled={loading}
-              className="refresh-button"
+              className="top-rated-refresh-button"
               title="Refresh your top tracks"
             >
-              <FiRefreshCw className="button-icon" />
+              <FiRefreshCw className="top-rated-button-icon" />
               {loading ? 'Loading...' : 'Refresh'}
             </button>
           </div>
         </div>
         
-        {error && <div className="error-message">{error}</div>}
+        {error && <div className="top-rated-error-message">{error}</div>}
         
         {loading && topTracks.length === 0 ? (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
+          <div className="top-rated-loading-container">
+            <div className="top-rated-loading-spinner"></div>
             <p>Loading your top tracks...</p>
           </div>
         ) : topTracks.length === 0 ? (
-          <div className="no-tracks">
+          <div className="top-rated-no-tracks">
             <p>We couldn't find any top tracks for you. Try listening to more music on Spotify!</p>
           </div>
         ) : (
-          <div className="tracks-list">
+          <div className="top-rated-tracks-list">
             {topTracks.map((track, index) => (
               <div 
                 key={`${track.spotifyId}-${index}`} 
-                className="track-item"
+                className="top-rated-track-item"
                 onClick={() => handleTrackClick(track)}
               >
-                <div className="track-card-container">
-                  <div className="album-cover-container">
-                    <div className="album-cover">
+                <div className="top-rated-track-card-container">
+                  <div className="top-rated-album-cover-container">
+                    <div className="top-rated-album-cover">
                       <img 
                         src={track.albumImageUrl} 
                         alt={`${track.albumName} by ${track.artistName}`}
                       />
                     </div>
-                    <div className="rank-badge">
+                    <div className="top-rated-rank-badge">
                       <span>
                         #{index + 1}
                       </span>
                     </div>
                   </div>
                   
-                  <div className="track-info">
-                    <h3 className="track-name">{track.trackName}</h3>
-                    <p className="artist-name">{track.artistName}</p>
-                    <p className="album-name">{track.albumName}</p>
+                  <div className="top-rated-track-info">
+                    <h3 className="top-rated-track-name">{track.trackName}</h3>
+                    <p className="top-rated-artist-name">{track.artistName}</p>
+                    <p className="top-rated-album-name">{track.albumName}</p>
                   </div>
                 </div>
               </div>
@@ -361,13 +361,13 @@ const TopTracks: React.FC = () => {
             {!loading && (
               <div 
                 ref={loadingElementRef} 
-                className="loading-more-container"
+                className="top-rated-loading-more-container"
               >
                 {loadingMore && (
-                  <div className="loading-spinner-small"></div>
+                  <div className="top-rated-loading-spinner-small"></div>
                 )}
                 {!hasMore && topTracks.length > 0 && (
-                  <p className="end-message">You've reached the end of your top tracks!</p>
+                  <p className="top-rated-end-message">You've reached the end of your top tracks!</p>
                 )}
               </div>
             )}
