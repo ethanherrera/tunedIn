@@ -206,26 +206,33 @@ const SearchContainer: React.FC = () => {
     // Fetch review data before opening the modal
     await fetchReviewData(track.spotifyId);
     setIsDetailsModalOpen(true);
-    setSearchTerm('');
-    setSearchResults([]);
-    setIsFocused(false);
   };
 
   const handleAlbumClick = (album: Album) => {
+    // Set the selected album first, then open the modal in the next render cycle
     setSelectedAlbum(album);
-    setIsAlbumDetailsModalOpen(true);
-    setSearchTerm('');
-    setSearchResults([]);
-    setIsFocused(false);
+    
+    // Use requestAnimationFrame to ensure the album is set before opening the modal
+    requestAnimationFrame(() => {
+      setIsAlbumDetailsModalOpen(true);
+    });
   };
 
   const handleDetailsModalClose = () => {
     setIsDetailsModalOpen(false);
     setReviewData(null);
+    // Restore focus to search if it was focused before
+    if (searchTerm.trim() !== '') {
+      setIsFocused(true);
+    }
   };
 
   const handleAlbumDetailsModalClose = () => {
     setIsAlbumDetailsModalOpen(false);
+    // Restore focus to search if it was focused before
+    if (searchTerm.trim() !== '') {
+      setIsFocused(true);
+    }
   };
 
   const handleReviewClick = () => {
@@ -245,6 +252,10 @@ const SearchContainer: React.FC = () => {
     // Refresh review data if the user has completed a review
     if (selectedTrack) {
       fetchReviewData(selectedTrack.spotifyId);
+    }
+    // Restore focus to search if it was focused before
+    if (searchTerm.trim() !== '') {
+      setIsFocused(true);
     }
   };
 
