@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SearchContainer from './components/searchComponents/SearchContainer';
 import UserReviewedTracks from './components/reviewComponents/UserReviewedTracks';
+import UserReviewedAlbums from './components/reviewComponents/UserReviewedAlbums';
 import TopTracks from './components/topTracksComponents/TopTracks';
 import LoginPage from './components/loginComponents/LoginPage';
 import { spotifyApi } from './api/apiClient';
@@ -9,7 +10,7 @@ import './App.css';
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [activeView, setActiveView] = useState<'search' | 'reviews' | 'top-tracks'>('search');
+    const [activeView, setActiveView] = useState<'search' | 'reviews' | 'top-tracks' | 'album-reviews'>('search');
     
     // Combined authentication check
     useEffect(() => {
@@ -93,6 +94,15 @@ function App() {
                         </svg>
                         Your Reviewed Tracks
                     </button>
+                    <button 
+                        className={`nav-button ${activeView === 'album-reviews' ? 'active' : ''}`}
+                        onClick={() => setActiveView('album-reviews')}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="nav-icon" viewBox="0 0 16 16">
+                            <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm6.5 11V2H2v11h4.5zm2 0H14V2H8.5v11z"/>
+                        </svg>
+                        Your Reviewed Albums
+                    </button>
                 </div>
                 <button 
                     onClick={() => {
@@ -118,8 +128,10 @@ function App() {
                     <SearchContainer />
                 ) : activeView === 'top-tracks' ? (
                     <TopTracks />
-                ) : (
+                ) : activeView === 'reviews' ? (
                     <UserReviewedTracks />
+                ) : (
+                    <UserReviewedAlbums />
                 )}
             </main>
         </div>

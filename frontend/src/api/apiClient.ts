@@ -294,7 +294,6 @@ export const reviewApi = {
 
 // Interface for album review request
 interface AlbumReviewRequest {
-  userId: string;
   spotifyAlbumId: string;
   description: string;
   ranking?: number;
@@ -327,9 +326,9 @@ export const albumReviewApi = {
     return response.data;
   },
   
-  getUserAlbumReview: async (userId: string, spotifyAlbumId: string): Promise<AlbumReview | null> => {
+  getUserAlbumReview: async (spotifyAlbumId: string): Promise<AlbumReview | null> => {
     try {
-      const response = await apiClient.get<AlbumReview>(`/album-reviews/user/${userId}/album/${spotifyAlbumId}`);
+      const response = await apiClient.get<AlbumReview>(`/album-reviews/user/album/${spotifyAlbumId}`);
       return response.data;
     } catch (error: any) {
       if (error.response && error.response.status === 404) {
@@ -339,8 +338,8 @@ export const albumReviewApi = {
     }
   },
   
-  getUserAlbumReviews: async (userId: string): Promise<AlbumReview[]> => {
-    const response = await apiClient.get<AlbumReview[]>(`/album-reviews/user/${userId}`);
+  getUserAlbumReviews: async (): Promise<AlbumReview[]> => {
+    const response = await apiClient.get<AlbumReview[]>(`/album-reviews/user`);
     return response.data;
   },
   

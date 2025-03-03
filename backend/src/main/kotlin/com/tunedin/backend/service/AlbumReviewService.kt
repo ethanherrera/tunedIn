@@ -7,6 +7,7 @@ import com.tunedin.backend.repository.AlbumReviewRepository
 import com.tunedin.backend.repository.TrackReviewRepository
 import org.springframework.stereotype.Service
 import java.util.UUID
+import kotlin.math.ceil
 
 @Service
 class AlbumReviewService(
@@ -96,28 +97,27 @@ class AlbumReviewService(
             review.spotifyTrackId in spotifyTrackIds 
         }
         
-        // Check if we have enough reviews
-        if (albumTrackReviews.size < spotifyTrackIds.size / 2) {
+        // Calculate average rating from available reviews
+        if (albumTrackReviews.isNotEmpty()) {
+            albumReview.rating = albumTrackReviews.map { it.rating }.average()
+        } else {
+            albumReview.rating = 5.0
+        }
+
+        //BROKEN TODO: FIX THIS
+        
+        // Check if we have enough reviews - must have reviews for at least half of the tracks
+        // If not, always set opinion to UNDEFINED regardless of rating
+        val minimumReviewsRequired = Math.ceil(spotifyTrackIds.size / 2.0).toInt()
+        if (albumTrackReviews.size < minimumReviewsRequired) {
             albumReview.opinion = AlbumOpinion.UNDEFINED
-            
-            // Still calculate average rating from available reviews
-            if (albumTrackReviews.isNotEmpty()) {
-                albumReview.rating = albumTrackReviews.map { it.rating }.average()
-            } else {
-                albumReview.rating = 5.0
-            }
-            
             return
         }
         
-        // Calculate average rating
-        val averageRating = albumTrackReviews.map { it.rating }.average()
-        albumReview.rating = averageRating
-        
-        // Set opinion based on rating buckets
+        // Set opinion based on rating buckets (only if we have enough reviews)
         albumReview.opinion = when {
-            averageRating < 4.0 -> AlbumOpinion.DISLIKE
-            averageRating < 7.0 -> AlbumOpinion.NEUTRAL
+            albumReview.rating < 4.0 -> AlbumOpinion.DISLIKE
+            albumReview.rating < 7.0 -> AlbumOpinion.NEUTRAL
             else -> AlbumOpinion.LIKED
         }
     }

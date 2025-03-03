@@ -123,18 +123,8 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
 
   const fetchAlbumReview = async () => {
     try {
-      // Get the user ID from cookies
-      const cookies = document.cookie.split(';');
-      const userIdCookie = cookies.find(cookie => cookie.trim().startsWith('userId='));
-      const userId = userIdCookie ? userIdCookie.split('=')[1].trim() : null;
-      
-      if (!userId) {
-        console.error('User ID not found in cookies');
-        return;
-      }
-      
-      // Fetch the album review
-      const review = await albumReviewApi.getUserAlbumReview(userId, album.id);
+      // Fetch the album review - userId will be handled via cookies in the backend
+      const review = await albumReviewApi.getUserAlbumReview(album.id);
       setAlbumReview(review);
       
       // If we have an album review, use its rating directly

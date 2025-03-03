@@ -1,0 +1,378 @@
+.user-reviewed-albums {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.user-reviewed-albums .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.user-reviewed-albums h2 {
+  margin: 0;
+  font-size: 24px;
+  color: white;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.refresh-button, .rerank-button, .genre-search-button {
+  min-width: 160px;
+  justify-content: center;
+}
+
+.refresh-button, .rerank-button {
+  background-color: #312e81;
+  color: white;
+  border: 1px solid #4f46e5;
+  border-radius: 9999px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.button-icon {
+  font-size: 16px;
+}
+
+.refresh-button:hover, .rerank-button:hover {
+  background-color: #4338ca;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.refresh-button:disabled, .rerank-button:disabled {
+  background-color: #1f1f1f;
+  border-color: #2d2d2d;
+  color: #6c6c6c;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.error-message {
+  color: #ef4444;
+  padding: 10px;
+  margin-bottom: 15px;
+  background-color: rgba(239, 68, 68, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.no-reviews {
+  text-align: center;
+  padding: 30px;
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  color: #a1a1aa;
+  border: 1px solid #3f3f46;
+}
+
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.review-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  border: 1px solid #3f3f46;
+  cursor: pointer;
+}
+
+.review-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+  border-color: #6366f1;
+}
+
+.album-card-container {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1rem;
+  padding: 1rem;
+  align-items: center;
+}
+
+/* Album cover container with rank */
+.album-cover-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Rank badge styling */
+.rank-badge {
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Album cover styling */
+.album-card-container .album-cover {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.album-card-container .album-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Album info styling */
+.album-card-container .album-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-right: 1rem;
+}
+
+.album-card-container .album-name {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+}
+
+.album-card-container .artist-name {
+  font-size: 1rem;
+  color: #c084fc;
+  margin: 0;
+}
+
+.album-card-container .release-date {
+  font-size: 0.875rem;
+  color: #71717a;
+  margin: 0;
+}
+
+.album-card-container .track-count {
+  font-size: 0.875rem;
+  color: #71717a;
+  margin: 0;
+}
+
+/* Rating circle styling */
+.rating-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 3px solid #1a1a1a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1.25rem;
+  padding: 2px;
+}
+
+/* Review details styling */
+.review-details {
+  grid-column: 1 / -1;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #3f3f46;
+  background-color: #27272a;
+  position: relative;
+}
+
+.review-description {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: #a1a1aa;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.review-date {
+  font-size: 0.75rem;
+  color: #71717a;
+  margin-top: 0.25rem;
+  margin-bottom: 2.5rem;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  .review-item {
+    flex-direction: row;
+  }
+  
+  .review-details {
+    flex: 1;
+    border-top: none;
+    border-left: 1px solid #3f3f46;
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  border: 1px solid #3f3f46;
+}
+
+.loading-container .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(99, 102, 241, 0.1);
+  border-radius: 50%;
+  border-top-color: #6366f1;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.loading-container p {
+  color: #a1a1aa;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Review action buttons styling - with specific selectors for UserReviewedAlbums */
+.user-reviewed-albums .album-list-review-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: -30px;
+}
+
+/* Album list specific button styles */
+.album-list-delete-button,
+.album-list-rereview-button {
+  border: none;
+  border-radius: 30px;
+  padding: 6px 12px;
+  font-weight: bold;
+  font-size: 12px;
+  cursor: pointer;
+  width: 110px;
+  text-align: center;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  box-sizing: border-box;
+}
+
+.album-list-rereview-button {
+  background-color: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #6366f1;
+}
+
+.album-list-rereview-button:hover {
+  background-color: rgba(99, 102, 241, 0.2);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.album-list-rereview-button:disabled {
+  background-color: rgba(99, 102, 241, 0.05);
+  border-color: rgba(99, 102, 241, 0.1);
+  color: rgba(99, 102, 241, 0.5);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.album-list-delete-button {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.album-list-delete-button:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.album-list-delete-button:disabled {
+  background-color: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.1);
+  color: rgba(239, 68, 68, 0.5);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.reviews-controls {
+  display: none; /* Hide this since we're using header-buttons */
+}
+
+.genre-filter {
+  margin-right: 0;
+}
+
+.active-filter {
+  display: flex;
+  align-items: center;
+  background-color: rgba(79, 70, 229, 0.1);
+  border-radius: 4px;
+  padding: 8px 16px;
+  margin-bottom: 16px;
+}
+
+.active-filter p {
+  margin: 0;
+  flex-grow: 1;
+}
+
+.clear-filter-button {
+  background-color: transparent;
+  color: #4f46e5;
+  border: 1px solid #4f46e5;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clear-filter-button:hover {
+  background-color: rgba(79, 70, 229, 0.1);
+} 

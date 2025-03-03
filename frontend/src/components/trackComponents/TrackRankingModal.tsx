@@ -226,39 +226,36 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
     setAlbumReviewError(null);
     
     try {
-      // Get the user ID from cookies
-      const cookies = document.cookie.split(';');
-      const userIdCookie = cookies.find(cookie => cookie.trim().startsWith('userId='));
-      const userId = userIdCookie ? userIdCookie.split('=')[1].trim() : null;
-      
-      if (!userId) {
-        console.error('User ID not found in cookies');
-        return;
-      }
-      
       // Get existing album review if any
-      const existingAlbumReview = await albumReviewApi.getUserAlbumReview(userId, track.albumId);
+      const existingAlbumReview = await albumReviewApi.getUserAlbumReview(track.albumId);
       
-      // Prepare track review IDs array
+      // Prepare track IDs array - use Spotify track IDs, not review IDs
       let spotifyTrackIds: string[] = [];
       
       if (existingAlbumReview) {
-        // If we already have an album review, add this track review to the list
+        // If we already have an album review, add this track to the list
         spotifyTrackIds = [...existingAlbumReview.spotifyTrackIds];
-        if (!spotifyTrackIds.includes(trackReviewId)) {
-          spotifyTrackIds.push(trackReviewId);
+        if (!spotifyTrackIds.includes(track.spotifyId)) {
+          spotifyTrackIds.push(track.spotifyId);
         }
       } else {
-        // If this is a new album review, start with just this track review
-        spotifyTrackIds = [trackReviewId];
+        // If this is a new album review, start with just this track
+        spotifyTrackIds = [track.spotifyId];
       }
+      
+      console.log('Saving album review with data:', {
+        spotifyAlbumId: track.albumId,
+        description: existingAlbumReview?.description || '',
+        spotifyTrackIds
+      });
       
       // Save the album review
       await albumReviewApi.saveAlbumReview({
-        userId,
         spotifyAlbumId: track.albumId,
         description: existingAlbumReview?.description || '', // Use existing description or empty string
         spotifyTrackIds
+      }).then(response => {
+        console.log('Album review save response:', response);
       });
       
       console.log('Album review saved successfully');
