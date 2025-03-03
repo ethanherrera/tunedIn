@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import SearchContainer from './components/searchComponents/SearchContainer';
 import UserReviewedTracks from './components/reviewComponents/UserReviewedTracks';
 import UserReviewedAlbums from './components/reviewComponents/UserReviewedAlbums';
@@ -6,6 +6,12 @@ import TopTracks from './components/topTracksComponents/TopTracks';
 import LoginPage from './components/loginComponents/LoginPage';
 import { spotifyApi } from './api/apiClient';
 import './App.css';
+
+// Memoize components to prevent unnecessary re-renders
+const MemoizedSearchContainer = memo(SearchContainer);
+const MemoizedTopTracks = memo(TopTracks);
+const MemoizedUserReviewedTracks = memo(UserReviewedTracks);
+const MemoizedUserReviewedAlbums = memo(UserReviewedAlbums);
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -124,15 +130,19 @@ function App() {
             </header>
             
             <main className="app-content">
-                {activeView === 'search' ? (
-                    <SearchContainer />
-                ) : activeView === 'top-tracks' ? (
-                    <TopTracks />
-                ) : activeView === 'reviews' ? (
-                    <UserReviewedTracks />
-                ) : (
-                    <UserReviewedAlbums />
-                )}
+                {/* Keep all components mounted but only display the active one */}
+                <div style={{ display: activeView === 'search' ? 'block' : 'none' }}>
+                    <MemoizedSearchContainer />
+                </div>
+                <div style={{ display: activeView === 'top-tracks' ? 'block' : 'none' }}>
+                    <MemoizedTopTracks />
+                </div>
+                <div style={{ display: activeView === 'reviews' ? 'block' : 'none' }}>
+                    <MemoizedUserReviewedTracks />
+                </div>
+                <div style={{ display: activeView === 'album-reviews' ? 'block' : 'none' }}>
+                    <MemoizedUserReviewedAlbums />
+                </div>
             </main>
         </div>
     );

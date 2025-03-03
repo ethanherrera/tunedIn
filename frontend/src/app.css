@@ -98,6 +98,21 @@
   width: 100%;
 }
 
+/* Tab component styles */
+.app-content > div {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+}
+
+.app-content > div[style*="display: none"] {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  visibility: hidden;
+  /* This ensures the component stays mounted but doesn't interfere with the layout */
+}
+
 .loading-container {
   display: flex;
   flex-direction: column;
