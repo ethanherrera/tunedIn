@@ -102,17 +102,23 @@ const TopTracks: React.FC = () => {
         return newReviews;
       });
       
-      // Update the tracks with their review scores and opinions
+      // Update only the tracks that were just loaded with their review scores and opinions
+      // This ensures we don't overwrite the existing tracks' data
       setTopTracks(prevTracks => {
         const updatedTracks = prevTracks.map(track => {
           const review = userReviews[track.spotifyId];
-          const updatedTrack = {
-            ...track,
-            reviewScore: review ? review.rating : undefined,
-            reviewOpinion: review ? review.opinion : undefined
-          };
-          console.log(`Track ${track.trackName} review score:`, review ? review.rating : 'none');
-          return updatedTrack;
+          
+          // Only update tracks that are in the current batch
+          if (trackIds.includes(track.spotifyId)) {
+            return {
+              ...track,
+              reviewScore: review ? review.rating : undefined,
+              reviewOpinion: review ? review.opinion : undefined
+            };
+          }
+          
+          // Return the track unchanged if it's not in the current batch
+          return track;
         });
         
         console.log('Updated tracks with review scores:', updatedTracks);
