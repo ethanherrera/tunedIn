@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './AlbumDetailsModal.css';
-import { spotifyApi, reviewApi } from '../../api/apiClient';
+import { spotifyApi, reviewApi, albumReviewApi } from '../../api/apiClient';
 import TrackDetailsModal from '../trackComponents/TrackDetailsModal';
 import TrackRankingModal from '../trackComponents/TrackRankingModal';
 
@@ -47,10 +47,12 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
   const [albumAverageScore, setAlbumAverageScore] = useState<number | null>(null);
   const [reviewedTracksCount, setReviewedTracksCount] = useState(0);
   const [tracksNeededForScore, setTracksNeededForScore] = useState(0);
+  const [albumReview, setAlbumReview] = useState<any | null>(null);
 
   useEffect(() => {
     if (isOpen && album.id) {
       fetchAlbumTracks();
+      fetchAlbumReview();
     }
   }, [isOpen, album.id]);
 
@@ -119,8 +121,36 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
     }
   };
 
+  const fetchAlbumReview = async () => {
+    try {
+      // Get the user ID from cookies
+      const cookies = document.cookie.split(';');
+      const userIdCookie = cookies.find(cookie => cookie.trim().startsWith('userId='));
+      const userId = userIdCookie ? userIdCookie.split('=')[1].trim() : null;
+      
+      if (!userId) {
+        console.error('User ID not found in cookies');
+        return;
+      }
+      
+      // Fetch the album review
+      const review = await albumReviewApi.getUserAlbumReview(userId, album.id);
+      setAlbumReview(review);
+      
+      // If we have an album review, use its rating directly
+      if (review) {
+        setAlbumAverageScore(review.rating);
+      }
+    } catch (error) {
+      console.error('Failed to fetch album review:', error);
+    }
+  };
+
   const calculateAlbumScore = () => {
     if (!tracks.length) return;
+    
+    // If we already have an album review, don't recalculate
+    if (albumReview) return;
     
     let reviewedCount = 0;
     let totalScore = 0;
@@ -172,6 +202,8 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
     setSelectedTrack(null);
     // Refresh track reviews to show the newly submitted review
     fetchTrackReviews();
+    // Refresh album review
+    fetchAlbumReview();
   };
 
   if (!isOpen) return null;
@@ -270,7 +302,9 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
                         {albumAverageScore.toFixed(1)}
                       </span>
                       <p className="album-details-modal-score-unlock-text">
-                        Your tunedIn score
+                        {albumReview && albumReview.opinion === 'UNDEFINED' 
+                          ? `Review ${Math.ceil(tracks.length / 2) - albumReview.spotifyTrackIds.length} more track${Math.ceil(tracks.length / 2) - albumReview.spotifyTrackIds.length !== 1 ? 's' : ''}`
+                          : 'Your tunedIn score'}
                       </p>
                     </div>
                   )}
@@ -332,6 +366,7 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
           onReReview={handleReviewTrack}
           onReviewDeleted={() => {
             fetchTrackReviews();
+            fetchAlbumReview();
             handleTrackModalClose();
           }}
           opinion={trackReviews[selectedTrack.spotifyId]?.[0]?.opinion}
@@ -345,7 +380,12 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
         <TrackRankingModal
           isOpen={isTrackRankingModalOpen}
           onClose={handleRankingModalClose}
-          track={selectedTrack}
+          track={{
+            ...selectedTrack,
+            albumId: album.id
+          }}
+          existingReviewId={trackReviews[selectedTrack.spotifyId]?.[0]?.id}
+          onAlbumReviewSaved={fetchAlbumReview}
         />
       )}
     </>

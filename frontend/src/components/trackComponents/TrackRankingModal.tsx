@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './TrackRankingModal.css';
-import { reviewApi } from '../../api/apiClient';
+import { reviewApi, albumReviewApi } from '../../api/apiClient';
 import TrackComparisonModal from './TrackComparisonModal';
 
 interface TrackRankingModalProps {
@@ -12,11 +12,13 @@ interface TrackRankingModalProps {
     artistName: string;
     trackName: string;
     spotifyId: string;
+    albumId: string;
   };
   existingReviewId?: string;
+  onAlbumReviewSaved?: () => void;
 }
 
-const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, track, existingReviewId }) => {
+const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, track, existingReviewId, onAlbumReviewSaved }) => {
   const [review, setReview] = useState('');
   const [rating, setRating] = useState<'dislike' | 'neutral' | 'like' | null>(null);
   const [wordCount, setWordCount] = useState(0);
@@ -40,6 +42,9 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
   const [comparisonDataReady, setComparisonDataReady] = useState(false);
   // Store the final ranking determined by binary search
   const [finalRanking, setFinalRanking] = useState<number | null>(null);
+  // Add state for album review
+  const [isSavingAlbumReview, setIsSavingAlbumReview] = useState(false);
+  const [albumReviewError, setAlbumReviewError] = useState<string | null>(null);
 
   // Reset form data when modal is closed or when track changes
   useEffect(() => {
@@ -184,16 +189,21 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
         ranking: finalRanking || 0 // Use the ranking from binary search if available
       };
       
+      let reviewResponse;
+      
       // If we have an existing review ID, update it
       if (existingReviewId) {
-        await reviewApi.updateReview(existingReviewId, reviewData);
+        reviewResponse = await reviewApi.updateReview(existingReviewId, reviewData);
       } else {
         // Otherwise create a new review
-        await reviewApi.createReview(reviewData);
+        reviewResponse = await reviewApi.createReview(reviewData);
       }
       
       // Mark as submitted to prevent duplicate submissions
       setHasSubmittedReview(true);
+      
+      // After successfully submitting the track review, save the album review
+      await saveAlbumReview(reviewResponse.id);
       
       // Close the modal
       onClose();
@@ -202,6 +212,66 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
       setError('Failed to submit your review. Please try again.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Function to save album review
+  const saveAlbumReview = async (trackReviewId: string) => {
+    if (!track.albumId) {
+      console.warn('Album ID is missing, cannot save album review');
+      return;
+    }
+    
+    setIsSavingAlbumReview(true);
+    setAlbumReviewError(null);
+    
+    try {
+      // Get the user ID from cookies
+      const cookies = document.cookie.split(';');
+      const userIdCookie = cookies.find(cookie => cookie.trim().startsWith('userId='));
+      const userId = userIdCookie ? userIdCookie.split('=')[1].trim() : null;
+      
+      if (!userId) {
+        console.error('User ID not found in cookies');
+        return;
+      }
+      
+      // Get existing album review if any
+      const existingAlbumReview = await albumReviewApi.getUserAlbumReview(userId, track.albumId);
+      
+      // Prepare track review IDs array
+      let spotifyTrackIds: string[] = [];
+      
+      if (existingAlbumReview) {
+        // If we already have an album review, add this track review to the list
+        spotifyTrackIds = [...existingAlbumReview.spotifyTrackIds];
+        if (!spotifyTrackIds.includes(trackReviewId)) {
+          spotifyTrackIds.push(trackReviewId);
+        }
+      } else {
+        // If this is a new album review, start with just this track review
+        spotifyTrackIds = [trackReviewId];
+      }
+      
+      // Save the album review
+      await albumReviewApi.saveAlbumReview({
+        userId,
+        spotifyAlbumId: track.albumId,
+        description: existingAlbumReview?.description || '', // Use existing description or empty string
+        spotifyTrackIds
+      });
+      
+      console.log('Album review saved successfully');
+      
+      // Notify parent component that album review was saved
+      if (onAlbumReviewSaved) {
+        onAlbumReviewSaved();
+      }
+    } catch (err) {
+      console.error('Failed to save album review:', err);
+      setAlbumReviewError('Failed to save album review');
+    } finally {
+      setIsSavingAlbumReview(false);
     }
   };
 

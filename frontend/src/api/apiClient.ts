@@ -291,3 +291,60 @@ export const reviewApi = {
     return response.data;
   }
 };
+
+// Interface for album review request
+interface AlbumReviewRequest {
+  userId: string;
+  spotifyAlbumId: string;
+  description: string;
+  ranking?: number;
+  genres?: string[];
+  spotifyTrackIds: string[];
+}
+
+// Interface for album review response
+interface AlbumReview {
+  id: string;
+  userId: string;
+  spotifyAlbumId: string;
+  opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED' | 'UNDEFINED';
+  description: string;
+  rating: number;
+  ranking: number;
+  createdAt: number;
+  genres: string[];
+  spotifyTrackIds: string[];
+}
+
+export const albumReviewApi = {
+  saveAlbumReview: async (reviewData: AlbumReviewRequest): Promise<AlbumReview> => {
+    const response = await apiClient.post<AlbumReview>('/album-reviews/save', reviewData);
+    return response.data;
+  },
+  
+  getAlbumReviews: async (spotifyAlbumId: string): Promise<AlbumReview[]> => {
+    const response = await apiClient.get<AlbumReview[]>(`/album-reviews/album/${spotifyAlbumId}`);
+    return response.data;
+  },
+  
+  getUserAlbumReview: async (userId: string, spotifyAlbumId: string): Promise<AlbumReview | null> => {
+    try {
+      const response = await apiClient.get<AlbumReview>(`/album-reviews/user/${userId}/album/${spotifyAlbumId}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.status === 404) {
+        return null;
+      }
+      throw error;
+    }
+  },
+  
+  getUserAlbumReviews: async (userId: string): Promise<AlbumReview[]> => {
+    const response = await apiClient.get<AlbumReview[]>(`/album-reviews/user/${userId}`);
+    return response.data;
+  },
+  
+  deleteAlbumReview: async (reviewId: string): Promise<void> => {
+    await apiClient.delete(`/album-reviews/${reviewId}`);
+  }
+};
