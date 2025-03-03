@@ -34,8 +34,7 @@ const UserReviewedAlbums: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedReview, setSelectedReview] = useState<ReviewWithAlbum | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState<boolean>(false);
-  const [isReReviewModalOpen, setIsReReviewModalOpen] = useState<boolean>(false);
-  const [isDeleting, setIsDeleting] = useState<{ [key: string]: boolean }>({});
+  const [shouldRefreshReviews, setShouldRefreshReviews] = useState<boolean>(false);
 
   // Function to get color based on rating value
   const getRatingColor = (rating: number): string => {
@@ -176,57 +175,22 @@ const UserReviewedAlbums: React.FC = () => {
   }, []);
 
   const handleAlbumClick = (review: ReviewWithAlbum, e?: React.MouseEvent) => {
-    // Don't open the modal if clicking on action buttons
-    if (e && (e.target as HTMLElement).closest('.review-actions')) {
-      return;
-    }
-    
     setSelectedReview(review);
     setIsDetailsModalOpen(true);
   };
 
   const handleCloseDetailsModal = () => {
     setIsDetailsModalOpen(false);
-    // Refresh the reviews list when the modal is closed
-    fetchUserReviews();
-  };
-
-  const handleReReview = () => {
-    setIsDetailsModalOpen(false);
-    setIsReReviewModalOpen(true);
-  };
-
-  const handleCloseReReviewModal = () => {
-    setIsReReviewModalOpen(false);
-    // Refresh the reviews list after re-reviewing
-    fetchUserReviews();
-  };
-
-  const handleReReviewFromList = (review: ReviewWithAlbum, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening the details modal
-    setSelectedReview(review);
-    setIsReReviewModalOpen(true);
-  };
-
-  const handleDeleteReviewFromList = async (review: ReviewWithAlbum, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening the details modal
-    
-    if (window.confirm('Are you sure you want to delete this review?')) {
-      // Set deleting state for this specific review
-      setIsDeleting(prev => ({ ...prev, [review.id]: true }));
-      
-      try {
-        await albumReviewApi.deleteAlbumReview(review.id);
-        // Refresh the reviews list after deletion
-        fetchUserReviews();
-      } catch (error) {
-        console.error('Failed to delete review:', error);
-        alert('Failed to delete review. Please try again.');
-      } finally {
-        // Clear deleting state for this review
-        setIsDeleting(prev => ({ ...prev, [review.id]: false }));
-      }
+    // Only refresh the reviews list if a review was made
+    if (shouldRefreshReviews) {
+      fetchUserReviews();
+      setShouldRefreshReviews(false);
     }
+  };
+
+  const handleReviewUpdated = () => {
+    // Set the flag to refresh reviews when the modal closes
+    setShouldRefreshReviews(true);
   };
 
   return (
@@ -308,23 +272,6 @@ const UserReviewedAlbums: React.FC = () => {
                 <p className="review-date">
                   Reviewed on: {new Date(review.createdAt).toLocaleDateString()}
                 </p>
-                
-                {/* Add review action buttons */}
-                <div className="review-actions">
-                  <button 
-                    className="album-list-delete-button"
-                    onClick={(e) => handleDeleteReviewFromList(review, e)}
-                    disabled={isDeleting[review.id]}
-                  >
-                    {isDeleting[review.id] ? 'Deleting...' : 'Delete Review'}
-                  </button>
-                  <button 
-                    className="album-list-rereview-button"
-                    onClick={(e) => handleReReviewFromList(review, e)}
-                  >
-                    Re-review
-                  </button>
-                </div>
               </div>
             </div>
           ))}
@@ -350,6 +297,7 @@ const UserReviewedAlbums: React.FC = () => {
             album_type: '', // We don't have this info in the review data
             total_tracks: selectedReview.album.totalTracks
           }}
+          onReviewUpdated={handleReviewUpdated}
         />
       )}
     </div>

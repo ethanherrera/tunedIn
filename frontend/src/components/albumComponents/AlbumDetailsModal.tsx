@@ -31,12 +31,14 @@ interface AlbumDetailsModalProps {
     album_type: string;
     total_tracks: number;
   };
+  onReviewUpdated?: () => void;
 }
 
 const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({ 
   isOpen, 
   onClose, 
-  album 
+  album,
+  onReviewUpdated
 }) => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -196,6 +198,10 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
     setIsTrackRankingModalOpen(false);
     setSelectedTrack(null);
     loadData(); // Reload data to refresh reviews
+    // Notify parent component that a review was updated
+    if (onReviewUpdated) {
+      onReviewUpdated();
+    }
   };
 
   if (!isOpen || !isRendered) return null;
@@ -375,6 +381,10 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
           onReviewDeleted={() => {
             loadData();
             handleTrackModalClose();
+            // Notify parent component that a review was deleted
+            if (onReviewUpdated) {
+              onReviewUpdated();
+            }
           }}
           opinion={trackReviews[selectedTrack.spotifyId]?.[0]?.opinion}
           description={trackReviews[selectedTrack.spotifyId]?.[0]?.description}
@@ -392,7 +402,13 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
             albumId: album.id
           }}
           existingReviewId={trackReviews[selectedTrack.spotifyId]?.[0]?.id}
-          onAlbumReviewSaved={loadData}
+          onAlbumReviewSaved={() => {
+            loadData();
+            // Notify parent component that a review was updated
+            if (onReviewUpdated) {
+              onReviewUpdated();
+            }
+          }}
         />
       )}
     </>
