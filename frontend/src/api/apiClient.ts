@@ -94,6 +94,7 @@ interface CreateReviewRequest {
   spotifyTrackId: string;
   opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
   description: string;
+  ranking?: number;
 }
 
 interface TrackReview {

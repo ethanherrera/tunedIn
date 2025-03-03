@@ -58,7 +58,7 @@ const UserReviewedAlbums: React.FC = () => {
       const userId = userProfile.id;
       
       // Fetch all album reviews for the user
-      const userAlbumReviews = await albumReviewApi.getUserAlbumReviews(userId);
+      const userAlbumReviews = await albumReviewApi.getUserAlbumReviews();
       
       // If there are no reviews, return early
       if (userAlbumReviews.length === 0) {
@@ -146,7 +146,15 @@ const UserReviewedAlbums: React.FC = () => {
       // Sort reviews primarily by rating (highest to lowest)
       // This will override the previous opinion-based sorting
       reviewsWithAlbums.sort((a, b) => {
-        // Sort by rating (highest to lowest)
+        // First, put all UNDEFINED opinions at the bottom
+        if (a.opinion === 'UNDEFINED' && b.opinion !== 'UNDEFINED') {
+          return 1; // a goes after b
+        }
+        if (a.opinion !== 'UNDEFINED' && b.opinion === 'UNDEFINED') {
+          return -1; // a goes before b
+        }
+        
+        // Then sort by rating (highest to lowest)
         return b.rating - a.rating;
       });
       
@@ -368,10 +376,10 @@ const UserReviewedAlbums: React.FC = () => {
                       review.opinion === 'DISLIKE' ? '#e74c3c' :  // Red for dislike
                       review.opinion === 'NEUTRAL' ? '#f39c12' :  // Yellow/orange for neutral
                       review.opinion === 'LIKED' ? '#2ecc71' :    // Green for liked
-                      '#6c757d'                                   // Gray for undefined
+                      '#888888'                                   // Gray for undefined
                   }}
                 >
-                  {review.rating.toFixed(1)}
+                  {review.opinion === 'UNDEFINED' ? '~' : review.rating.toFixed(1)}
                 </div>
               </div>
               

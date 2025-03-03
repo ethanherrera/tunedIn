@@ -286,14 +286,18 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
                       <span 
                         className="album-details-modal-rating-circle"
                         style={{
-                          backgroundColor: getRatingColor(albumAverageScore)
+                          backgroundColor: albumReview && albumReview.opinion === 'UNDEFINED' 
+                            ? '#888888' 
+                            : getRatingColor(albumAverageScore)
                         }}
                       >
-                        {albumAverageScore.toFixed(1)}
+                        {albumReview && albumReview.opinion === 'UNDEFINED' 
+                          ? '~' 
+                          : albumAverageScore.toFixed(1)}
                       </span>
                       <p className="album-details-modal-score-unlock-text">
                         {albumReview && albumReview.opinion === 'UNDEFINED' 
-                          ? `Review ${Math.ceil(tracks.length / 2) - albumReview.spotifyTrackIds.length} more track${Math.ceil(tracks.length / 2) - albumReview.spotifyTrackIds.length !== 1 ? 's' : ''}`
+                          ? `${Math.ceil(tracks.length / 2) - reviewedTracksCount} track${Math.ceil(tracks.length / 2) - reviewedTracksCount !== 1 ? 's' : ''} remaining`
                           : 'Your tunedIn score'}
                       </p>
                     </div>

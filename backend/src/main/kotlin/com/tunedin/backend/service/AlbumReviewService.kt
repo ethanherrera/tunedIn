@@ -104,7 +104,6 @@ class AlbumReviewService(
             albumReview.rating = 5.0
         }
 
-        //BROKEN TODO: FIX THIS
         
         // Check if we have enough reviews - must have reviews for at least half of the tracks
         // If not, always set opinion to UNDEFINED regardless of rating
