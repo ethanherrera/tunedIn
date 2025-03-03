@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { albumReviewApi, spotifyApi } from '../../api/apiClient';
-import { FiRefreshCw, FiShuffle } from 'react-icons/fi';
-import GenreSearch from './GenreSearch';
+import { FiRefreshCw } from 'react-icons/fi';
 import AlbumDetailsModal from '../albumComponents/AlbumDetailsModal';
 import './UserReviewedAlbums.css';
 
@@ -36,11 +35,7 @@ const UserReviewedAlbums: React.FC = () => {
   const [selectedReview, setSelectedReview] = useState<ReviewWithAlbum | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState<boolean>(false);
   const [isReReviewModalOpen, setIsReReviewModalOpen] = useState<boolean>(false);
-  const [isRandomReviewModalOpen, setIsRandomReviewModalOpen] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<{ [key: string]: boolean }>({});
-  const [selectedGenre, setSelectedGenre] = useState<{ id: number; name: string } | null>(null);
-  const [allReviews, setAllReviews] = useState<ReviewWithAlbum[]>([]);
-  const [filteredReviews, setFilteredReviews] = useState<ReviewWithAlbum[]>([]);
 
   // Function to get color based on rating value
   const getRatingColor = (rating: number): string => {
@@ -166,8 +161,6 @@ const UserReviewedAlbums: React.FC = () => {
         review.rank = index + 1;
       });
       
-      setAllReviews(reviewsWithAlbums);
-      setFilteredReviews(reviewsWithAlbums);
       setReviews(reviewsWithAlbums);
     } catch (err) {
       console.error('Failed to fetch user album reviews:', err);
@@ -209,26 +202,6 @@ const UserReviewedAlbums: React.FC = () => {
     fetchUserReviews();
   };
 
-  const handleRerankRandomAlbum = () => {
-    if (reviews.length === 0) {
-      setError('No albums available to rerank. Please review some albums first.');
-      return;
-    }
-    
-    // Select a random album from the reviews
-    const randomIndex = Math.floor(Math.random() * reviews.length);
-    const randomReview = reviews[randomIndex];
-    
-    setSelectedReview(randomReview);
-    setIsRandomReviewModalOpen(true);
-  };
-
-  const handleCloseRandomReviewModal = () => {
-    setIsRandomReviewModalOpen(false);
-    // Refresh the reviews list after re-reviewing
-    fetchUserReviews();
-  };
-
   const handleReReviewFromList = (review: ReviewWithAlbum, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent opening the details modal
     setSelectedReview(review);
@@ -256,48 +229,11 @@ const UserReviewedAlbums: React.FC = () => {
     }
   };
 
-  const handleGenreSelect = (genre: { id: number; name: string }) => {
-    setSelectedGenre(genre);
-    console.log('Selected genre in parent component:', genre);
-    
-    // Filter reviews by the selected genre
-    if (allReviews.length > 0) {
-      const filtered = allReviews.filter(review => 
-        review.genres && review.genres.some(g => 
-          g.toLowerCase() === genre.name.toLowerCase() || 
-          g.toLowerCase().includes(genre.name.toLowerCase())
-        )
-      );
-      setFilteredReviews(filtered);
-    }
-  };
-
-  const clearGenreFilter = () => {
-    setSelectedGenre(null);
-    setFilteredReviews(allReviews);
-    setReviews(allReviews);
-  };
-
   return (
     <div className="user-reviewed-albums">
       <div className="header">
         <h2>Your Reviewed Albums</h2>
         <div className="header-buttons">
-          <GenreSearch 
-            onGenreSelect={handleGenreSelect}
-            buttonText="Filter by Genre"
-            className="genre-filter"
-            reviews={allReviews}
-          />
-          <button 
-            onClick={handleRerankRandomAlbum}
-            disabled={loading || reviews.length === 0}
-            className="rerank-button"
-            title="Rerank a random album from your list"
-          >
-            <FiShuffle className="button-icon" />
-            Rerank Random Album
-          </button>
           <button 
             onClick={fetchUserReviews}
             disabled={loading}
@@ -310,18 +246,6 @@ const UserReviewedAlbums: React.FC = () => {
         </div>
       </div>
       
-      {selectedGenre && (
-        <div className="active-filter">
-          <p>Filtering by genre: <strong>{selectedGenre.name}</strong></p>
-          <button 
-            className="clear-filter-button"
-            onClick={clearGenreFilter}
-          >
-            Clear Filter
-          </button>
-        </div>
-      )}
-      
       {error && <div className="error-message">{error}</div>}
       
       {loading ? (
@@ -329,17 +253,13 @@ const UserReviewedAlbums: React.FC = () => {
           <div className="loading-spinner"></div>
           <p>Loading your reviewed albums...</p>
         </div>
-      ) : filteredReviews.length === 0 ? (
+      ) : reviews.length === 0 ? (
         <div className="no-reviews">
-          {selectedGenre ? (
-            <p>No reviews found with the genre "{selectedGenre.name}". Try another genre or clear the filter.</p>
-          ) : (
-            <p>You haven't reviewed any albums yet. Search for albums to review them!</p>
-          )}
+          <p>You haven't reviewed any albums yet. Search for albums to review them!</p>
         </div>
       ) : (
         <div className="reviews-list">
-          {filteredReviews.map((review) => (
+          {reviews.map((review) => (
             <div 
               key={review.id} 
               className="review-item"
