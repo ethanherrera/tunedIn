@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { albumReviewApi, spotifyApi } from '../../api/apiClient';
 import { FiRefreshCw, FiShuffle } from 'react-icons/fi';
 import GenreSearch from './GenreSearch';
+import AlbumDetailsModal from '../albumComponents/AlbumDetailsModal';
 import './UserReviewedAlbums.css';
 
 // Interface for the review data with album information
@@ -142,19 +143,11 @@ const UserReviewedAlbums: React.FC = () => {
         }
       });
       
-      // Sort reviews by opinion buckets (LIKED first, then NEUTRAL, then DISLIKE)
-      // Within each bucket, sort by ranking (lowest to highest)
+      // Sort reviews primarily by rating (highest to lowest)
+      // This will override the previous opinion-based sorting
       reviewsWithAlbums.sort((a, b) => {
-        // First sort by opinion buckets
-        const opinionOrder = { 'LIKED': 1, 'NEUTRAL': 2, 'DISLIKE': 3, 'UNDEFINED': 4 };
-        const opinionComparison = opinionOrder[a.opinion] - opinionOrder[b.opinion];
-        
-        if (opinionComparison !== 0) {
-          return opinionComparison; // Different opinion buckets
-        }
-        
-        // Within the same opinion bucket, sort by ranking (lowest to highest)
-        return a.ranking - b.ranking;
+        // Sort by rating (highest to lowest)
+        return b.rating - a.rating;
       });
       
       // Update the display information for each review
@@ -193,6 +186,8 @@ const UserReviewedAlbums: React.FC = () => {
 
   const handleCloseDetailsModal = () => {
     setIsDetailsModalOpen(false);
+    // Refresh the reviews list when the modal is closed
+    fetchUserReviews();
   };
 
   const handleReReview = () => {
@@ -409,7 +404,26 @@ const UserReviewedAlbums: React.FC = () => {
       )}
 
       {/* Album details and re-review modals would go here */}
-      {/* These would need to be implemented separately */}
+      {selectedReview && (
+        <AlbumDetailsModal
+          isOpen={isDetailsModalOpen}
+          onClose={handleCloseDetailsModal}
+          album={{
+            id: selectedReview.spotifyAlbumId,
+            name: selectedReview.album.albumName,
+            artists: [{ 
+              id: '', // We don't have the artist ID in the review data
+              name: selectedReview.album.artistName 
+            }],
+            images: [{ 
+              url: selectedReview.album.albumImageUrl 
+            }],
+            release_date: selectedReview.album.releaseDate,
+            album_type: '', // We don't have this info in the review data
+            total_tracks: selectedReview.album.totalTracks
+          }}
+        />
+      )}
     </div>
   );
 };
