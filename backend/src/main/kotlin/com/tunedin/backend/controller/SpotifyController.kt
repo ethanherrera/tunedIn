@@ -283,4 +283,22 @@ class SpotifyController(
                 .body(SpotifyErrorResponse("Failed to get album: ${e.message}. Available cookies: [$cookiesInfo]"))
         }
     }
+    
+    @GetMapping("/artists/{id}")
+    fun getArtistById(@PathVariable id: String, request: HttpServletRequest): ResponseEntity<*> {
+        try {
+            // Get access token from cookie
+            val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
+            val accessToken = request.cookies?.find { it.name == "accessToken" }?.value
+                ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(SpotifyErrorResponse("Access token not found in cookies. Available cookies: [$cookiesInfo]"))
+            
+            val artist = spotifyService.getArtist(id, accessToken)
+            return ResponseEntity.ok(artist)
+        } catch (e: Exception) {
+            val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(SpotifyErrorResponse("Failed to get artist: ${e.message}. Available cookies: [$cookiesInfo]"))
+        }
+    }
 } 

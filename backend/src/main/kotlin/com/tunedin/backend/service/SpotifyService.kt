@@ -329,4 +329,28 @@ class SpotifyService(
         
         return response.body ?: throw RuntimeException("Failed to get album details")
     }
+
+    /**
+     * Get a single artist by their Spotify ID
+     * @param id The Spotify ID of the artist
+     * @param accessToken Spotify access token
+     * @return Artist object
+     */
+    fun getArtist(id: String, accessToken: String): Artist {
+        val restTemplate = RestTemplate()
+        val url = "https://api.spotify.com/v1/artists/$id"
+
+        val headers = HttpHeaders().apply {
+            setBearerAuth(accessToken)
+        }
+
+        val response = restTemplate.exchange(
+            url,
+            HttpMethod.GET,
+            HttpEntity<Any>(headers),
+            Artist::class.java
+        )
+
+        return response.body ?: throw RuntimeException("No response body from Spotify artist API")
+    }
 } 

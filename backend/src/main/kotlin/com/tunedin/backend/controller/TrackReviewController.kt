@@ -30,13 +30,18 @@ class TrackReviewController(
             ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(SpotifyErrorResponse("User ID not found in cookies. Available cookies: [$cookiesInfo]"))
         
+        val accessToken = httpRequest.cookies?.find { it.name == "accessToken" }?.value
+            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(SpotifyErrorResponse("Access token not found in cookies. Available cookies: [$cookiesInfo]"))
+        
         val review = trackReviewService.createReview(
             userId = userId,
             spotifyTrackId = request.spotifyTrackId,
             opinion = request.opinion,
             description = request.description,
             rating = request.rating,
-            ranking = request.ranking
+            ranking = request.ranking,
+            accessToken = accessToken
         )
         return ResponseEntity.ok(review)
     }

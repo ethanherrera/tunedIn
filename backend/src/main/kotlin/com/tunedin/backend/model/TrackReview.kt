@@ -16,7 +16,8 @@ data class TrackReview(
     var description: String,
     var rating: Double = 5.0,
     var ranking: Int = 0,
-    var createdAt: Long = System.currentTimeMillis()
+    var createdAt: Long = System.currentTimeMillis(),
+    var genres: List<String> = emptyList()
 ) {
     init {
         require(description.split("\\s+".toRegex()).size <= 200) {

@@ -105,6 +105,7 @@ interface TrackReview {
   rating: number;
   ranking: number;
   createdAt: number;
+  genres: string[];
 }
 
 // Add User Profile interface
@@ -235,6 +236,11 @@ export const spotifyApi = {
     const response = await apiClient.get<Album>(`/spotify/albums/${albumId}`, {
       params: market ? { market } : undefined
     });
+    return response.data;
+  },
+
+  getArtist: async (artistId: string) => {
+    const response = await apiClient.get<Artist>(`/spotify/artists/${artistId}`);
     return response.data;
   }
 };

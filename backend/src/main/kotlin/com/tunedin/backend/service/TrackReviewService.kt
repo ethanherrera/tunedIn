@@ -8,9 +8,19 @@ import java.util.UUID
 
 @Service
 class TrackReviewService(
-    private val trackReviewRepository: TrackReviewRepository
+    private val trackReviewRepository: TrackReviewRepository,
+    private val spotifyService: SpotifyService
 ) {
-    fun createReview(userId: String, spotifyTrackId: String, opinion: Opinion, description: String, rating: Double, ranking: Int = 0): TrackReview {
+    fun createReview(userId: String, spotifyTrackId: String, opinion: Opinion, description: String, rating: Double, ranking: Int = 0, accessToken: String): TrackReview {
+        // Get the track to fetch artist information
+        val track = spotifyService.getTrack(spotifyTrackId, accessToken)
+        
+        // Fetch genres for all artists
+        val allGenres = track.artists.flatMap { artist ->
+            val artistDetails = spotifyService.getArtist(artist.id, accessToken)
+            artistDetails.genres ?: emptyList()
+        }.distinct()
+
         // Check if the user has already reviewed this track
         val existingReview = trackReviewRepository.findByUserIdAndSpotifyTrackId(userId, spotifyTrackId)
         
@@ -29,6 +39,7 @@ class TrackReviewService(
             }
             
             existingReview.description = description
+            existingReview.genres = allGenres
             
             // Don't update the createdAt timestamp to preserve the original review date
             val savedReview = trackReviewRepository.save(existingReview)
@@ -57,7 +68,8 @@ class TrackReviewService(
             opinion = opinion,
             description = description,
             rating = 5.0, // Default rating, will be updated by rescoreReviews
-            ranking = nextRank // Use the appropriate rank for this opinion group
+            ranking = nextRank, // Use the appropriate rank for this opinion group
+            genres = allGenres
         )
         val savedReview = trackReviewRepository.save(review)
         
