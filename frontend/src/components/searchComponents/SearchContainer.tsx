@@ -278,21 +278,49 @@ const SearchContainer: React.FC = () => {
       
       {searchResults.length > 0 && isFocused && (
         <div className="search-results">
-          {searchResults.map((item) => (
-            <div key={item.type === 'track' ? `track-${(item.data as Track).spotifyId}` : `album-${(item.data as Album).id}`} className="search-result-item">
-              {item.type === 'track' ? (
-                <TrackCardSearchResult 
-                  track={item.data as Track} 
-                  onClick={handleTrackClick}
-                />
-              ) : (
-                <AlbumCard 
-                  album={item.data as Album} 
-                  onClick={handleAlbumClick}
-                />
-              )}
+          <div className="search-results-horizontal">
+            {/* Tracks Section - Left */}
+            <div className={`search-results-section search-results-tracks ${!searchResults.some(item => item.type === 'track') ? 'search-results-empty' : ''}`}>
+              <div className="search-results-section-header">Tracks</div>
+              <div className="search-results-section-content">
+                {searchResults
+                  .filter(item => item.type === 'track')
+                  .map((item) => (
+                    <div key={`track-${(item.data as Track).spotifyId}`} className="search-result-item">
+                      <TrackCardSearchResult 
+                        track={item.data as Track} 
+                        onClick={handleTrackClick}
+                      />
+                    </div>
+                  ))
+                }
+                {!searchResults.some(item => item.type === 'track') && (
+                  <div className="search-results-empty-message">No tracks found</div>
+                )}
+              </div>
             </div>
-          ))}
+            
+            {/* Albums Section - Right */}
+            <div className={`search-results-section search-results-albums ${!searchResults.some(item => item.type === 'album') ? 'search-results-empty' : ''}`}>
+              <div className="search-results-section-header">Albums</div>
+              <div className="search-results-section-content">
+                {searchResults
+                  .filter(item => item.type === 'album')
+                  .map((item) => (
+                    <div key={`album-${(item.data as Album).id}`} className="search-result-item">
+                      <AlbumCard 
+                        album={item.data as Album} 
+                        onClick={handleAlbumClick}
+                      />
+                    </div>
+                  ))
+                }
+                {!searchResults.some(item => item.type === 'album') && (
+                  <div className="search-results-empty-message">No albums found</div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
