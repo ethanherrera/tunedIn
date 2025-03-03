@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './AlbumDetailsModal.css';
-import { spotifyApi } from '../../api/apiClient';
+import { spotifyApi, reviewApi } from '../../api/apiClient';
 import TrackDetailsModal from '../trackComponents/TrackDetailsModal';
 import TrackRankingModal from '../trackComponents/TrackRankingModal';
 
@@ -43,12 +43,19 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
   const [isTrackDetailsModalOpen, setIsTrackDetailsModalOpen] = useState(false);
   const [isTrackRankingModalOpen, setIsTrackRankingModalOpen] = useState(false);
+  const [trackReviews, setTrackReviews] = useState<Record<string, any | null>>({});
 
   useEffect(() => {
     if (isOpen && album.id) {
       fetchAlbumTracks();
     }
   }, [isOpen, album.id]);
+
+  useEffect(() => {
+    if (tracks.length > 0) {
+      fetchTrackReviews();
+    }
+  }, [tracks]);
 
   const fetchAlbumTracks = async () => {
     setIsLoading(true);
@@ -74,6 +81,34 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
       console.error('Failed to fetch album tracks:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchTrackReviews = async () => {
+    try {
+      // Extract all track IDs from the tracks array
+      const trackIds = tracks.map(track => track.spotifyId);
+      
+      // Make the batch API request to get all reviews
+      const reviews = await reviewApi.getTrackReviewsBatch(trackIds);
+      
+      // Debug log to see the structure of the reviews object
+      console.log('Debug - Track reviews structure:', reviews);
+      
+      // Log each track's review status
+      tracks.forEach(track => {
+        const trackReview = reviews[track.spotifyId];
+        console.log(
+          `Track "${track.trackName}" has review:`, 
+          Array.isArray(trackReview) && trackReview.length > 0 ? 'YES' : 'NO',
+          trackReview
+        );
+      });
+      
+      // Set the reviews in state
+      setTrackReviews(reviews);
+    } catch (error) {
+      console.error('Failed to fetch track reviews:', error);
     }
   };
 
@@ -119,6 +154,13 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  // Function to get color based on rating value
+  const getRatingColor = (rating: number): string => {
+    if (rating < 4.0) return '#e74c3c'; // Red for low ratings (dislike range: 0.0-3.9)
+    if (rating < 8.0) return '#f39c12'; // Yellow/orange for mid ratings (neutral range: 4.0-7.9)
+    return '#2ecc71'; // Green for high ratings (like range: 8.0-10.0)
   };
 
   return (
@@ -182,9 +224,17 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
                         />
                       </div>
                       <div className="album-details-modal-track-info">
-                        <div>
-                          <h3 className="album-details-modal-track-name">{track.trackName}</h3>
-                        </div>
+                        <h3 className="album-details-modal-track-name">{track.trackName}</h3>
+                        {trackReviews[track.spotifyId] && Array.isArray(trackReviews[track.spotifyId]) && trackReviews[track.spotifyId].length > 0 ? (
+                          <div 
+                            className="album-details-modal-rating-circle"
+                            style={{
+                              backgroundColor: getRatingColor(trackReviews[track.spotifyId][0].rating)
+                            }}
+                          >
+                            {trackReviews[track.spotifyId][0].rating.toFixed(1)}
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -203,6 +253,10 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
           onClose={handleTrackModalClose}
           track={selectedTrack}
           onReview={handleReviewTrack}
+          opinion={trackReviews[selectedTrack.spotifyId]?.[0]?.opinion}
+          description={trackReviews[selectedTrack.spotifyId]?.[0]?.description}
+          rating={trackReviews[selectedTrack.spotifyId]?.[0]?.rating}
+          reviewId={trackReviews[selectedTrack.spotifyId]?.[0]?.id}
         />
       )}
 
