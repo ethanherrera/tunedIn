@@ -183,16 +183,11 @@ class TrackReviewController(
     }
 
     /**
-     * Batch endpoint to get the current user's reviews for multiple tracks
+     * Batch endpoint to get reviews for multiple tracks
      */
     @PostMapping("/batch/tracks")
-    fun getReviewsByTrackIds(@RequestBody spotifyTrackIds: List<String>, request: HttpServletRequest): ResponseEntity<*> {
-        val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
-        val userId = request.cookies?.find { it.name == "userId" }?.value
-            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(SpotifyErrorResponse("User ID not found in cookies. Available cookies: [$cookiesInfo]"))
-        
-        val reviewsByTrackId = trackReviewService.getUserReviewsByTrackIds(userId, spotifyTrackIds)
+    fun getReviewsByTrackIds(@RequestBody spotifyTrackIds: List<String>): ResponseEntity<Map<String, List<TrackReview>>> {
+        val reviewsByTrackId = trackReviewService.getReviewsByTrackIds(spotifyTrackIds)
         return ResponseEntity.ok(reviewsByTrackId)
     }
 }

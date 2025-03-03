@@ -210,18 +210,6 @@ class TrackReviewService(
         }
     }
     
-    /**
-     * Get a specific user's reviews for multiple track IDs
-     * @param userId The ID of the user whose reviews to retrieve
-     * @param spotifyTrackIds List of Spotify track IDs to retrieve reviews for
-     * @return Map of track ID to the user's review for that track (or null if no review exists)
-     */
-    fun getUserReviewsByTrackIds(userId: String, spotifyTrackIds: List<String>): Map<String, TrackReview?> {
-        return spotifyTrackIds.associateWith { trackId ->
-            trackReviewRepository.findByUserIdAndSpotifyTrackId(userId, trackId)
-        }
-    }
-    
     fun deleteReview(id: UUID): Boolean {
         if (trackReviewRepository.existsById(id)) {
             val review = trackReviewRepository.findById(id).get()

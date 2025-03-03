@@ -49,8 +49,6 @@ const TopTracks: React.FC = () => {
     limit: 10,
     offset: 0
   });
-  // Add a state to store pre-fetched reviews
-  const [trackReviews, setTrackReviews] = useState<Record<string, TrackReview | null>>({});
   
   // Reference to the observer and the loading element
   const observer = useRef<IntersectionObserver | null>(null);
@@ -100,36 +98,24 @@ const TopTracks: React.FC = () => {
         albumImageUrl: item.album.images[0]?.url || 'https://via.placeholder.com/300'
       }));
       
-      // Update state based on whether this is an initial load or loading more
+      // Check if we've reached the end of available tracks
+      setHasMore(tracks.length === filters.limit);
+      
+      // If this is an initial load, replace tracks; otherwise append
       if (isInitialLoad) {
         setTopTracks(tracks);
       } else {
         setTopTracks(prevTracks => [...prevTracks, ...tracks]);
       }
-      
-      // Check if there are more tracks to load
-      setHasMore(response.next !== null);
-      
-      // Pre-fetch reviews for all tracks in this batch
-      if (tracks.length > 0) {
-        const trackIds = tracks.map(track => track.spotifyId);
-        try {
-          const batchReviews = await reviewApi.getTrackReviewsBatch(trackIds);
-          setTrackReviews(prevReviews => ({
-            ...prevReviews,
-            ...batchReviews
-          }));
-        } catch (reviewError) {
-          console.error('Failed to fetch reviews in batch:', reviewError);
-          // Continue even if review fetch fails
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch top tracks:', error);
-      setError('Failed to load tracks. Please try again.');
+    } catch (err) {
+      console.error('Failed to fetch top tracks:', err);
+      setError('Failed to load your top tracks. Please try again.');
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (isInitialLoad) {
+        setLoading(false);
+      } else {
+        setLoadingMore(false);
+      }
     }
   };
 
@@ -160,15 +146,6 @@ const TopTracks: React.FC = () => {
 
   const handleTrackClick = async (track: Track) => {
     setSelectedTrack(track);
-    
-    // Check if we already have the review in our pre-fetched data
-    if (trackReviews[track.spotifyId] !== undefined) {
-      setSelectedTrackReview(trackReviews[track.spotifyId]);
-      setIsDetailsModalOpen(true);
-      return;
-    }
-    
-    // If not, fetch it individually
     setIsLoadingReview(true);
     setSelectedTrackReview(null);
     
@@ -179,12 +156,6 @@ const TopTracks: React.FC = () => {
       // If the user has reviewed this track, set the review
       if (reviews && reviews.length > 0) {
         setSelectedTrackReview(reviews[0]);
-        
-        // Also update our cache
-        setTrackReviews(prevReviews => ({
-          ...prevReviews,
-          [track.spotifyId]: reviews[0]
-        }));
       }
     } catch (err) {
       console.error('Failed to fetch track review:', err);
@@ -207,22 +178,20 @@ const TopTracks: React.FC = () => {
   const handleCloseReviewModal = async () => {
     setIsReviewModalOpen(false);
     
-    // After a review is added or updated, refresh the reviews
+    // If a track is selected, refresh its review data
     if (selectedTrack) {
+      setIsLoadingReview(true);
       try {
         const reviews = await reviewApi.getTrackReviews(selectedTrack.spotifyId);
-        
         if (reviews && reviews.length > 0) {
           setSelectedTrackReview(reviews[0]);
-          
-          // Update our cache
-          setTrackReviews(prevReviews => ({
-            ...prevReviews,
-            [selectedTrack.spotifyId]: reviews[0]
-          }));
+        } else {
+          setSelectedTrackReview(null);
         }
       } catch (err) {
         console.error('Failed to refresh track review:', err);
+      } finally {
+        setIsLoadingReview(false);
       }
     }
   };

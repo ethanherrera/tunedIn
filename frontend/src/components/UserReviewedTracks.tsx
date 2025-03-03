@@ -222,25 +222,21 @@ const UserReviewedTracks: React.FC = () => {
   };
 
   const handleDeleteReviewFromList = async (review: ReviewWithTrack, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening the modal
+    e.stopPropagation(); // Prevent opening the details modal
     
-    if (window.confirm(`Are you sure you want to delete your review for "${review.track.trackName}"?`)) {
-      // Set this specific review as deleting
+    if (window.confirm('Are you sure you want to delete this review?')) {
+      // Set deleting state for this specific review
       setIsDeleting(prev => ({ ...prev, [review.id]: true }));
       
       try {
         await reviewApi.deleteReview(review.id);
-        
-        // Update the UI by removing the deleted review
-        setReviews(prevReviews => prevReviews.filter(r => r.id !== review.id));
-        
-        // Show success message
-        alert('Review deleted successfully!');
+        // Refresh the reviews list after deletion
+        fetchUserReviews();
       } catch (error) {
         console.error('Failed to delete review:', error);
         alert('Failed to delete review. Please try again.');
       } finally {
-        // Clear the deleting state
+        // Clear deleting state for this review
         setIsDeleting(prev => ({ ...prev, [review.id]: false }));
       }
     }
