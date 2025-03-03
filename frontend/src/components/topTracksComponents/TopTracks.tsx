@@ -11,6 +11,9 @@ interface Track {
   artistName: string;
   trackName: string;
   spotifyId: string;
+  albumId: string;
+  reviewScore?: number;
+  reviewOpinion?: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
 }
 
 // Interface for review data
@@ -44,6 +47,7 @@ const TopTracks: React.FC = () => {
   const [selectedTrackReview, setSelectedTrackReview] = useState<TrackReview | null>(null);
   const [isLoadingReview, setIsLoadingReview] = useState<boolean>(false);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const [trackReviews, setTrackReviews] = useState<Record<string, TrackReview | null>>({});
   const [filters, setFilters] = useState<FilterOptions>({
     timeRange: 'medium_term',
     limit: 10,
@@ -64,6 +68,61 @@ const TopTracks: React.FC = () => {
     
     if (node) observer.current.observe(node);
   }, [loading, loadingMore, hasMore]);
+
+  // Fetch reviews for multiple tracks in batch
+  const fetchTrackReviewsBatch = async (tracks: Track[]) => {
+    if (!tracks || tracks.length === 0) return;
+    
+    try {
+      const trackIds = tracks.map(track => track.spotifyId);
+      console.log('Fetching reviews for track IDs:', trackIds);
+      
+      const reviewsData = await reviewApi.getTrackReviewsBatch(trackIds);
+      console.log('Raw reviews data from API:', reviewsData);
+      
+      // Create a map of track ID to the user's review (first review in the list)
+      const userReviews: Record<string, TrackReview | null> = {};
+      
+      // Process the response data
+      Object.entries(reviewsData).forEach(([trackId, reviews]) => {
+        console.log(`Processing reviews for track ${trackId}:`, reviews);
+        // If there are reviews for this track, use the first one (user's review)
+        userReviews[trackId] = reviews && reviews.length > 0 ? reviews[0] : null;
+      });
+      
+      console.log('Processed user reviews:', userReviews);
+      
+      // Update the trackReviews state with the new data
+      setTrackReviews(prevReviews => {
+        const newReviews = {
+          ...prevReviews,
+          ...userReviews
+        };
+        console.log('Updated trackReviews state:', newReviews);
+        return newReviews;
+      });
+      
+      // Update the tracks with their review scores and opinions
+      setTopTracks(prevTracks => {
+        const updatedTracks = prevTracks.map(track => {
+          const review = userReviews[track.spotifyId];
+          const updatedTrack = {
+            ...track,
+            reviewScore: review ? review.rating : undefined,
+            reviewOpinion: review ? review.opinion : undefined
+          };
+          console.log(`Track ${track.trackName} review score:`, review ? review.rating : 'none');
+          return updatedTrack;
+        });
+        
+        console.log('Updated tracks with review scores:', updatedTracks);
+        return updatedTracks;
+      });
+    } catch (err) {
+      console.error('Failed to fetch track reviews in batch:', err);
+      // Continue without reviews if fetch fails
+    }
+  };
 
   const fetchTopTracks = async (isInitialLoad = true) => {
     if (isInitialLoad) {
@@ -95,7 +154,8 @@ const TopTracks: React.FC = () => {
         trackName: item.name,
         artistName: item.artists[0].name,
         albumName: item.album.name,
-        albumImageUrl: item.album.images[0]?.url || 'https://via.placeholder.com/300'
+        albumImageUrl: item.album.images[0]?.url || 'https://via.placeholder.com/300',
+        albumId: item.album.id
       }));
       
       // Check if we've reached the end of available tracks
@@ -107,6 +167,9 @@ const TopTracks: React.FC = () => {
       } else {
         setTopTracks(prevTracks => [...prevTracks, ...tracks]);
       }
+
+      // Fetch reviews for the tracks
+      fetchTrackReviewsBatch(tracks);
     } catch (err) {
       console.error('Failed to fetch top tracks:', err);
       setError('Failed to load your top tracks. Please try again.');
@@ -183,11 +246,29 @@ const TopTracks: React.FC = () => {
       setIsLoadingReview(true);
       try {
         const reviews = await reviewApi.getTrackReviews(selectedTrack.spotifyId);
-        if (reviews && reviews.length > 0) {
-          setSelectedTrackReview(reviews[0]);
-        } else {
-          setSelectedTrackReview(null);
-        }
+        const review = reviews && reviews.length > 0 ? reviews[0] : null;
+        
+        setSelectedTrackReview(review);
+        
+        // Update the trackReviews state with the new review
+        setTrackReviews(prevReviews => ({
+          ...prevReviews,
+          [selectedTrack.spotifyId]: review
+        }));
+        
+        // Update the track's review score in the topTracks list
+        setTopTracks(prevTracks => 
+          prevTracks.map(track => {
+            if (track.spotifyId === selectedTrack.spotifyId) {
+              return {
+                ...track,
+                reviewScore: review ? review.rating : undefined,
+                reviewOpinion: review ? review.opinion : undefined
+              };
+            }
+            return track;
+          })
+        );
       } catch (err) {
         console.error('Failed to refresh track review:', err);
       } finally {
@@ -352,6 +433,24 @@ const TopTracks: React.FC = () => {
                     <h3 className="top-rated-track-name">{track.trackName}</h3>
                     <p className="top-rated-artist-name">{track.artistName}</p>
                     <p className="top-rated-album-name">{track.albumName}</p>
+                  </div>
+                  
+                  <div 
+                    className="top-rated-rating-circle"
+                    style={{
+                      backgroundColor: 
+                        track.reviewScore !== undefined
+                          ? (track.reviewOpinion === 'DISLIKE' 
+                              ? '#e74c3c'  // Red for dislike
+                              : track.reviewOpinion === 'NEUTRAL' 
+                                ? '#f39c12'  // Yellow/orange for neutral
+                                : '#2ecc71')  // Green for liked
+                          : '#888888'  // Grey for not reviewed
+                    }}
+                  >
+                    {track.reviewScore !== undefined 
+                      ? track.reviewScore.toFixed(1) 
+                      : '~'}
                   </div>
                 </div>
               </div>

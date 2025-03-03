@@ -281,14 +281,14 @@ export const reviewApi = {
   /**
    * Get the current user's reviews for multiple tracks in a single request
    * @param spotifyTrackIds Array of Spotify track IDs to get reviews for
-   * @returns Map of track IDs to the user's review for that track (or null if no review exists)
+   * @returns Map of track IDs to the list of reviews for that track
    */
-  getTrackReviewsBatch: async (spotifyTrackIds: string[]): Promise<Record<string, TrackReview | null>> => {
+  getTrackReviewsBatch: async (spotifyTrackIds: string[]): Promise<Record<string, TrackReview[]>> => {
     if (spotifyTrackIds.length === 0) {
       return {};
     }
     
-    const response = await apiClient.post<Record<string, TrackReview | null>>('/reviews/batch/tracks', spotifyTrackIds);
+    const response = await apiClient.post<Record<string, TrackReview[]>>('/reviews/batch/tracks', spotifyTrackIds);
     return response.data;
   }
 };
