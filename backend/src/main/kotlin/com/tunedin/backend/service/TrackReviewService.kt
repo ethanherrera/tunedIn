@@ -3,8 +3,10 @@ package com.tunedin.backend.service
 import com.tunedin.backend.model.TrackReview
 import com.tunedin.backend.model.Opinion
 import com.tunedin.backend.repository.TrackReviewRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.UUID
+import kotlin.math.max
 
 @Service
 class TrackReviewService(
@@ -303,100 +305,126 @@ class TrackReviewService(
     }
 
     fun updateReview(id: UUID, userId: String, spotifyTrackId: String, opinion: Opinion, description: String, rating: Double, ranking: Int = 0): TrackReview? {
-        // Get the existing review
-        val existingReview = trackReviewRepository.findById(id).orElse(null) ?: return null
+        val logger = LoggerFactory.getLogger(TrackReviewService::class.java)
+        logger.info("Updating review with id: $id, userId: $userId, spotifyTrackId: $spotifyTrackId, opinion: $opinion, ranking: $ranking")
         
-        // Set the rating based on opinion
-        val assignedRating = when (opinion) {
-            Opinion.LIKED -> 10.0
-            Opinion.NEUTRAL -> 7.0
-            Opinion.DISLIKE -> 4.0
-        }
-        
-        // Store the old opinion to check if it changed
-        val oldOpinion = existingReview.opinion
-        
-        // Update the review fields
-        existingReview.spotifyTrackId = spotifyTrackId
-        existingReview.opinion = opinion
-        existingReview.description = description
-        existingReview.rating = assignedRating // Use the opinion-based rating
-        
-        // If opinion changed, recalculate the ranking
-        if (oldOpinion != opinion) {
-            // If a specific ranking is provided (from binary search), use it
-            existingReview.ranking = if (ranking > 0) {
-                // Shift other reviews to make room for this ranking
-                shiftReviewsForInsertion(userId, opinion, ranking)
-                ranking
+        try {
+            // Get the existing review
+            val existingReview = trackReviewRepository.findById(id).orElse(null) ?: return null
+            logger.info("Found existing review with id: $id, current rating: ${existingReview.rating}, current opinion: ${existingReview.opinion}")
+            
+            // Set the rating based on opinion
+            val assignedRating = when (opinion) {
+                Opinion.LIKED -> 10.0
+                Opinion.NEUTRAL -> 7.0
+                Opinion.DISLIKE -> 4.0
+            }
+            
+            // Store the old opinion to check if it changed
+            val oldOpinion = existingReview.opinion
+            
+            // Update the review fields
+            existingReview.spotifyTrackId = spotifyTrackId
+            existingReview.opinion = opinion
+            existingReview.description = description
+            existingReview.rating = assignedRating // Use the opinion-based rating
+            
+            logger.info("Updated review fields - opinion: $opinion, rating: $assignedRating")
+            
+            // If opinion changed, recalculate the ranking
+            if (oldOpinion != opinion) {
+                logger.info("Opinion changed from $oldOpinion to $opinion, recalculating ranking")
+                // If a specific ranking is provided (from binary search), use it
+                existingReview.ranking = if (ranking > 0) {
+                    logger.info("Using provided ranking: $ranking")
+                    // Shift other reviews to make room for this ranking
+                    shiftReviewsForInsertion(userId, opinion, ranking)
+                    ranking
+                } else {
+                    logger.info("Calculating next rank for opinion group")
+                    // Otherwise calculate the next rank for this opinion group
+                    getNextRankForOpinionGroup(userId, opinion)
+                }
+                
+                // Save the review first
+                logger.info("Saving review with new ranking: ${existingReview.ranking}")
+                val savedReview = trackReviewRepository.save(existingReview)
+                
+                // Then reorder other reviews if necessary
+                logger.info("Reordering reviews after opinion change")
+                reorderReviewsAfterOpinionChange(userId, oldOpinion, opinion)
+                
+                // Rescore all reviews for this user
+                logger.info("Rescoring reviews for user")
+                rescoreReviews(userId)
+                
+                // Get the track to get the album ID
+                try {
+                    // We need to get the track to get the album ID
+                    // This requires an access token, which we don't have in this method
+                    // So we'll try to find the album review by track ID
+                    logger.info("Updating album reviews by track ID")
+                    updateAlbumReviewsByTrackId(userId, spotifyTrackId)
+                } catch (e: Exception) {
+                    // Log the error but don't fail the review update
+                    logger.error("Failed to update album review: ${e.message}", e)
+                }
+                
+                return savedReview
+            } else if (ranking > 0 && ranking != existingReview.ranking) {
+                // Opinion didn't change but ranking did - update the ranking
+                logger.info("Opinion didn't change but ranking did - old ranking: ${existingReview.ranking}, new ranking: $ranking")
+                // Remove the review from its current position
+                val oldRanking = existingReview.ranking
+                
+                // Update the ranking
+                existingReview.ranking = ranking
+                
+                // Save the review
+                logger.info("Saving review with new ranking: $ranking")
+                val savedReview = trackReviewRepository.save(existingReview)
+                
+                // Reorder other reviews to maintain consistent ranking
+                logger.info("Reordering reviews after ranking change")
+                reorderReviewsAfterRankingChange(userId, opinion, oldRanking, ranking)
+                
+                // Rescore all reviews for this user
+                logger.info("Rescoring reviews for user")
+                rescoreReviews(userId)
+                
+                // Try to update album reviews
+                try {
+                    logger.info("Updating album reviews by track ID")
+                    updateAlbumReviewsByTrackId(userId, spotifyTrackId)
+                } catch (e: Exception) {
+                    // Log the error but don't fail the review update
+                    logger.error("Failed to update album review: ${e.message}", e)
+                }
+                
+                return savedReview
             } else {
-                // Otherwise calculate the next rank for this opinion group
-                getNextRankForOpinionGroup(userId, opinion)
+                // Don't update the createdAt timestamp to preserve the original review date
+                logger.info("No change in opinion or ranking, just updating description")
+                val savedReview = trackReviewRepository.save(existingReview)
+                
+                // Rescore all reviews for this user
+                logger.info("Rescoring reviews for user")
+                rescoreReviews(userId)
+                
+                // Try to update album reviews
+                try {
+                    logger.info("Updating album reviews by track ID")
+                    updateAlbumReviewsByTrackId(userId, spotifyTrackId)
+                } catch (e: Exception) {
+                    // Log the error but don't fail the review update
+                    logger.error("Failed to update album review: ${e.message}", e)
+                }
+                
+                return savedReview
             }
-            
-            // Save the review first
-            val savedReview = trackReviewRepository.save(existingReview)
-            
-            // Then reorder other reviews if necessary
-            reorderReviewsAfterOpinionChange(userId, oldOpinion, opinion)
-            
-            // Rescore all reviews for this user
-            rescoreReviews(userId)
-            
-            // Get the track to get the album ID
-            try {
-                // We need to get the track to get the album ID
-                // This requires an access token, which we don't have in this method
-                // So we'll try to find the album review by track ID
-                updateAlbumReviewsByTrackId(userId, spotifyTrackId)
-            } catch (e: Exception) {
-                // Log the error but don't fail the review update
-                println("Failed to update album review: ${e.message}")
-            }
-            
-            return savedReview
-        } else if (ranking > 0 && ranking != existingReview.ranking) {
-            // Opinion didn't change but ranking did - update the ranking
-            // Remove the review from its current position
-            val oldRanking = existingReview.ranking
-            
-            // Update the ranking
-            existingReview.ranking = ranking
-            
-            // Save the review
-            val savedReview = trackReviewRepository.save(existingReview)
-            
-            // Reorder other reviews to maintain consistent ranking
-            reorderReviewsAfterRankingChange(userId, opinion, oldRanking, ranking)
-            
-            // Rescore all reviews for this user
-            rescoreReviews(userId)
-            
-            // Try to update album reviews
-            try {
-                updateAlbumReviewsByTrackId(userId, spotifyTrackId)
-            } catch (e: Exception) {
-                // Log the error but don't fail the review update
-                println("Failed to update album review: ${e.message}")
-            }
-            
-            return savedReview
-        } else {
-            // Don't update the createdAt timestamp to preserve the original review date
-            val savedReview = trackReviewRepository.save(existingReview)
-            
-            // Rescore all reviews for this user
-            rescoreReviews(userId)
-            
-            // Try to update album reviews
-            try {
-                updateAlbumReviewsByTrackId(userId, spotifyTrackId)
-            } catch (e: Exception) {
-                // Log the error but don't fail the review update
-                println("Failed to update album review: ${e.message}")
-            }
-            
-            return savedReview
+        } catch (e: Exception) {
+            logger.error("Error updating review: ${e.message}", e)
+            throw e
         }
     }
     
@@ -440,12 +468,16 @@ class TrackReviewService(
      * getting the top score for that category.
      */
     fun rescoreReviews(userId: String) {
+        val logger = LoggerFactory.getLogger(TrackReviewService::class.java)
+        logger.info("Rescoring reviews for user: $userId")
         val userReviews = trackReviewRepository.findByUserId(userId)
         
         // Group reviews by opinion and sort by ranking (lower ranking = higher position)
         val likedReviews = userReviews.filter { it.opinion == Opinion.LIKED }.sortedBy { it.ranking }
         val neutralReviews = userReviews.filter { it.opinion == Opinion.NEUTRAL }.sortedBy { it.ranking }
         val dislikedReviews = userReviews.filter { it.opinion == Opinion.DISLIKE }.sortedBy { it.ranking }
+        
+        logger.info("Found ${likedReviews.size} liked reviews, ${neutralReviews.size} neutral reviews, ${dislikedReviews.size} disliked reviews")
         
         // Rescore liked reviews (7.0-10.0)
         if (likedReviews.isNotEmpty()) {
@@ -455,7 +487,10 @@ class TrackReviewService(
             likedReviews.forEachIndexed { index, review ->
                 // Lower index (lower ranking) gets higher score
                 // For example, with 3 reviews: index 0 gets 10.0, index 1 gets 8.5, index 2 gets 7.0
-                review.rating = 10.0 - (index * likedStep)
+                val calculatedRating = 10.0 - (index * likedStep)
+                // Ensure rating is never negative due to floating point errors
+                review.rating = max(0.0, calculatedRating)
+                logger.info("Setting liked review ${review.id} with ranking ${review.ranking} to rating ${review.rating}")
                 trackReviewRepository.save(review)
             }
         }
@@ -467,7 +502,10 @@ class TrackReviewService(
             
             neutralReviews.forEachIndexed { index, review ->
                 // Lower index (lower ranking) gets higher score
-                review.rating = 6.9 - (index * neutralStep)
+                val calculatedRating = 6.9 - (index * neutralStep)
+                // Ensure rating is never negative due to floating point errors
+                review.rating = max(0.0, calculatedRating)
+                logger.info("Setting neutral review ${review.id} with ranking ${review.ranking} to rating ${review.rating}")
                 trackReviewRepository.save(review)
             }
         }
@@ -479,10 +517,15 @@ class TrackReviewService(
             
             dislikedReviews.forEachIndexed { index, review ->
                 // Lower index (lower ranking) gets higher score
-                review.rating = 3.9 - (index * dislikedStep)
+                val calculatedRating = 3.9 - (index * dislikedStep)
+                // Ensure rating is never negative due to floating point errors
+                review.rating = max(0.0, calculatedRating)
+                logger.info("Setting disliked review ${review.id} with ranking ${review.ranking} to rating ${review.rating}")
                 trackReviewRepository.save(review)
             }
         }
+        
+        logger.info("Finished rescoring reviews for user: $userId")
     }
 
     /**
