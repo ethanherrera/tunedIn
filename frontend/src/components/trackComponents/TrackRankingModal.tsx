@@ -3,6 +3,19 @@ import './TrackRankingModal.css';
 import { reviewApi } from '../../api/apiClient';
 import TrackComparisonModal from './TrackComparisonModal';
 
+// Add interface for the review data
+interface ReviewData {
+  id: string;
+  userId: string;
+  spotifyTrackId: string;
+  opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
+  description: string;
+  rating: number;
+  ranking: number;
+  createdAt: number;
+  genres: string[];
+}
+
 interface TrackRankingModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -42,24 +55,77 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
   const [comparisonDataReady, setComparisonDataReady] = useState(false);
   // Store the final ranking determined by binary search
   const [finalRanking, setFinalRanking] = useState<number | null>(null);
+  // Store the existing review data
+  const [existingReview, setExistingReview] = useState<ReviewData | null>(null);
+  // Flag to track if we're loading the existing review
+  const [isLoadingExistingReview, setIsLoadingExistingReview] = useState(false);
+
+  // Fetch existing review data when the modal opens with an existingReviewId
+  useEffect(() => {
+    const fetchExistingReview = async () => {
+      if (!existingReviewId || !isOpen) return;
+      
+      setIsLoadingExistingReview(true);
+      try {
+        // Use the reviewApi to get the review by ID
+        const response = await reviewApi.getTrackReviews(track.spotifyId);
+        const reviewData = response.find(r => r.id === existingReviewId);
+        
+        if (reviewData) {
+          setExistingReview(reviewData);
+          // Autofill the description field with the existing review's description
+          setReview(reviewData.description);
+          // Set the initial rating based on the existing review's opinion
+          setRating(mapOpinionToRating(reviewData.opinion));
+          // Update word count
+          const words = reviewData.description.trim().split(/\s+/);
+          setWordCount(reviewData.description.trim() === '' ? 0 : words.length);
+        }
+      } catch (err) {
+        console.error('Failed to fetch existing review:', err);
+        setError('Failed to load your existing review. You can still create a new one.');
+      } finally {
+        setIsLoadingExistingReview(false);
+      }
+    };
+    
+    fetchExistingReview();
+  }, [existingReviewId, isOpen, track.spotifyId]);
 
   // Reset form data when modal is closed or when track changes
   useEffect(() => {
     if (isOpen) {
-      // Track has changed, reset the form
-      setReview('');
-      setRating(null);
-      setError(null);
-      setWordCount(0);
-      setPendingReview(null);
-      setHasSubmittedReview(false);
-      setShowComparison(false);
-      setComparisonsComplete(false);
-      setIsPrefetchingComparisons(false);
-      setComparisonDataReady(false);
-      setFinalRanking(null);
+      // Only reset if we don't have an existing review to load
+      if (!existingReviewId) {
+        // Track has changed, reset the form
+        setReview('');
+        setRating(null);
+        setError(null);
+        setWordCount(0);
+        setPendingReview(null);
+        setHasSubmittedReview(false);
+        setShowComparison(false);
+        setComparisonsComplete(false);
+        setIsPrefetchingComparisons(false);
+        setComparisonDataReady(false);
+        setFinalRanking(null);
+      }
     }
-  }, [isOpen, track.spotifyId]);
+  }, [isOpen, track.spotifyId, existingReviewId]);
+
+  // Helper function to map opinion to rating
+  const mapOpinionToRating = (opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED'): 'dislike' | 'neutral' | 'like' => {
+    switch (opinion) {
+      case 'DISLIKE':
+        return 'dislike';
+      case 'NEUTRAL':
+        return 'neutral';
+      case 'LIKED':
+        return 'like';
+      default:
+        return 'neutral';
+    }
+  };
 
   // Start prefetching when rating changes
   useEffect(() => {
@@ -94,6 +160,13 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
     setComparisonsComplete(true);
     if (ranking !== undefined) {
       setFinalRanking(ranking);
+    }
+    
+    // Automatically submit the review when comparisons are complete
+    if (rating) {
+      setTimeout(() => {
+        submitReview(ranking);
+      }, 500); // Small delay to allow user to see the final comparison result
     }
   };
 
@@ -180,7 +253,8 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
     }
   };
 
-  const handleSubmit = async () => {
+  // Extract submit logic to a reusable function
+  const submitReview = async (ranking?: number) => {
     if (!rating) {
       setError('Please select a rating (Dislike, Neutral, or Like)');
       return;
@@ -191,7 +265,7 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
       return;
     }
     
-    if (isSubmitting) return;
+    if (isSubmitting || hasSubmittedReview) return;
     
     setIsSubmitting(true);
     setError(null);
@@ -205,7 +279,7 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
         spotifyTrackId: track.spotifyId,
         opinion: opinionValue,
         description: review,
-        ranking: finalRanking || 0 // Use the ranking from binary search if available
+        ranking: ranking || finalRanking || 0 // Use the ranking from binary search if available
       };
       
       let reviewResponse;
@@ -239,6 +313,10 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSubmit = () => {
+    submitReview();
   };
 
   return (
@@ -333,16 +411,7 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
 
         {/* Action Buttons */}
         <div className="track-ranking-modal-action-buttons">
-          {/* Only show submit button when comparisons are complete */}
-          {comparisonsComplete && (
-            <button
-              className="track-ranking-modal-submit-button"
-              onClick={handleSubmit}
-              disabled={isSubmitting || isDeleting || !rating || wordCount > 200}
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit Review'}
-            </button>
-          )}
+          {/* Submit button removed - review is automatically submitted when comparisons are complete */}
         </div>
       </div>
     </div>
