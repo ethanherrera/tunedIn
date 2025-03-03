@@ -58,6 +58,10 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
       setIsLoading(true);
       setTracks([]);
       setTrackReviews({});
+      setAlbumAverageScore(null);
+      setReviewedTracksCount(0);
+      setTracksNeededForScore(0);
+      setAlbumReview(null);
       
       if (initialRender.current) {
         initialRender.current = false;
@@ -70,10 +74,32 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
         loadData();
       }
     } else {
+      // When modal closes, reset ALL state completely
       setIsRendered(false);
+      setIsLoading(true);
+      setTracks([]);
+      setTrackReviews({});
+      setAlbumAverageScore(null);
+      setReviewedTracksCount(0);
+      setTracksNeededForScore(0);
+      setAlbumReview(null);
       initialRender.current = true;
     }
   }, [isOpen, album.id]);
+
+  // Add a cleanup function to the component to reset state when unmounted
+  useEffect(() => {
+    return () => {
+      // Reset all state when component unmounts
+      setIsLoading(true);
+      setTracks([]);
+      setTrackReviews({});
+      setAlbumAverageScore(null);
+      setReviewedTracksCount(0);
+      setTracksNeededForScore(0);
+      setAlbumReview(null);
+    };
+  }, []);
 
   // Simplified data loading function
   const loadData = async () => {
@@ -260,23 +286,23 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
                         </div>
                       )}
 
-                      {albumAverageScore !== null && (
+                      {albumAverageScore !== null && albumReview && (
                         <div className="album-details-modal-details-right">
                           <span 
                             className="album-details-modal-rating-circle"
                             style={{
-                              backgroundColor: albumReview && albumReview.opinion === 'UNDEFINED' 
+                              backgroundColor: albumReview.opinion === 'UNDEFINED' 
                                 ? '#888888' 
                                 : getRatingColor(albumAverageScore)
                             }}
                           >
-                            {albumReview && albumReview.opinion === 'UNDEFINED' 
+                            {albumReview.opinion === 'UNDEFINED' 
                               ? '~' 
                               : albumAverageScore.toFixed(1)}
                           </span>
                           <p className="album-details-modal-score-unlock-text">
-                            {albumReview && albumReview.opinion === 'UNDEFINED' 
-                              ? `${Math.ceil(tracks.length / 2) - reviewedTracksCount} track${Math.ceil(tracks.length / 2) - reviewedTracksCount !== 1 ? 's' : ''} remaining`
+                            {albumReview.opinion === 'UNDEFINED' 
+                              ? 'Review more tracks to see album score'
                               : 'Your tunedIn score'}
                           </p>
                         </div>
@@ -315,7 +341,16 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
                               >
                                 {trackReviews[track.spotifyId][0].rating.toFixed(1)}
                               </div>
-                            ) : null}
+                            ) : (
+                              <div 
+                                className="album-details-modal-rating-circle"
+                                style={{
+                                  backgroundColor: '#888888' // Grey for unreviewed tracks
+                                }}
+                              >
+                                -
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
