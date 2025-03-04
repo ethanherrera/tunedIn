@@ -121,6 +121,13 @@ interface UserProfile {
   href: string;
 }
 
+// Add RecentActivity interface
+interface RecentActivity {
+  id: string;
+  trackReview: TrackReview;
+  timestamp: number;
+}
+
 const BASE_URL = 'http://localhost:8000/api';
 
 export const apiClient = axios.create({
@@ -346,5 +353,22 @@ export const albumReviewApi = {
   
   deleteAlbumReview: async (reviewId: string): Promise<void> => {
     await apiClient.delete(`/album-reviews/${reviewId}`);
+  }
+};
+
+export const userApi = {
+  getProfile: async () => {
+    const response = await apiClient.get<UserProfile>('/users/profile');
+    return response.data;
+  },
+  
+  getMe: async () => {
+    const response = await apiClient.get<UserProfile>('/users/me');
+    return response.data;
+  },
+  
+  getRecentActivities: async () => {
+    const response = await apiClient.get<RecentActivity[]>('/users/recent-activities');
+    return response.data;
   }
 };
