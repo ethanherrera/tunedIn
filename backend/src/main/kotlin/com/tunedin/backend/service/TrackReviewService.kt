@@ -17,7 +17,7 @@ class TrackReviewService(
 ) {
     private val logger = LoggerFactory.getLogger(TrackReviewService::class.java)
     
-    fun createReview(userId: String, spotifyTrackId: String, opinion: Opinion, description: String, rating: Double, ranking: Int = 0, accessToken: String): TrackReview {
+    fun saveReview(userId: String, spotifyTrackId: String, opinion: Opinion, description: String, rating: Double, ranking: Int = 0, accessToken: String): TrackReview {
         // Get the track to fetch artist information
         val track = spotifyService.getTrack(spotifyTrackId, accessToken)
         
@@ -27,7 +27,29 @@ class TrackReviewService(
             artistDetails.genres ?: emptyList()
         }.distinct()
 
-        // Check if the user has already reviewed this track
+        // Check for duplicate entries and clean them up
+        try {
+            // First, get all reviews for this user and track ID
+            val allUserTrackReviews = trackReviewRepository.findByUserId(userId)
+                .filter { it.spotifyTrackId == spotifyTrackId }
+            
+            // If we have more than one review for the same user and track, clean up the duplicates
+            if (allUserTrackReviews.size > 1) {
+                logger.warn("Found ${allUserTrackReviews.size} duplicate reviews for user $userId and track $spotifyTrackId. Cleaning up...")
+                
+                // Keep the first one and delete the rest
+                val reviewToKeep = allUserTrackReviews.first()
+                allUserTrackReviews.drop(1).forEach { duplicate ->
+                    logger.info("Deleting duplicate review with ID ${duplicate.id}")
+                    trackReviewRepository.delete(duplicate)
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("Error while cleaning up duplicate reviews: ${e.message}", e)
+            // Continue with the operation even if cleanup fails
+        }
+
+        // Now try to find the existing review (should be only one or none after cleanup)
         val existingReview = trackReviewRepository.findByUserIdAndSpotifyTrackId(userId, spotifyTrackId)
         
         if (existingReview != null) {
@@ -56,14 +78,8 @@ class TrackReviewService(
             // Update the album review for this track
             updateAlbumReviewForTrack(userId, track.album.id, spotifyTrackId, accessToken)
             
-            // Add to user's recent activities
-            try {
-                userService.addRecentActivity(userId, savedReview)
-                logger.info("Updated recent activity for user $userId with track review ${savedReview.id}")
-            } catch (e: Exception) {
-                // Don't fail the whole operation if adding to recent activities fails
-                logger.error("Failed to update recent activity for user $userId: ${e.message}", e)
-            }
+            // We don't add to recent activities when updating an existing review
+            // This prevents duplicate entries in the recent activities list
             
             return savedReview
         }
@@ -97,7 +113,7 @@ class TrackReviewService(
         // Update the album review for this track
         updateAlbumReviewForTrack(userId, track.album.id, spotifyTrackId, accessToken)
         
-        // Add to user's recent activities
+        // Add to user's recent activities - only for new reviews, not updates
         try {
             userService.addRecentActivity(userId, savedReview)
             logger.info("Added recent activity for user $userId with track review ${savedReview.id}")

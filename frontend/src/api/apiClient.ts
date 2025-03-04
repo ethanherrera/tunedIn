@@ -90,11 +90,12 @@ interface SpotifySearchResponse {
 }
 
 // Review types
-interface CreateReviewRequest {
+interface SaveReviewRequest {
   spotifyTrackId: string;
   opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
   description: string;
   ranking?: number;
+  id?: string;  // Optional ID for updates
 }
 
 interface TrackReview {
@@ -254,7 +255,7 @@ export const spotifyApi = {
 };
 
 export const reviewApi = {
-  createReview: async (reviewData: CreateReviewRequest): Promise<TrackReview> => {
+  saveReview: async (reviewData: SaveReviewRequest): Promise<TrackReview> => {
     const response = await apiClient.post<TrackReview>('/reviews', reviewData);
     return response.data;
   },
@@ -279,10 +280,15 @@ export const reviewApi = {
     const response = await apiClient.delete<{ success: boolean, message: string }>(`/reviews/track/${spotifyTrackId}`);
     return response.data;
   },
-
-  updateReview: async (reviewId: string, reviewData: CreateReviewRequest): Promise<TrackReview> => {
-    const response = await apiClient.put<TrackReview>(`/reviews/${reviewId}`, reviewData);
-    return response.data;
+  
+  // For backward compatibility
+  createReview: async (reviewData: SaveReviewRequest): Promise<TrackReview> => {
+    return reviewApi.saveReview(reviewData);
+  },
+  
+  // For backward compatibility
+  updateReview: async (reviewId: string, reviewData: SaveReviewRequest): Promise<TrackReview> => {
+    return reviewApi.saveReview({ ...reviewData, id: reviewId });
   },
   
   /**

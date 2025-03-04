@@ -11,12 +11,13 @@ import com.tunedin.backend.model.spotify.SpotifyErrorResponse
 import org.springframework.http.HttpStatus
 import org.slf4j.LoggerFactory
 
-data class CreateReviewRequest(
+data class SaveReviewRequest(
     val spotifyTrackId: String,
     val opinion: Opinion,
     val description: String,
     val rating: Double,
-    val ranking: Int = 0
+    val ranking: Int = 0,
+    val id: UUID? = null  // Optional ID for updates
 )
 
 @RestController
@@ -27,11 +28,11 @@ class TrackReviewController(
     private val logger = LoggerFactory.getLogger(TrackReviewController::class.java)
 
     /**
-     * Create a new track review
+     * Save a track review (create new or update existing)
      */
     @PostMapping
-    fun createReview(@RequestBody request: Map<String, Any>, httpRequest: HttpServletRequest): ResponseEntity<*> {
-        logger.info("Received create review request: ${request}")
+    fun saveReview(@RequestBody request: Map<String, Any>, httpRequest: HttpServletRequest): ResponseEntity<Any> {
+        logger.info("Received save review request: ${request}")
         
         try {
             val cookiesInfo = httpRequest.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
@@ -55,9 +56,34 @@ class TrackReviewController(
             val description = request["description"] as? String ?: ""
             val ranking = (request["ranking"] as? Number)?.toInt() ?: 0
             
-            logger.info("Parsed create review request - userId: $userId, trackId: $spotifyTrackId, opinion: $opinion, ranking: $ranking")
+            // Check if this is an update (ID is provided)
+            val reviewId = request["id"] as? String
+            if (reviewId != null) {
+                // This is an update to an existing review
+                val id = try {
+                    UUID.fromString(reviewId)
+                } catch (e: IllegalArgumentException) {
+                    return ResponseEntity.badRequest().body(mapOf("error" to "Invalid review ID format"))
+                }
+                
+                // Verify the review exists and belongs to the user
+                val existingReview = trackReviewService.getReviewById(id)
+                if (existingReview == null) {
+                    logger.error("Review not found with id: $id")
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).build()
+                }
+                
+                if (existingReview.userId != userId) {
+                    logger.error("User $userId is not authorized to update review $id owned by ${existingReview.userId}")
+                    return ResponseEntity.status(403).body(mapOf("error" to "Not authorized to update this review"))
+                }
+                
+                logger.info("Updating existing review with id: $id")
+            }
             
-            val review = trackReviewService.createReview(
+            logger.info("Processing review - userId: $userId, trackId: $spotifyTrackId, opinion: $opinion, ranking: $ranking")
+            
+            val review = trackReviewService.saveReview(
                 userId = userId,
                 spotifyTrackId = spotifyTrackId,
                 opinion = opinion,
@@ -67,66 +93,11 @@ class TrackReviewController(
                 accessToken = accessToken
             )
             
-            logger.info("Successfully created review with id: ${review.id}")
+            val action = if (reviewId != null) "updated" else "created"
+            logger.info("Successfully $action review with id: ${review.id}")
             return ResponseEntity.ok(review)
         } catch (e: Exception) {
-            logger.error("Error creating review: ${e.message}", e)
-            return ResponseEntity.badRequest().body(mapOf("error" to (e.message ?: "Unknown error")))
-        }
-    }
-
-    /**
-     * Update an existing track review
-     */
-    @PutMapping("/{id}")
-    fun updateReview(@PathVariable id: UUID, @RequestBody request: Map<String, Any>, httpRequest: HttpServletRequest): ResponseEntity<Any> {
-        logger.info("Received update review request for id $id: ${request}")
-        
-        try {
-            val cookiesInfo = httpRequest.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
-            val userId = httpRequest.cookies?.find { it.name == "userId" }?.value
-                ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(SpotifyErrorResponse("User ID not found in cookies. Available cookies: [$cookiesInfo]"))
-            
-            val spotifyTrackId = request["spotifyTrackId"] as? String
-                ?: return ResponseEntity.badRequest().body(mapOf("error" to "spotifyTrackId is required"))
-            val opinionStr = request["opinion"] as? String
-                ?: return ResponseEntity.badRequest().body(mapOf("error" to "opinion is required"))
-            val opinion = try {
-                Opinion.valueOf(opinionStr)
-            } catch (e: IllegalArgumentException) {
-                return ResponseEntity.badRequest().body(mapOf("error" to "Invalid opinion value: $opinionStr"))
-            }
-            val description = request["description"] as? String ?: ""
-            val ranking = (request["ranking"] as? Number)?.toInt() ?: 0
-            
-            logger.info("Parsed update review request - userId: $userId, trackId: $spotifyTrackId, opinion: $opinion, ranking: $ranking")
-            
-            val existingReview = trackReviewService.getReviewById(id)
-            if (existingReview == null) {
-                logger.error("Review not found with id: $id")
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build()
-            }
-            
-            if (existingReview.userId != userId) {
-                logger.error("User $userId is not authorized to update review $id owned by ${existingReview.userId}")
-                return ResponseEntity.status(403).body(mapOf("error" to "Not authorized to update this review"))
-            }
-            
-            val updatedReview = trackReviewService.updateReview(
-                id = id,
-                userId = userId,
-                spotifyTrackId = spotifyTrackId,
-                opinion = opinion,
-                description = description,
-                rating = 5.0, // Default rating, will be updated by rescoreReviews
-                ranking = ranking
-            )
-            
-            logger.info("Successfully updated review with id: $id")
-            return ResponseEntity.ok(updatedReview)
-        } catch (e: Exception) {
-            logger.error("Error updating review: ${e.message}", e)
+            logger.error("Error saving review: ${e.message}", e)
             return ResponseEntity.badRequest().body(mapOf("error" to (e.message ?: "Unknown error")))
         }
     }
@@ -151,7 +122,7 @@ class TrackReviewController(
     fun getReviewsByUserId(
         request: HttpServletRequest,
         @RequestParam(required = false) opinions: List<Opinion>?
-    ): ResponseEntity<*> {
+    ): ResponseEntity<Any> {
         val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
         val userId = request.cookies?.find { it.name == "userId" }?.value
             ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -190,7 +161,7 @@ class TrackReviewController(
     }
     
     @DeleteMapping("/track/{spotifyTrackId}")
-    fun deleteReviewByTrackId(@PathVariable spotifyTrackId: String, request: HttpServletRequest): ResponseEntity<*> {
+    fun deleteReviewByTrackId(@PathVariable spotifyTrackId: String, request: HttpServletRequest): ResponseEntity<Any> {
         val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
         val userId = request.cookies?.find { it.name == "userId" }?.value
             ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -213,7 +184,7 @@ class TrackReviewController(
      * - Disliked reviews: 0.0-3.9
      */
     @PostMapping("/rescore")
-    fun rescoreReviews(request: HttpServletRequest): ResponseEntity<*> {
+    fun rescoreReviews(request: HttpServletRequest): ResponseEntity<Any> {
         val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
         val userId = request.cookies?.find { it.name == "userId" }?.value
             ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

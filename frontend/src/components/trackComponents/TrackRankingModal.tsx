@@ -255,61 +255,62 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
 
   // Extract submit logic to a reusable function
   const submitReview = async (ranking?: number) => {
-    if (!rating) {
-      setError('Please select a rating (Dislike, Neutral, or Like)');
-      return;
-    }
-    
-    if (wordCount > 200) {
-      setError('Review must be 200 words or less');
-      return;
-    }
-    
-    if (isSubmitting || hasSubmittedReview) return;
-    
-    setIsSubmitting(true);
-    setError(null);
-    
     try {
-      // Map the rating to an opinion
+      setIsSubmitting(true);
+      
+      // Get the opinion value from the rating
+      if (!rating) {
+        setError('Please select a rating (Dislike, Neutral, or Like)');
+        return;
+      }
+      
       const opinionValue = mapRatingToOpinion(rating);
       
-      // Create the review data
+      console.log('Submitting review with data:', {
+        spotifyTrackId: track.spotifyId,
+        opinion: opinionValue,
+        description: review,
+        ranking: ranking || finalRanking || 0,
+        ...(existingReviewId && { id: existingReviewId })
+      });
+      
       const reviewData = {
         spotifyTrackId: track.spotifyId,
         opinion: opinionValue,
         description: review,
-        ranking: ranking || finalRanking || 0 // Use the ranking from binary search if available
+        ranking: ranking || finalRanking || 0, // Use the ranking from binary search if available
+        ...(existingReviewId && { id: existingReviewId }) // Include ID if updating
       };
       
-      let reviewResponse;
-      
-      // If we have an existing review ID, update it
-      if (existingReviewId) {
-        reviewResponse = await reviewApi.updateReview(existingReviewId, reviewData);
-        console.log('Review updated:', reviewResponse);
-      } else {
-        // Otherwise create a new review
-        reviewResponse = await reviewApi.createReview(reviewData);
-        console.log('Review created:', reviewResponse);
+      // Use the unified saveReview method
+      try {
+        const reviewResponse = await reviewApi.saveReview(reviewData);
+        console.log(existingReviewId ? 'Review updated:' : 'Review created:', reviewResponse);
+        
+        // Mark as submitted to prevent duplicate submissions
+        setHasSubmittedReview(true);
+        
+        // The backend now automatically handles album reviews when a track is reviewed
+        
+        // Close the modal
+        onClose();
+        
+        // Trigger the callback if provided
+        if (onAlbumReviewSaved) {
+          onAlbumReviewSaved();
+        }
+      } catch (error: any) {
+        console.error('Error saving review:', error);
+        if (error.response) {
+          console.error('Response data:', error.response.data);
+          console.error('Response status:', error.response.status);
+          console.error('Response headers:', error.response.headers);
+        }
+        setError(`Failed to save review: ${error.response?.data?.error || error.message || 'Unknown error'}`);
       }
-      
-      // Mark as submitted to prevent duplicate submissions
-      setHasSubmittedReview(true);
-      
-      // The backend now automatically handles album reviews when a track is reviewed
-      // No need to explicitly save the album review here
-      
-      // Notify parent component that the review was saved (which may update album review UI)
-      if (onAlbumReviewSaved) {
-        onAlbumReviewSaved();
-      }
-      
-      // Close the modal
-      onClose();
-    } catch (err) {
-      console.error('Failed to submit review:', err);
-      setError('Failed to submit your review. Please try again.');
+    } catch (e: any) {
+      console.error('Error in submitReview function:', e);
+      setError(`An error occurred: ${e.message || 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }

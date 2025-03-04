@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { userApi } from '../../api/apiClient';
 import { FiRefreshCw, FiUser, FiMail, FiMusic } from 'react-icons/fi';
+import RecentActivities from './RecentActivities';
 import './ProfilePage.css';
 
 // Use a more generic interface that can handle both backend and frontend types
@@ -168,6 +169,8 @@ const ProfilePage: React.FC = () => {
           </a>
         </div>
       )}
+
+      <RecentActivities />
     </div>
   );
 };
