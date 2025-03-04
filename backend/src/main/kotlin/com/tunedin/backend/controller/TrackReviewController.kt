@@ -119,7 +119,7 @@ class TrackReviewController(
     }
 
     @GetMapping("/user")
-    fun getReviewsByUserId(
+    fun getReviewsByUserIdCookie(
         request: HttpServletRequest,
         @RequestParam(required = false) opinions: List<Opinion>?
     ): ResponseEntity<Any> {
@@ -130,6 +130,21 @@ class TrackReviewController(
         
         val reviews = trackReviewService.getReviewsByUserId(userId, opinions)
         return ResponseEntity.ok(reviews)
+    }
+    
+    @GetMapping("/user/{userId}")
+    fun getReviewsByUserId(
+        @PathVariable userId: String,
+        @RequestParam(required = false) opinions: List<Opinion>?
+    ): ResponseEntity<Any> {
+        try {
+            val reviews = trackReviewService.getReviewsByUserId(userId, opinions)
+            return ResponseEntity.ok(reviews)
+        } catch (e: Exception) {
+            logger.error("Error getting reviews for user $userId: ${e.message}", e)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(mapOf("error" to (e.message ?: "Unknown error")))
+        }
     }
     
     @DeleteMapping("/{id}")

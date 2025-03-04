@@ -271,6 +271,11 @@ export const reviewApi = {
     return response.data;
   },
   
+  getFriendTrackReviews: async (friendId: string): Promise<TrackReview[]> => {
+    const response = await apiClient.get<TrackReview[]>(`/reviews/user/${friendId}`);
+    return response.data;
+  },
+  
   deleteReview: async (reviewId: string): Promise<{ success: boolean, message: string }> => {
     const response = await apiClient.delete<{ success: boolean, message: string }>(`/reviews/${reviewId}`);
     return response.data;

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FiUserPlus, FiUsers, FiUserCheck, FiCheck, FiX } from 'react-icons/fi';
-import { friendsApi } from '../../api/apiClient';
+import { FiUserPlus, FiUsers, FiUserCheck, FiCheck, FiX, FiDisc, FiLoader } from 'react-icons/fi';
+import { friendsApi, reviewApi, spotifyApi } from '../../api/apiClient';
 import './FriendsModal.css';
+import '../reviewComponents/UserReviewedTracks.css';
 
 interface FriendsModalProps {
   isOpen: boolean;
@@ -30,6 +31,183 @@ interface FriendRequest {
   updatedAt?: string;
 }
 
+// Track review interfaces
+interface TrackReview {
+  id: string;
+  userId: string;
+  spotifyTrackId: string;
+  opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
+  description: string;
+  rating: number;
+  ranking: number;
+  createdAt: number;
+  genres: string[];
+}
+
+interface TrackDetails {
+  albumImageUrl: string;
+  albumName: string;
+  artistName: string;
+  trackName: string;
+  spotifyId: string;
+}
+
+interface ReviewWithTrackDetails extends TrackReview {
+  track?: TrackDetails;
+}
+
+// FriendReviewedTracks component
+interface FriendReviewedTracksProps {
+  friend: Friend;
+  onClose: () => void;
+}
+
+const FriendReviewedTracks: React.FC<FriendReviewedTracksProps> = ({ friend, onClose }) => {
+  const [reviews, setReviews] = useState<ReviewWithTrackDetails[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchFriendReviews();
+  }, [friend.id]);
+
+  const fetchFriendReviews = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Get friend's track reviews
+      const reviewsData = await reviewApi.getFriendTrackReviews(friend.id);
+      
+      // Get track details for each review
+      const reviewsWithTracks = await Promise.all(
+        reviewsData.map(async (review) => {
+          try {
+            const trackData = await spotifyApi.getTrack(review.spotifyTrackId);
+            return {
+              ...review,
+              track: {
+                albumImageUrl: trackData.album.images[0]?.url || '',
+                albumName: trackData.album.name,
+                artistName: trackData.artists.map(a => a.name).join(', '),
+                trackName: trackData.name,
+                spotifyId: trackData.id
+              }
+            };
+          } catch (err) {
+            console.error(`Error fetching track data for ${review.spotifyTrackId}:`, err);
+            return review;
+          }
+        })
+      );
+      
+      setReviews(reviewsWithTracks);
+    } catch (err) {
+      console.error('Error fetching friend reviews:', err);
+      setError('Failed to load reviews. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to get color based on rating value
+  const getRatingColor = (rating: number): string => {
+    if (rating < 4.0) return '#e74c3c'; // Red for low ratings (dislike range: 0.0-3.9)
+    if (rating < 8.0) return '#f39c12'; // Yellow/orange for mid ratings (neutral range: 4.0-7.9)
+    return '#2ecc71'; // Green for high ratings (like range: 8.0-10.0)
+  };
+
+  const renderReviewsList = () => {
+    if (loading) {
+      return (
+        <div className="loading-container">
+          <div className="loading-spinner">
+            <FiLoader />
+          </div>
+          <p>Loading reviews...</p>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="error-message">
+          <p>{error}</p>
+          <button onClick={fetchFriendReviews} className="refresh-button">Try Again</button>
+        </div>
+      );
+    }
+
+    if (reviews.length === 0) {
+      return (
+        <div className="no-reviews">
+          <p>{friend.display_name} hasn't reviewed any tracks yet.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="reviews-list">
+        {reviews.map((review) => (
+          <div key={review.id} className="review-item">
+            <div className="track-card-container">
+              {review.track ? (
+                <>
+                  <div className="album-cover-container">
+                    <div className="album-cover">
+                      <img src={review.track.albumImageUrl} alt={review.track.trackName} />
+                    </div>
+                  </div>
+                  <div className="track-info">
+                    <div className="track-name">{review.track.trackName}</div>
+                    <div className="artist-name">{review.track.artistName}</div>
+                    <div className="album-name">{review.track.albumName}</div>
+                  </div>
+                </>
+              ) : (
+                <div className="track-info">
+                  <div className="track-name">Track ID: {review.spotifyTrackId}</div>
+                  <div className="artist-name">Track details unavailable</div>
+                </div>
+              )}
+            </div>
+            <div className="review-details">
+              <div 
+                className="rating-circle" 
+                style={{ backgroundColor: getRatingColor(review.rating) }}
+              >
+                {review.rating.toFixed(1)}
+              </div>
+              {review.description && (
+                <div className="review-description">
+                  "{review.description}"
+                </div>
+              )}
+              <div className="review-date">
+                {new Date(review.createdAt).toLocaleDateString()}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div className="user-reviewed-tracks">
+      <div className="header">
+        <h2>{friend.display_name}'s Reviewed Tracks</h2>
+        <div className="header-buttons">
+          <button className="refresh-button" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      </div>
+      {renderReviewsList()}
+    </div>
+  );
+};
+
+// Main FriendsModal component
 const FriendsModal: React.FC<FriendsModalProps> = ({ isOpen, onClose }) => {
   const [friendUserId, setFriendUserId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -39,6 +217,9 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isOpen, onClose }) => {
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+  const [isClosing, setIsClosing] = useState<boolean>(false);
 
   // Fetch friends and friend requests when the modal opens
   useEffect(() => {
@@ -124,9 +305,24 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isOpen, onClose }) => {
   };
 
   const handleClose = () => {
-    setFriendUserId('');
-    setRequestStatus(null);
-    onClose();
+    // If drawer is open, close it first with animation
+    if (isDrawerOpen) {
+      setIsClosing(true);
+      setTimeout(() => {
+        setIsDrawerOpen(false);
+        setSelectedFriend(null);
+        setIsClosing(false);
+        setRequestStatus(null);
+        setFriendUserId('');
+        onClose();
+      }, 300);
+    } else {
+      // Just close the modal
+      setRequestStatus(null);
+      setFriendUserId('');
+      setSelectedFriend(null);
+      onClose();
+    }
   };
 
   const handleSendFriendRequest = async () => {
@@ -239,6 +435,21 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleFriendClick = (friend: Friend) => {
+    setSelectedFriend(friend);
+    setIsDrawerOpen(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setIsClosing(true);
+    // Wait for animation to complete before removing the drawer
+    setTimeout(() => {
+      setIsDrawerOpen(false);
+      setSelectedFriend(null);
+      setIsClosing(false);
+    }, 300); // Match animation duration (0.3s)
+  };
+
   const renderFriendsList = () => {
     if (isLoading) {
       return <div className="loading-indicator">Loading friends...</div>;
@@ -273,7 +484,11 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isOpen, onClose }) => {
             : new Date();
             
           return (
-            <div key={friend.id} className="friend-item">
+            <div 
+              key={friend.id} 
+              className="friend-item"
+              onClick={() => handleFriendClick(friend)}
+            >
               <div className="friend-avatar">
                 {friend.image_url ? (
                   <img src={friend.image_url} alt={friend.display_name} />
@@ -291,10 +506,23 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isOpen, onClose }) => {
               <div className="friend-actions">
                 <button 
                   className="remove-friend-button"
-                  onClick={() => handleRemoveFriend(friend.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveFriend(friend.id);
+                  }}
                   title="Remove Friend"
                 >
                   <FiX />
+                </button>
+                <button 
+                  className="view-reviews-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleFriendClick(friend);
+                  }}
+                  title="View Reviews"
+                >
+                  <FiDisc />
                 </button>
               </div>
             </div>
@@ -398,80 +626,91 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h2>Friends</h2>
-          <button className="modal-close-button" onClick={handleClose}>×</button>
-        </div>
-        <div className="modal-body">
-          <div className="friend-request-section">
-            <h3>Add a Friend</h3>
-            <p>Enter a user ID to send a friend request:</p>
-            <div className="friend-input-container">
-              <input
-                type="text"
-                value={friendUserId}
-                onChange={(e) => setFriendUserId(e.target.value)}
-                onKeyDown={handleKeyPress}
-                placeholder="Enter user ID"
-                className="friend-input"
-                disabled={isSubmitting}
-              />
-              <button 
-                className={`friend-request-button ${isSubmitting ? 'loading' : ''}`}
-                onClick={handleSendFriendRequest}
-                disabled={isSubmitting}
-                aria-label="Send friend request"
-              >
-                {isSubmitting ? 'Sending...' : <><FiUserPlus /> Add</>}
-              </button>
-            </div>
-            {requestStatus && (
-              <div 
-                className={`friend-request-status ${
-                  requestStatus.type === 'success' 
-                    ? 'success' 
-                    : requestStatus.type === 'already-sent'
-                    ? 'already-sent'
-                    : 'error'
-                }`}
-                role="alert"
-              >
-                {requestStatus.type === 'success' ? (
-                  <FiCheck className="status-icon" />
-                ) : requestStatus.type === 'already-sent' ? (
-                  <FiUserCheck className="status-icon" />
-                ) : (
-                  <FiX className="status-icon" />
-                )}
-                {requestStatus.message}
-              </div>
-            )}
+    <>
+      <div className={`modal-overlay ${isDrawerOpen ? 'with-drawer' : ''} ${isClosing ? 'closing' : ''}`}>
+        <div className="modal-content">
+          <div className="modal-header">
+            <h2>Friends</h2>
+            <button className="modal-close-button" onClick={handleClose}>×</button>
           </div>
-          
-          <div className="friends-tabs">
-            <div className="tabs-header">
-              <button 
-                className={`tab-button ${activeTab === 'friends' ? 'active' : ''}`}
-                onClick={() => setActiveTab('friends')}
-              >
-                <FiUsers /> Friends
-              </button>
-              <button 
-                className={`tab-button ${activeTab === 'requests' ? 'active' : ''}`}
-                onClick={() => setActiveTab('requests')}
-              >
-                <FiUserCheck /> Friend Requests
-              </button>
+          <div className="modal-body">
+            <div className="friend-request-section">
+              <h3>Add a Friend</h3>
+              <p>Enter a user ID to send a friend request:</p>
+              <div className="friend-input-container">
+                <input
+                  type="text"
+                  value={friendUserId}
+                  onChange={(e) => setFriendUserId(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder="Enter user ID"
+                  className="friend-input"
+                  disabled={isSubmitting}
+                />
+                <button 
+                  className={`friend-request-button ${isSubmitting ? 'loading' : ''}`}
+                  onClick={handleSendFriendRequest}
+                  disabled={isSubmitting}
+                  aria-label="Send friend request"
+                >
+                  {isSubmitting ? 'Sending...' : <><FiUserPlus /> Add</>}
+                </button>
+              </div>
+              {requestStatus && (
+                <div 
+                  className={`friend-request-status ${
+                    requestStatus.type === 'success' 
+                      ? 'success' 
+                      : requestStatus.type === 'already-sent'
+                      ? 'already-sent'
+                      : 'error'
+                  }`}
+                  role="alert"
+                >
+                  {requestStatus.type === 'success' ? (
+                    <FiCheck className="status-icon" />
+                  ) : requestStatus.type === 'already-sent' ? (
+                    <FiUserCheck className="status-icon" />
+                  ) : (
+                    <FiX className="status-icon" />
+                  )}
+                  {requestStatus.message}
+                </div>
+              )}
             </div>
-            <div className="tabs-content">
-              {renderTabContent()}
+            
+            <div className="friends-tabs">
+              <div className="tabs-header">
+                <button 
+                  className={`tab-button ${activeTab === 'friends' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('friends')}
+                >
+                  <FiUsers /> Friends
+                </button>
+                <button 
+                  className={`tab-button ${activeTab === 'requests' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('requests')}
+                >
+                  <FiUserCheck /> Friend Requests
+                </button>
+              </div>
+              <div className="tabs-content">
+                {renderTabContent()}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+      
+      {(isDrawerOpen || isClosing) && selectedFriend && (
+        <div className={`friend-reviews-drawer ${isClosing ? 'closing' : ''}`}>
+          <FriendReviewedTracks 
+            friend={selectedFriend} 
+            onClose={handleCloseDrawer} 
+          />
+        </div>
+      )}
+    </>
   );
 };
 

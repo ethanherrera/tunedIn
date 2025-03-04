@@ -470,4 +470,338 @@
 .remove-friend-button:hover {
   background-color: rgba(239, 68, 68, 0.2);
   color: #ef4444;
+}
+
+/* Modal Backdrop and Container */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.friends-modal-container {
+  display: flex;
+  width: 90%;
+  max-width: 1200px;
+  height: 80vh;
+  position: relative;
+}
+
+.friends-modal {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  border: 1px solid #3f3f46;
+  overflow: hidden;
+  animation: modalFadeIn 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+/* When drawer is open, adjust modal position */
+.modal-overlay.with-drawer {
+  justify-content: flex-end;
+  padding-right: 50%; /* Position modal exactly at the left half */
+}
+
+.modal-overlay.with-drawer .modal-content {
+  border-radius: 12px 0 0 12px;
+  border-right: none;
+  max-width: 500px;
+  width: 500px; /* Fixed width to match with drawer */
+  margin-right: 0; /* Remove any margin */
+}
+
+/* Friend Reviews Drawer */
+.friend-reviews-drawer {
+  position: fixed;
+  top: 50%;
+  left: 50%; /* Position exactly at the center */
+  transform: translateY(-50%);
+  background-color: #1a1a1a;
+  border-radius: 0 12px 12px 0; /* Rounded corners on right side */
+  width: 800px;
+  max-height: 80vh;
+  border: 1px solid #3f3f46;
+  border-left: none; /* Remove left border to avoid double border */
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  animation: drawerSlideIn 0.3s ease forwards;
+  z-index: 1001; /* Higher than the modal */
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.friend-reviews-drawer.closing {
+  animation: drawerSlideOut 0.3s ease forwards;
+}
+
+@keyframes drawerSlideIn {
+  from {
+    transform: translateY(-50%) translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(-50%) translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes drawerSlideOut {
+  from {
+    transform: translateY(-50%) translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-50%) translateX(-20px);
+    opacity: 0;
+  }
+}
+
+/* Modal animation for closing */
+.modal-overlay.closing .modal-content {
+  animation: modalFadeOut 0.3s ease forwards;
+}
+
+@keyframes modalFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+/* Import UserReviewedTracks styles */
+.friend-reviews-drawer .user-reviewed-tracks {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.friend-reviews-drawer .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.friend-reviews-drawer h2 {
+  margin: 0;
+  font-size: 24px;
+  color: white;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.friend-reviews-drawer .header-buttons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.friend-reviews-drawer .refresh-button {
+  background-color: #312e81;
+  color: white;
+  border: 1px solid #4f46e5;
+  border-radius: 9999px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.friend-reviews-drawer .refresh-button:hover {
+  background-color: #4338ca;
+  transform: translateY(-1px);
+}
+
+.friend-reviews-drawer .loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #a1a1aa;
+}
+
+.friend-reviews-drawer .loading-spinner {
+  animation: spin 1s linear infinite;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: #6366f1;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.friend-reviews-drawer .error-message {
+  text-align: center;
+  padding: 2rem;
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.1);
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.friend-reviews-drawer .no-reviews {
+  text-align: center;
+  padding: 3rem;
+  color: #a1a1aa;
+  font-size: 1.1rem;
+}
+
+.friend-reviews-drawer .reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.friend-reviews-drawer .review-item {
+  display: flex;
+  background-color: #27272a;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid #3f3f46;
+  padding: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.friend-reviews-drawer .review-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border-color: #4f46e5;
+}
+
+.friend-reviews-drawer .track-card-container {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.friend-reviews-drawer .album-cover-container {
+  width: 60px;
+  height: 60px;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+
+.friend-reviews-drawer .album-cover {
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.friend-reviews-drawer .album-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.friend-reviews-drawer .track-info {
+  flex: 1;
+}
+
+.friend-reviews-drawer .track-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+  color: white;
+}
+
+.friend-reviews-drawer .artist-name {
+  font-size: 0.9rem;
+  color: #d4d4d8;
+  margin-bottom: 4px;
+}
+
+.friend-reviews-drawer .album-name {
+  font-size: 0.8rem;
+  color: #a1a1aa;
+}
+
+.friend-reviews-drawer .review-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 120px;
+}
+
+.friend-reviews-drawer .rating-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: white;
+  margin-bottom: 8px;
+}
+
+.friend-reviews-drawer .review-description {
+  font-size: 0.85rem;
+  color: #d4d4d8;
+  font-style: italic;
+  text-align: right;
+  margin-bottom: 8px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.friend-reviews-drawer .review-date {
+  font-size: 0.75rem;
+  color: #71717a;
+}
+
+/* View Reviews Button */
+.view-reviews-button {
+  background: none;
+  border: none;
+  color: #a855f7;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.view-reviews-button:hover {
+  background-color: rgba(168, 85, 247, 0.2);
 } 
