@@ -425,5 +425,10 @@ export const friendsApi = {
   
   removeFriend: async (friendId: string): Promise<void> => {
     await apiClient.delete(`/friends/${friendId}`);
+  },
+  
+  getFriendReviews: async (friendId: string): Promise<any[]> => {
+    const response = await apiClient.get<any[]>(`/reviews/user/${friendId}`);
+    return response.data;
   }
 };

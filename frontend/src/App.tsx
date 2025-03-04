@@ -5,6 +5,7 @@ import UserReviewedAlbums from './components/reviewComponents/UserReviewedAlbums
 import TopTracks from './components/topTracksComponents/TopTracks';
 import ProfilePage from './components/profileComponents/ProfilePage';
 import LoginPage from './components/loginComponents/LoginPage';
+import FriendsSidebar from './components/friendComponents/FriendsSidebar';
 import { spotifyApi } from './api/apiClient';
 import './App.css';
 
@@ -14,11 +15,13 @@ const MemoizedTopTracks = memo(TopTracks);
 const MemoizedUserReviewedTracks = memo(UserReviewedTracks);
 const MemoizedUserReviewedAlbums = memo(UserReviewedAlbums);
 const MemoizedProfilePage = memo(ProfilePage);
+const MemoizedFriendsSidebar = memo(FriendsSidebar);
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [activeView, setActiveView] = useState<'search' | 'reviews' | 'top-tracks' | 'album-reviews' | 'profile'>('search');
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
     
     // Combined authentication check
     useEffect(() => {
@@ -50,6 +53,11 @@ function App() {
         
         verifyAuth();
     }, []);
+    
+    // Handle sidebar collapse state
+    const handleSidebarCollapse = (collapsed: boolean) => {
+        setIsSidebarCollapsed(collapsed);
+    };
     
     // Only render content when loading is complete
     if (isLoading) {
@@ -140,24 +148,32 @@ function App() {
                 </button>
             </header>
             
-            <main className="app-content">
-                {/* Keep all components mounted but only display the active one */}
-                <div style={{ display: activeView === 'search' ? 'block' : 'none' }}>
-                    <MemoizedSearchContainer />
-                </div>
-                <div style={{ display: activeView === 'top-tracks' ? 'block' : 'none' }}>
-                    <MemoizedTopTracks />
-                </div>
-                <div style={{ display: activeView === 'reviews' ? 'block' : 'none' }}>
-                    <MemoizedUserReviewedTracks />
-                </div>
-                <div style={{ display: activeView === 'album-reviews' ? 'block' : 'none' }}>
-                    <MemoizedUserReviewedAlbums />
-                </div>
-                <div style={{ display: activeView === 'profile' ? 'block' : 'none' }}>
-                    <MemoizedProfilePage />
-                </div>
-            </main>
+            <div className={`app-container ${!isSidebarCollapsed ? 'sidebar-active' : ''}`}>
+                <main className="app-content">
+                    {/* Keep all components mounted but only display the active one */}
+                    <div style={{ display: activeView === 'search' ? 'block' : 'none' }}>
+                        <MemoizedSearchContainer />
+                    </div>
+                    <div style={{ display: activeView === 'top-tracks' ? 'block' : 'none' }}>
+                        <MemoizedTopTracks />
+                    </div>
+                    <div style={{ display: activeView === 'reviews' ? 'block' : 'none' }}>
+                        <MemoizedUserReviewedTracks />
+                    </div>
+                    <div style={{ display: activeView === 'album-reviews' ? 'block' : 'none' }}>
+                        <MemoizedUserReviewedAlbums />
+                    </div>
+                    <div style={{ display: activeView === 'profile' ? 'block' : 'none' }}>
+                        <MemoizedProfilePage />
+                    </div>
+                </main>
+                
+                {/* Friends Sidebar */}
+                <MemoizedFriendsSidebar 
+                    isCollapsed={isSidebarCollapsed}
+                    onCollapseChange={handleSidebarCollapse}
+                />
+            </div>
         </div>
     );
 }
