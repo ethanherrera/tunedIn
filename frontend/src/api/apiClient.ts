@@ -378,3 +378,10 @@ export const userApi = {
     return response.data;
   }
 };
+
+export const friendsApi = {
+  checkUserExists: async (userId: string) => {
+    const response = await apiClient.get<{ exists: boolean }>(`/friends/check-user/${userId}`);
+    return response.data;
+  }
+};

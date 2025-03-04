@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { userApi } from '../../api/apiClient';
-import { FiRefreshCw, FiUser, FiMail, FiMusic } from 'react-icons/fi';
+import { FiRefreshCw, FiUser, FiMail, FiMusic, FiUserPlus } from 'react-icons/fi';
 import RecentActivities from './RecentActivities';
+import AddFriendModal from '../friendComponents/AddFriendModal';
 import './ProfilePage.css';
 
 // Use a more generic interface that can handle both backend and frontend types
@@ -27,6 +28,7 @@ const ProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [showFriendsModal, setShowFriendsModal] = useState<boolean>(false);
 
   useEffect(() => {
     fetchUserProfile();
@@ -90,12 +92,20 @@ const ProfilePage: React.FC = () => {
     <div className="profile-container">
       <div className="profile-header">
         <h1>Your Profile</h1>
-        <button 
-          className="profile-refresh-button"
-          onClick={fetchUserProfile}
-        >
-          <FiRefreshCw /> Refresh
-        </button>
+        <div className="profile-header-buttons">
+          <button 
+            className="profile-friends-button"
+            onClick={() => setShowFriendsModal(true)}
+          >
+            <FiUserPlus /> Add Friends
+          </button>
+          <button 
+            className="profile-refresh-button"
+            onClick={fetchUserProfile}
+          >
+            <FiRefreshCw /> Refresh
+          </button>
+        </div>
       </div>
       
       <div className="profile-content">
@@ -169,6 +179,12 @@ const ProfilePage: React.FC = () => {
           </a>
         </div>
       )}
+
+      {/* Add Friend Modal */}
+      <AddFriendModal 
+        isOpen={showFriendsModal}
+        onClose={() => setShowFriendsModal(false)}
+      />
 
       <RecentActivities />
     </div>

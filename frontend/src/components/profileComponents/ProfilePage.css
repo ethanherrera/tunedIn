@@ -30,7 +30,12 @@
   background-clip: text;
 }
 
-.profile-refresh-button {
+.profile-header-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.profile-refresh-button, .profile-friends-button {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -45,7 +50,7 @@
   transition: all 0.3s ease;
 }
 
-.profile-refresh-button:hover {
+.profile-refresh-button:hover, .profile-friends-button:hover {
   background: linear-gradient(90deg, #6366f1, #a855f7);
   border-color: #8b5cf6;
   box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
