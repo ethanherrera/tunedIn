@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.time.Duration
 import jakarta.servlet.http.HttpServletRequest
+import org.slf4j.LoggerFactory
 
 @RestController
 @RequestMapping("/api/spotify")
@@ -19,6 +20,8 @@ class SpotifyController(
     private val userService: UserService,
     @Value("\${frontend.url}") private val frontendUrl: String
 ) {
+    private val logger = LoggerFactory.getLogger(SpotifyController::class.java)
+    
     @GetMapping("/login")
     fun login(): ResponseEntity<SpotifyAuthUrlResponse> {
         val authUrl = spotifyService.generateAuthUrl()
@@ -49,17 +52,19 @@ class SpotifyController(
 
         try {
             val tokenResponse = spotifyService.exchangeCode(code)
-            val user = userService.createOrUpdateUser(tokenResponse)
+            val userProfile = userService.createOrUpdateUser(tokenResponse)
+            
+            logger.info("User authenticated: ${userProfile.id}, display name: ${userProfile.display_name}")
             
             // Create secure HTTP-only cookies
-            val userIdCookie = ResponseCookie.from("userId", user.id)
+            val userIdCookie = ResponseCookie.from("userId", userProfile.id)
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
                 .maxAge(Duration.ofDays(7))
                 .build()
                 
-            val displayNameCookie = ResponseCookie.from("displayName", user.displayName)
+            val displayNameCookie = ResponseCookie.from("displayName", userProfile.display_name ?: "Spotify User")
                 .httpOnly(false) // Allow JavaScript to read display name for UI
                 .secure(true)
                 .path("/")
@@ -82,6 +87,7 @@ class SpotifyController(
                 .build<Void>()
                 
         } catch (e: Exception) {
+            logger.error("Authentication error", e)
             // Redirect to frontend with error
             val redirectUrl = "$frontendUrl/auth-error?error=${e.message}"
             return ResponseEntity.status(HttpStatus.FOUND)

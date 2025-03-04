@@ -12,8 +12,11 @@ import kotlin.math.max
 class TrackReviewService(
     private val trackReviewRepository: TrackReviewRepository,
     private val spotifyService: SpotifyService,
-    private val albumReviewService: AlbumReviewService
+    private val albumReviewService: AlbumReviewService,
+    private val userService: UserService
 ) {
+    private val logger = LoggerFactory.getLogger(TrackReviewService::class.java)
+    
     fun createReview(userId: String, spotifyTrackId: String, opinion: Opinion, description: String, rating: Double, ranking: Int = 0, accessToken: String): TrackReview {
         // Get the track to fetch artist information
         val track = spotifyService.getTrack(spotifyTrackId, accessToken)
@@ -53,6 +56,15 @@ class TrackReviewService(
             // Update the album review for this track
             updateAlbumReviewForTrack(userId, track.album.id, spotifyTrackId, accessToken)
             
+            // Add to user's recent activities
+            try {
+                userService.addRecentActivity(userId, savedReview)
+                logger.info("Updated recent activity for user $userId with track review ${savedReview.id}")
+            } catch (e: Exception) {
+                // Don't fail the whole operation if adding to recent activities fails
+                logger.error("Failed to update recent activity for user $userId: ${e.message}", e)
+            }
+            
             return savedReview
         }
         
@@ -84,6 +96,15 @@ class TrackReviewService(
         
         // Update the album review for this track
         updateAlbumReviewForTrack(userId, track.album.id, spotifyTrackId, accessToken)
+        
+        // Add to user's recent activities
+        try {
+            userService.addRecentActivity(userId, savedReview)
+            logger.info("Added recent activity for user $userId with track review ${savedReview.id}")
+        } catch (e: Exception) {
+            // Don't fail the whole operation if adding to recent activities fails
+            logger.error("Failed to add recent activity for user $userId: ${e.message}", e)
+        }
         
         return savedReview
     }

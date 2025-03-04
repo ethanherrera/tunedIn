@@ -1,61 +1,127 @@
 package com.tunedin.backend.service
 
-import com.tunedin.backend.model.SpotifyUser
+import com.tunedin.backend.model.*
 import com.tunedin.backend.model.spotify.SpotifyTokenResponse
 import com.tunedin.backend.model.spotify.SpotifyUserProfile
-import com.tunedin.backend.repository.SpotifyUserRepository
+import com.tunedin.backend.repository.UserProfileRepository
 import org.springframework.stereotype.Service
 import java.time.Instant
+import org.slf4j.LoggerFactory
 
 @Service
 class UserService(
     private val spotifyService: SpotifyService,
-    private val spotifyUserRepository: SpotifyUserRepository
+    private val userProfileRepository: UserProfileRepository
 ) {
-    fun createOrUpdateUser(tokenResponse: SpotifyTokenResponse): SpotifyUser {
+    private val logger = LoggerFactory.getLogger(UserService::class.java)
+    
+    fun createOrUpdateUser(tokenResponse: SpotifyTokenResponse): UserProfile {
         // Get user profile from Spotify
-        val userProfile = spotifyService.getUserProfile(tokenResponse.accessToken)
+        val spotifyUserProfile = spotifyService.getUserProfile(tokenResponse.accessToken)
         
         // Calculate token expiration
         val expiresAt = Instant.now().plusSeconds(tokenResponse.expiresIn.toLong())
         
-        // Create or update user
-        val user = spotifyUserRepository.findById(userProfile.id).orElse(
-            SpotifyUser(
-                id = userProfile.id,
-                email = userProfile.email,
-                displayName = userProfile.display_name ?: "Spotify User",
-                profileImageUrl = userProfile.images?.firstOrNull()?.url,
-                accessToken = tokenResponse.accessToken,
-                refreshToken = tokenResponse.refreshToken,
-                tokenExpiresAt = expiresAt,
-                createdAt = Instant.now()
+        // Check if profile already exists
+        val existingProfile = getUserProfileById(spotifyUserProfile.id)
+        
+        // Convert Spotify profile images to our ImageObject format
+        val images = spotifyUserProfile.images?.map { image ->
+            ImageObject(
+                url = image.url,
+                height = image.height,
+                width = image.width
             )
-        ).copy(
-            email = userProfile.email,
-            displayName = userProfile.display_name ?: "Spotify User",
-            profileImageUrl = userProfile.images?.firstOrNull()?.url,
-            accessToken = tokenResponse.accessToken,
-            refreshToken = tokenResponse.refreshToken,
-            tokenExpiresAt = expiresAt,
-            updatedAt = Instant.now()
+        }
+        
+        // Create external URLs object
+        val externalUrls = ExternalUrls(
+            spotify = spotifyUserProfile.external_urls["spotify"]
         )
         
-        return spotifyUserRepository.save(user)
+        // For fields that might not be in the SpotifyUserProfile, we'll use null values
+        // These will be populated if/when the Spotify API provides them
+        
+        val userProfile = if (existingProfile != null) {
+            // Update existing profile with new data from Spotify
+            existingProfile.copy(
+                display_name = spotifyUserProfile.display_name,
+                email = spotifyUserProfile.email,
+                external_urls = externalUrls,
+                href = spotifyUserProfile.href,
+                images = images,
+                uri = spotifyUserProfile.uri,
+                accessToken = tokenResponse.accessToken,
+                refreshToken = tokenResponse.refreshToken ?: existingProfile.refreshToken,
+                tokenExpiresAt = expiresAt,
+                updatedAt = Instant.now()
+            )
+        } else {
+            // Create new profile with data from Spotify
+            UserProfile(
+                id = spotifyUserProfile.id,
+                display_name = spotifyUserProfile.display_name,
+                email = spotifyUserProfile.email,
+                external_urls = externalUrls,
+                href = spotifyUserProfile.href,
+                images = images,
+                uri = spotifyUserProfile.uri,
+                accessToken = tokenResponse.accessToken,
+                refreshToken = tokenResponse.refreshToken,
+                tokenExpiresAt = expiresAt
+            )
+        }
+        
+        logger.info("Saving user profile for user ID: ${spotifyUserProfile.id}")
+        return userProfileRepository.save(userProfile)
     }
     
     fun getValidAccessToken(userId: String): String {
-        val user = spotifyUserRepository.findById(userId)
-            .orElseThrow { RuntimeException("User not found") }
+        val userProfile = getUserProfileById(userId)
+            ?.takeIf { it.accessToken != null && it.refreshToken != null && it.tokenExpiresAt != null }
+            ?: throw RuntimeException("User profile not found or missing authentication data")
         
         // Check if token is expired
-        if (Instant.now().isAfter(user.tokenExpiresAt)) {
+        if (userProfile.tokenExpiresAt != null && Instant.now().isAfter(userProfile.tokenExpiresAt)) {
             // Refresh token
-            val tokenResponse = spotifyService.refreshAccessToken(user.refreshToken)
-            val updatedUser = createOrUpdateUser(tokenResponse)
-            return updatedUser.accessToken
+            val tokenResponse = spotifyService.refreshAccessToken(userProfile.refreshToken!!)
+            val updatedProfile = createOrUpdateUser(tokenResponse)
+            return updatedProfile.accessToken ?: throw RuntimeException("Failed to refresh access token")
         }
         
-        return user.accessToken
+        return userProfile.accessToken ?: throw RuntimeException("Access token not found")
+    }
+    
+    // UserProfile methods
+    
+    fun saveUserProfile(userProfile: UserProfile): UserProfile {
+        return userProfileRepository.save(userProfile)
+    }
+    
+    fun getUserProfileById(userId: String): UserProfile? {
+        return userProfileRepository.findById(userId).orElse(null)
+    }
+    
+    fun addRecentActivity(userId: String, trackReview: TrackReview): UserProfile {
+        val userProfile = getUserProfileById(userId)
+            ?: throw RuntimeException("User profile not found for user ID: $userId")
+        
+        val recentActivity = RecentActivity(
+            trackReview = trackReview,
+            timestamp = Instant.now()
+        )
+        
+        // Create a new list with the new activity at the beginning
+        val updatedActivities = mutableListOf(recentActivity)
+        
+        // Add existing activities, limiting to the most recent 20
+        updatedActivities.addAll(userProfile.recentActivities.take(19))
+        
+        val updatedProfile = userProfile.copy(
+            recentActivities = updatedActivities,
+            updatedAt = Instant.now()
+        )
+        
+        return userProfileRepository.save(updatedProfile)
     }
 } 
