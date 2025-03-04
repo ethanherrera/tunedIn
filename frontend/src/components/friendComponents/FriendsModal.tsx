@@ -14,19 +14,26 @@ interface Friend {
   id: string;
   display_name: string;
   image_url?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface FriendRequest {
   id: string;
-  display_name: string;
+  display_name?: string;
   image_url?: string;
-  timestamp: string;
+  timestamp?: string;
+  senderId?: string;
+  receiverId?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 const FriendsModal: React.FC<FriendsModalProps> = ({ isOpen, onClose }) => {
   const [friendUserId, setFriendUserId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [requestStatus, setRequestStatus] = useState<{ message: string; success: boolean } | null>(null);
+  const [requestStatus, setRequestStatus] = useState<{ message: string; success: boolean; type?: 'success' | 'error' | 'already-sent' } | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('friends');
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
@@ -98,6 +105,24 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleRemoveFriend = async (friendId: string) => {
+    if (window.confirm('Are you sure you want to remove this friend?')) {
+      try {
+        await friendsApi.removeFriend(friendId);
+        // Refresh the lists after removing
+        fetchFriendsAndRequests();
+      } catch (err) {
+        console.error('Failed to remove friend:', err);
+        // Check if the error is related to authentication
+        if (err instanceof Error && err.message.includes('User ID not found')) {
+          setError('You need to be logged in to remove friends. Please log in again.');
+        } else {
+          setError('Failed to remove friend. Please try again.');
+        }
+      }
+    }
+  };
+
   const handleClose = () => {
     setFriendUserId('');
     setRequestStatus(null);
@@ -108,7 +133,8 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isOpen, onClose }) => {
     if (!friendUserId.trim()) {
       setRequestStatus({
         message: 'Please enter a user ID',
-        success: false
+        success: false,
+        type: 'error'
       });
       return;
     }
@@ -117,45 +143,91 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isOpen, onClose }) => {
     setRequestStatus(null);
 
     try {
+      // First check if the user exists
       const response = await friendsApi.checkUserExists(friendUserId);
       
       if (response.exists) {
-        // Send friend request
         try {
+          // Send friend request
           await friendsApi.sendFriendRequest(friendUserId);
           
           setRequestStatus({
-            message: 'Friend request sent!',
-            success: true
+            message: 'Friend request sent successfully!',
+            success: true,
+            type: 'success'
           });
           setFriendUserId(''); // Clear the input after successful request
+          
+          // Refresh the sent requests list if we implement that view in the future
+          fetchFriendsAndRequests();
         } catch (err) {
           console.error('Failed to send friend request:', err);
-          // Check if the error is related to authentication
-          if (err instanceof Error && err.message.includes('User ID not found')) {
-            setRequestStatus({
-              message: 'You need to be logged in to send friend requests. Please log in again.',
-              success: false
-            });
+          
+          // Handle specific error cases
+          if (err instanceof Error) {
+            if (err.message.includes('User ID not found')) {
+              setRequestStatus({
+                message: 'You need to be logged in to send friend requests. Please log in again.',
+                success: false,
+                type: 'error'
+              });
+            } else if (err.message.includes('already friends')) {
+              setRequestStatus({
+                message: 'You are already friends with this user.',
+                success: false,
+                type: 'error'
+              });
+            } else if (err.message.includes('request already sent')) {
+              setRequestStatus({
+                message: 'Friend request already sent',
+                success: false,
+                type: 'already-sent'
+              });
+            } else if (err.message.includes('cannot send to yourself')) {
+              setRequestStatus({
+                message: 'You cannot send a friend request to yourself.',
+                success: false,
+                type: 'error'
+              });
+            } else {
+              setRequestStatus({
+                message: 'Failed to send friend request. Please try again later.',
+                success: false,
+                type: 'error'
+              });
+            }
           } else {
             setRequestStatus({
-              message: 'Failed to send friend request. Please try again.',
-              success: false
+              message: 'An unexpected error occurred. Please try again.',
+              success: false,
+              type: 'error'
             });
           }
         }
       } else {
         setRequestStatus({
-          message: 'User ID does not exist',
-          success: false
+          message: 'User ID does not exist. Please check and try again.',
+          success: false,
+          type: 'error'
         });
       }
     } catch (err) {
-      console.error('Failed to check user:', err);
-      setRequestStatus({
-        message: 'Failed to check if user exists. Please try again.',
-        success: false
-      });
+      console.error('Failed to check if user exists:', err);
+      
+      // Handle network or server errors when checking user existence
+      if (err instanceof Error && err.message.includes('Network Error')) {
+        setRequestStatus({
+          message: 'Network error. Please check your connection and try again.',
+          success: false,
+          type: 'error'
+        });
+      } else {
+        setRequestStatus({
+          message: 'Failed to check if user exists. Please try again later.',
+          success: false,
+          type: 'error'
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -194,23 +266,40 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isOpen, onClose }) => {
 
     return (
       <div className="friends-list">
-        {friends.map(friend => (
-          <div key={friend.id} className="friend-item">
-            <div className="friend-avatar">
-              {friend.image_url ? (
-                <img src={friend.image_url} alt={friend.display_name} />
-              ) : (
-                <div className="avatar-placeholder">
-                  {friend.display_name.charAt(0).toUpperCase()}
-                </div>
-              )}
+        {friends.map(friend => {
+          // Parse the timestamp string from the backend
+          const timestamp = friend.createdAt 
+            ? new Date(friend.createdAt.replace(' ', 'T')) // Handle ISO format
+            : new Date();
+            
+          return (
+            <div key={friend.id} className="friend-item">
+              <div className="friend-avatar">
+                {friend.image_url ? (
+                  <img src={friend.image_url} alt={friend.display_name} />
+                ) : (
+                  <div className="avatar-placeholder">
+                    {friend.display_name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="friend-info">
+                <div className="friend-name">{friend.display_name}</div>
+                <div className="friend-id">{friend.id}</div>
+                <div className="friend-since">Friends since: {timestamp.toLocaleDateString()}</div>
+              </div>
+              <div className="friend-actions">
+                <button 
+                  className="remove-friend-button"
+                  onClick={() => handleRemoveFriend(friend.id)}
+                  title="Remove Friend"
+                >
+                  <FiX />
+                </button>
+              </div>
             </div>
-            <div className="friend-info">
-              <div className="friend-name">{friend.display_name}</div>
-              <div className="friend-id">{friend.id}</div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -242,40 +331,47 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isOpen, onClose }) => {
 
     return (
       <div className="friend-requests-list">
-        {friendRequests.map(request => (
-          <div key={request.id} className="friend-request-item">
-            <div className="friend-avatar">
-              {request.image_url ? (
-                <img src={request.image_url} alt={request.display_name} />
-              ) : (
-                <div className="avatar-placeholder">
-                  {request.display_name.charAt(0).toUpperCase()}
-                </div>
-              )}
+        {friendRequests.map(request => {
+          // Parse the timestamp string from the backend
+          const timestamp = request.createdAt 
+            ? new Date(request.createdAt.replace(' ', 'T')) // Handle ISO format
+            : new Date();
+            
+          return (
+            <div key={request.id} className="friend-request-item">
+              <div className="friend-avatar">
+                {request.image_url ? (
+                  <img src={request.image_url} alt={request.display_name || 'User'} />
+                ) : (
+                  <div className="avatar-placeholder">
+                    {(request.display_name || 'U').charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="friend-info">
+                <div className="friend-name">{request.display_name || 'Unknown User'}</div>
+                <div className="friend-id">{request.senderId || request.id}</div>
+                <div className="request-time">Requested: {timestamp.toLocaleString()}</div>
+              </div>
+              <div className="request-actions">
+                <button 
+                  className="accept-button"
+                  onClick={() => handleAcceptFriendRequest(request.id)}
+                  title="Accept"
+                >
+                  <FiCheck />
+                </button>
+                <button 
+                  className="reject-button"
+                  onClick={() => handleRejectFriendRequest(request.id)}
+                  title="Reject"
+                >
+                  <FiX />
+                </button>
+              </div>
             </div>
-            <div className="friend-info">
-              <div className="friend-name">{request.display_name}</div>
-              <div className="friend-id">{request.id}</div>
-              <div className="request-time">Requested: {new Date(request.timestamp).toLocaleString()}</div>
-            </div>
-            <div className="request-actions">
-              <button 
-                className="accept-button"
-                onClick={() => handleAcceptFriendRequest(request.id)}
-                title="Accept"
-              >
-                <FiCheck />
-              </button>
-              <button 
-                className="reject-button"
-                onClick={() => handleRejectFriendRequest(request.id)}
-                title="Reject"
-              >
-                <FiX />
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -323,15 +419,32 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isOpen, onClose }) => {
                 disabled={isSubmitting}
               />
               <button 
-                className="friend-request-button"
+                className={`friend-request-button ${isSubmitting ? 'loading' : ''}`}
                 onClick={handleSendFriendRequest}
                 disabled={isSubmitting}
+                aria-label="Send friend request"
               >
                 {isSubmitting ? 'Sending...' : <><FiUserPlus /> Add</>}
               </button>
             </div>
             {requestStatus && (
-              <div className={`friend-request-status ${requestStatus.success ? 'success' : 'error'}`}>
+              <div 
+                className={`friend-request-status ${
+                  requestStatus.type === 'success' 
+                    ? 'success' 
+                    : requestStatus.type === 'already-sent'
+                    ? 'already-sent'
+                    : 'error'
+                }`}
+                role="alert"
+              >
+                {requestStatus.type === 'success' ? (
+                  <FiCheck className="status-icon" />
+                ) : requestStatus.type === 'already-sent' ? (
+                  <FiUserCheck className="status-icon" />
+                ) : (
+                  <FiX className="status-icon" />
+                )}
                 {requestStatus.message}
               </div>
             )}
