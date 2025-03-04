@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './TrackComparisonModal.css';
 import { reviewApi, spotifyApi } from '../../api/apiClient';
+import usePreventScroll from '../../hooks/usePreventScroll';
 
 interface Track {
   albumImageUrl: string;
@@ -57,6 +58,10 @@ const TrackComparisonModal: React.FC<TrackComparisonModalProps> = ({
   const [noTracksAvailable, setNoTracksAvailable] = useState(false);
   const [allComparisonsCompleted, setAllComparisonsCompleted] = useState(false);
   const [contentReady, setContentReady] = useState(false); // Add new state for content readiness
+
+  // Prevent scrolling when modal is open and not embedded
+  // Only apply when this modal is standalone, not when embedded in another modal
+  usePreventScroll(isOpen && !embedded);
 
   // Call onComparisonComplete when appropriate
   useEffect(() => {

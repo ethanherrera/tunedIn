@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './TrackDetailsModal.css';
 import { reviewApi } from '../../api/apiClient';
+import usePreventScroll from '../../hooks/usePreventScroll';
 
 interface TrackDetailsModalProps {
   isOpen: boolean;
@@ -43,6 +44,9 @@ const TrackDetailsModal: React.FC<TrackDetailsModalProps> = ({
 }) => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Prevent scrolling when modal is open
+  usePreventScroll(isOpen);
   
   if (!isOpen) return null;
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './TrackRankingModal.css';
 import { reviewApi } from '../../api/apiClient';
 import TrackComparisonModal from './TrackComparisonModal';
+import usePreventScroll from '../../hooks/usePreventScroll';
 
 // Add interface for the review data
 interface ReviewData {
@@ -59,6 +60,9 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
   const [existingReview, setExistingReview] = useState<ReviewData | null>(null);
   // Flag to track if we're loading the existing review
   const [isLoadingExistingReview, setIsLoadingExistingReview] = useState(false);
+
+  // Prevent scrolling when modal is open
+  usePreventScroll(isOpen);
 
   // Fetch existing review data when the modal opens with an existingReviewId
   useEffect(() => {

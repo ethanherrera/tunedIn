@@ -3,6 +3,7 @@ import './AlbumDetailsModal.css';
 import { spotifyApi, reviewApi, albumReviewApi } from '../../api/apiClient';
 import TrackDetailsModal from '../trackComponents/TrackDetailsModal';
 import TrackRankingModal from '../trackComponents/TrackRankingModal';
+import usePreventScroll from '../../hooks/usePreventScroll';
 
 interface Track {
   albumImageUrl: string;
@@ -52,6 +53,9 @@ const AlbumDetailsModal: React.FC<AlbumDetailsModalProps> = ({
   const [tracksNeededForScore, setTracksNeededForScore] = useState(0);
   const [albumReview, setAlbumReview] = useState<any | null>(null);
   const initialRender = useRef(true);
+
+  // Prevent scrolling when modal is open
+  usePreventScroll(isOpen);
 
   // Reset states when modal opens or closes
   useEffect(() => {

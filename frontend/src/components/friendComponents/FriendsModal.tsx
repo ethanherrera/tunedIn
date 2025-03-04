@@ -3,6 +3,7 @@ import { FiUserPlus, FiUsers, FiUserCheck, FiCheck, FiX, FiDisc, FiLoader } from
 import { friendsApi, reviewApi, spotifyApi } from '../../api/apiClient';
 import './FriendsModal.css';
 import '../reviewComponents/UserReviewedTracks.css';
+import usePreventScroll from '../../hooks/usePreventScroll';
 
 interface FriendsModalProps {
   isOpen: boolean;
@@ -220,6 +221,9 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isOpen, onClose }) => {
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
   const [isClosing, setIsClosing] = useState<boolean>(false);
+  
+  // Use the custom hook to prevent scrolling
+  usePreventScroll(isOpen);
 
   // Fetch friends and friend requests when the modal opens
   useEffect(() => {
