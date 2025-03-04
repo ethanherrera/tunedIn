@@ -7,7 +7,7 @@
     "create": "docker exec -it mongodb mongosh -u root -p rootpassword /scripts/create-initial-documents.js",
     "reset": "docker exec -it mongodb mongosh -u root -p rootpassword /scripts/reset-db.js",
     "enter": "docker exec -it mongodb mongosh -u root -p rootpassword",
-    "drop": "docker volume rm tunedin_mongodb_data",
+    "drop": "docker compose down && docker volume rm tunedin_mongodb_data",
     "prune": "docker system prune -f"
   }
 }

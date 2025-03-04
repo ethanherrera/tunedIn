@@ -78,9 +78,6 @@ class TrackReviewService(
             // Update the album review for this track
             updateAlbumReviewForTrack(userId, track.album.id, spotifyTrackId, accessToken)
             
-            // We don't add to recent activities when updating an existing review
-            // This prevents duplicate entries in the recent activities list
-            
             return savedReview
         }
         
@@ -112,15 +109,6 @@ class TrackReviewService(
         
         // Update the album review for this track
         updateAlbumReviewForTrack(userId, track.album.id, spotifyTrackId, accessToken)
-        
-        // Add to user's recent activities - only for new reviews, not updates
-        try {
-            userService.addRecentActivity(userId, savedReview)
-            logger.info("Added recent activity for user $userId with track review ${savedReview.id}")
-        } catch (e: Exception) {
-            // Don't fail the whole operation if adding to recent activities fails
-            logger.error("Failed to add recent activity for user $userId: ${e.message}", e)
-        }
         
         return savedReview
     }
