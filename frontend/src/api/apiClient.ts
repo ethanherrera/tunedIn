@@ -369,8 +369,11 @@ export const userApi = {
   },
   
   getMe: async () => {
-    const response = await apiClient.get<UserProfile>('/users/me');
-    return response.data;
+    const response = await fetch('/api/users/me');
+    if (!response.ok) {
+      throw new Error('Failed to get current user profile');
+    }
+    return response.json();
   },
   
   getRecentActivities: async () => {
@@ -380,8 +383,42 @@ export const userApi = {
 };
 
 export const friendsApi = {
-  checkUserExists: async (userId: string) => {
+  checkUserExists: async (userId: string): Promise<{ exists: boolean }> => {
     const response = await apiClient.get<{ exists: boolean }>(`/friends/check-user/${userId}`);
     return response.data;
+  },
+  
+  sendFriendRequest: async (receiverId: string): Promise<any> => {
+    const response = await apiClient.post(`/friends/request/${receiverId}`);
+    return response.data;
+  },
+  
+  acceptFriendRequest: async (requestId: string): Promise<any> => {
+    const response = await apiClient.put(`/friends/request/${requestId}/accept`);
+    return response.data;
+  },
+  
+  declineFriendRequest: async (requestId: string): Promise<any> => {
+    const response = await apiClient.put(`/friends/request/${requestId}/decline`);
+    return response.data;
+  },
+  
+  getPendingRequests: async (): Promise<any[]> => {
+    const response = await apiClient.get<any[]>(`/friends/requests/pending`);
+    return response.data;
+  },
+  
+  getSentRequests: async (): Promise<any[]> => {
+    const response = await apiClient.get<any[]>(`/friends/requests/sent`);
+    return response.data;
+  },
+  
+  getFriendsList: async (): Promise<any[]> => {
+    const response = await apiClient.get<any[]>(`/friends/list`);
+    return response.data;
+  },
+  
+  removeFriend: async (friendId: string): Promise<void> => {
+    await apiClient.delete(`/friends/${friendId}`);
   }
 };

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { userApi } from '../../api/apiClient';
-import { FiRefreshCw, FiUser, FiMail, FiMusic, FiUserPlus } from 'react-icons/fi';
+import { FiRefreshCw, FiUser, FiMail, FiMusic, FiUsers } from 'react-icons/fi';
 import RecentActivities from './RecentActivities';
-import AddFriendModal from '../friendComponents/AddFriendModal';
+import FriendsModal from '../friendComponents/FriendsModal';
 import './ProfilePage.css';
 
 // Use a more generic interface that can handle both backend and frontend types
@@ -97,7 +97,7 @@ const ProfilePage: React.FC = () => {
             className="profile-friends-button"
             onClick={() => setShowFriendsModal(true)}
           >
-            <FiUserPlus /> Add Friends
+            <FiUsers /> Friends
           </button>
           <button 
             className="profile-refresh-button"
@@ -180,8 +180,8 @@ const ProfilePage: React.FC = () => {
         </div>
       )}
 
-      {/* Add Friend Modal */}
-      <AddFriendModal 
+      {/* Friends Modal */}
+      <FriendsModal 
         isOpen={showFriendsModal}
         onClose={() => setShowFriendsModal(false)}
       />

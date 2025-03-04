@@ -23,6 +23,7 @@ data class UserProfile(
     val refreshToken: String? = null,
     val tokenExpiresAt: Instant? = null,
     val recentActivities: List<RecentActivity> = emptyList(),
+    val friendIds: List<String> = emptyList(),  // List of friend user IDs
     val createdAt: Instant = Instant.now(),
     val updatedAt: Instant = Instant.now()
 )
