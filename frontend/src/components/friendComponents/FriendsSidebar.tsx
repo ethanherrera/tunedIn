@@ -544,16 +544,6 @@ const FriendsSidebar: React.FC<FriendsSidebarProps> = ({ isCollapsed, onCollapse
                 >
                   <FiX />
                 </button>
-                <button 
-                  className="view-reviews-button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleFriendClick(friend);
-                  }}
-                  title="View Reviews"
-                >
-                  <FiDisc />
-                </button>
               </div>
             </div>
           );

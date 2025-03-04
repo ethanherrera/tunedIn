@@ -367,17 +367,18 @@
   margin-left: auto;
 }
 
-.accept-button, .reject-button, .remove-friend-button, .view-reviews-button {
+.accept-button, .reject-button, .remove-friend-button {
   display: flex;
-  align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  align-items: center;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  background-color: #27272a;
+  color: white;
+  margin-left: 5px;
 }
 
 .accept-button {
@@ -408,16 +409,6 @@
 .remove-friend-button:hover {
   background-color: rgba(239, 68, 68, 0.2);
   color: #ef4444;
-}
-
-.view-reviews-button {
-  background-color: rgba(168, 85, 247, 0.2);
-  color: #a855f7;
-}
-
-.view-reviews-button:hover {
-  background-color: rgba(168, 85, 247, 0.4);
-  transform: scale(1.1);
 }
 
 /* Empty States */
