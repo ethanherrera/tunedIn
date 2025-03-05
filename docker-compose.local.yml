@@ -1,0 +1,84 @@
+version: '3.8'
+
+# =====================================================
+# DOCKER COMPOSE CONFIGURATION FOR LOCAL DEVELOPMENT ONLY
+# DO NOT USE IN PRODUCTION ENVIRONMENT
+# =====================================================
+
+services:
+  mongodb:
+    build:
+      context: ./database
+      dockerfile: Dockerfile.local
+    container_name: mongodb-local
+    restart: unless-stopped
+    ports:
+      - "${MONGODB_PORT:-27017}:27017"
+    env_file:
+      - ./database/.env.local
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USERNAME:-root}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD:-rootpassword}
+      - MONGO_INITDB_DATABASE=${MONGODB_DATABASE:-tunedIn}
+    volumes:
+      - mongodb_data_local:/data/db
+      - ./database/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+      - ./database/scripts:/scripts
+    networks:
+      - tunedIn-network-local
+    labels:
+      - "com.tunedin.environment=development"
+      - "com.tunedin.description=Local development MongoDB instance"
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile.local
+    container_name: backend-local
+    ports:
+      - "${SERVER_PORT:-8000}:${SERVER_PORT:-8000}"
+    env_file:
+      - ./backend/.env.local
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://${MONGODB_USERNAME:-root}:${MONGODB_PASSWORD:-rootpassword}@mongodb-local:${MONGODB_PORT:-27017}/${MONGODB_DATABASE:-tunedIn}?authSource=${MONGODB_AUTH_DATABASE:-admin}
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    networks:
+      - tunedIn-network-local
+    labels:
+      - "com.tunedin.environment=development"
+      - "com.tunedin.description=Local development backend service"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.local
+    container_name: frontend-local
+    ports:
+      - "${FRONTEND_PORT:-5137}:${FRONTEND_PORT:-5137}"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000/api
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - tunedIn-network-local
+    labels:
+      - "com.tunedin.environment=development"
+      - "com.tunedin.description=Local development frontend service"
+
+volumes:
+  mongodb_data_local:
+    driver: local
+    labels:
+      - "com.tunedin.environment=development"
+
+networks:
+  tunedIn-network-local:
+    driver: bridge
+    labels:
+      - "com.tunedin.environment=development"

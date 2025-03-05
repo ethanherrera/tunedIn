@@ -1,0 +1,23 @@
+# =====================================================
+# DOCKERFILE FOR LOCAL DEVELOPMENT ONLY
+# DO NOT USE IN PRODUCTION ENVIRONMENT
+# =====================================================
+
+FROM eclipse-temurin:21-jdk-jammy as builder
+
+WORKDIR /app
+COPY . .
+RUN ./mvnw clean package -DskipTests
+
+FROM eclipse-temurin:21-jre-jammy
+
+WORKDIR /app
+COPY --from=builder /app/target/*.jar app.jar
+
+# Development environment labels
+LABEL environment="development" \
+      description="TunedIn backend service for local development" \
+      maintainer="TunedIn Development Team"
+
+EXPOSE ${SERVER_PORT:-8000}
+ENTRYPOINT ["java", "-jar", "app.jar"] 

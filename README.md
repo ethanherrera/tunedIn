@@ -1,37 +1,79 @@
-# TunedIn
+# TunedIn Development Environment
 
-Run the application using:
+This repository contains the development environment for the TunedIn application.
+
+## Development Setup
+
+The application is containerized using Docker and Docker Compose for local development.
+
+### Prerequisites
+
+- Docker
+- Docker Compose
+
+### Starting the Development Environment
+
+To start the development environment, run:
+
+```bash
+./start-local-dev.sh
 ```
-docker compose down && docker compose build && docker compose up
+
+This will start the following services:
+- MongoDB (available at localhost:27017)
+- Backend (available at http://localhost:8000)
+- Frontend (available at http://localhost:5137)
+
+### Stopping the Development Environment
+
+To stop the development environment, run:
+
+```bash
+./stop-local-dev.sh
 ```
+
+### Viewing Logs
+
+To view the logs of all services, run:
+
+```bash
+docker-compose -f docker-compose.local.yml logs -f
+```
+
+To view logs for a specific service, run:
+
+```bash
+docker-compose -f docker-compose.local.yml logs -f [service-name]
+```
+
+Where `[service-name]` is one of: `mongodb`, `backend`, or `frontend`.
+
+## Project Structure
+
+- `backend/`: Spring Boot backend service
+- `database/`: MongoDB database configuration
+- `frontend/`: Frontend application
+
+## Configuration Files
+
+### Docker Configuration
+
+- `docker-compose.local.yml`: Docker Compose configuration for local development
+- `backend/Dockerfile.local`: Backend Docker configuration
+- `database/Dockerfile.local`: Database Docker configuration
+- `frontend/Dockerfile.local`: Frontend Docker configuration
+
+### Environment Configuration
+
+Each service has its own environment configuration file:
+
+- `backend/.env.local`: Backend environment variables
+- `database/.env.local`: Database environment variables
+- `frontend/.env.local`: Frontend environment variables
 
 ## Environment Variables
 
-The backend application uses environment variables for configuration. These are defined in the `.env` file in the backend directory.
-
-### Setting Up Environment Variables
-
-1. Copy the `.env.example` file to `.env` in the backend directory:
-   ```
-   cp backend/.env.example backend/.env
-   ```
-
-2. Update the values in the `.env` file with your actual configuration:
-   - Firebase Admin SDK credentials
-   - Spotify API credentials
-   - MongoDB connection details
-   - Other application settings
-
-### Required Environment Variables
-
-#### Firebase Admin SDK
-- `FIREBASE_TYPE`: Service account type
-- `FIREBASE_PROJECT_ID`: Firebase project ID
-- `FIREBASE_PRIVATE_KEY_ID`: Firebase private key ID
-- `FIREBASE_PRIVATE_KEY`: Firebase private key
-- `FIREBASE_CLIENT_EMAIL`: Firebase client email
-- `FIREBASE_CLIENT_ID`: Firebase client ID
-- `FIREBASE_CLIENT_X509_CERT_URL`: Firebase client X509 certificate URL
+### Backend Environment Variables
 
 #### Spotify API
 - `SPOTIFY_CLIENT_ID`: Spotify API client ID
@@ -39,7 +81,7 @@ The backend application uses environment variables for configuration. These are 
 - `SPOTIFY_REDIRECT_URI`: Spotify API redirect URI
 
 #### MongoDB
-- `MONGODB_HOST`: MongoDB host
+- `MONGODB_HOST`: MongoDB host (set to `mongodb-local` for local development)
 - `MONGODB_PORT`: MongoDB port
 - `MONGODB_DATABASE`: MongoDB database name
 - `MONGODB_USERNAME`: MongoDB username
@@ -54,3 +96,15 @@ The backend application uses environment variables for configuration. These are 
 #### Frontend Configuration
 - `FRONTEND_URL`: Frontend URL for CORS and redirects
 - `FRONTEND_PORT`: Frontend port for Docker container
+
+### Setting Up Environment Variables
+
+1. Copy the `.env.example` file to `.env.local` in the backend directory:
+   ```
+   cp backend/.env.example backend/.env.local
+   ```
+
+2. Update the values in the `.env.local` file with your actual configuration:
+   - Spotify API credentials
+   - MongoDB connection details
+   - Other application settings
