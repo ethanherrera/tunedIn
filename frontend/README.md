@@ -48,3 +48,30 @@ export default tseslint.config({
   },
 })
 ```
+
+## Environment Configuration
+
+The application uses environment variables for configuration. There are two environment files:
+
+- `.env.development` - Used for local development
+- `.env.production` - Used for production builds
+
+### Available Environment Variables
+
+| Variable | Description | Default (Development) |
+|----------|-------------|----------------------|
+| VITE_API_BASE_URL | Base URL for API requests | http://localhost:8000/api |
+| VITE_SERVER_HOST | Host for the development server | 0.0.0.0 |
+| VITE_SERVER_PORT | Port for the development server | 5137 |
+| VITE_BUILD_SOURCEMAP | Whether to generate sourcemaps | true |
+
+### Running with Different Environments
+
+```bash
+# Development (default)
+npm run dev
+
+# Production mode locally
+npm run build
+npm run preview
+```
