@@ -14,16 +14,16 @@ fi
 
 # Stop any existing containers to avoid conflicts
 echo "Stopping any existing containers..."
-docker-compose -f docker-compose.local.yml down
+docker compose -f docker-compose.local.yml down
 
 # Start the local development environment with explicit build
 echo "Building and starting development environment..."
-docker-compose -f docker-compose.local.yml up -d --build
+docker compose -f docker-compose.local.yml up -d --build
 
 echo "Development environment started!"
 echo "MongoDB: localhost:27017"
 echo "Backend: http://localhost:8000"
 echo "Frontend: http://localhost:5137"
 echo ""
-echo "To view logs: docker-compose -f docker-compose.local.yml logs -f"
+echo "To view logs: docker compose -f docker-compose.local.yml logs -f"
 echo "To stop: ./stop-local-dev.sh" 

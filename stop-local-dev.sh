@@ -7,6 +7,6 @@
 echo "Stopping TunedIn development environment..."
 
 # Stop the development environment
-docker-compose -f docker-compose.local.yml down
+docker compose -f docker-compose.local.yml down
 
 echo "Development environment stopped!" 
