@@ -1,10 +1,12 @@
 # System files
 .DS_Store
+**/.DS_Store
 
 # Build files
 .vite/
 dist/
 build/
+**/dist/
 
 # Dependencies
 node_modules/
@@ -25,7 +27,10 @@ node_modules/
 .env.development.local
 .env.test.local
 .env.production.local
+**/.env.local
+**/.env.prod
 !.env.example
+!**/.env.example
 
 # Logs
 *.log
@@ -42,5 +47,38 @@ repomix-output.txt
 
 # Add these lines to your .gitignore
 backend/src/main/resources/application.properties
+backend/src/main/resources/firebase-service-account.json
 
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.tfvars
+terraform/.terraform.lock.hcl
+terraform/crash.log
+terraform/override.tf
+terraform/override.tf.json
+terraform/*_override.tf
+terraform/*_override.tf.json
+
+# Docker
+docker-compose.override.yml
+**/Dockerfile.local
+docker-compose.local.yml
+
+# Local scripts
+*.local.sh
+config.local.sh
+config.prod.sh
+
+# Config files
+config.local.sh
+
+# ESLint
 eslint.config.js
+
+# Maven
+**/target/
+
+# Misc
+**/.DS_Store

@@ -7,7 +7,7 @@ import ProfilePage from './components/profileComponents/ProfilePage';
 import LoginPage from './components/loginComponents/LoginPage';
 import FriendsSidebar from './components/friendComponents/FriendsSidebar';
 import { spotifyApi } from './api/apiClient';
-import './App.css';
+import './app.css';
 
 // Memoize components to prevent unnecessary re-renders
 const MemoizedSearchContainer = memo(SearchContainer);

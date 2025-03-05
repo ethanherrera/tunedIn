@@ -26,6 +26,7 @@ interface ReviewWithTrack {
     artistName: string;
     trackName: string;
     spotifyId: string;
+    albumId: string; // Added albumId property
   };
 }
 
@@ -165,7 +166,8 @@ const UserReviewedTracks: React.FC = () => {
               albumName: trackData.album.name,
               artistName: trackData.artists[0].name,
               trackName: trackData.name,
-              spotifyId: trackData.id
+              spotifyId: trackData.id,
+              albumId: trackData.album.id
             }
           };
         } else {
@@ -178,7 +180,8 @@ const UserReviewedTracks: React.FC = () => {
               albumName: 'Unknown Album',
               artistName: 'Unknown Artist',
               trackName: 'Unknown Track',
-              spotifyId: review.spotifyTrackId
+              spotifyId: review.spotifyTrackId,
+              albumId: ''
             }
           };
         }

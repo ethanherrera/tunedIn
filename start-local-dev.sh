@@ -16,9 +16,9 @@ fi
 echo "Stopping any existing containers..."
 docker-compose -f docker-compose.local.yml down
 
-# Start the local development environment
-echo "Starting development environment..."
-docker-compose -f docker-compose.local.yml up -d
+# Start the local development environment with explicit build
+echo "Building and starting development environment..."
+docker-compose -f docker-compose.local.yml up -d --build
 
 echo "Development environment started!"
 echo "MongoDB: localhost:27017"
