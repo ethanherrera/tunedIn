@@ -583,6 +583,8 @@ class TrackReviewService(
      */
     private fun updateAlbumReviewForTrack(userId: String, spotifyAlbumId: String, spotifyTrackId: String, accessToken: String) {
         try {
+            println("Updating album review for track: userId=$userId, albumId=$spotifyAlbumId, trackId=$spotifyTrackId")
+            
             // Get the album to get all track IDs
             val album = spotifyService.getAlbum(spotifyAlbumId, accessToken)
             
@@ -592,29 +594,43 @@ class TrackReviewService(
             // Check if the user already has a review for this album
             var albumReview = albumReviewService.getUserAlbumReview(userId, spotifyAlbumId)
             
+            println("Existing album review found: ${albumReview != null}, albumId=$spotifyAlbumId")
+            
             if (albumReview == null) {
-                // Create a new album review with minimal information
-                // The calculateRatingAndSetOpinion method will set the rating and opinion
-                albumReview = com.tunedin.backend.model.AlbumReview(
-                    userId = userId,
-                    spotifyAlbumId = spotifyAlbumId,
-                    description = "Auto-generated from track reviews",
-                    spotifyTrackIds = trackIds
-                )
+                // Double-check by getting all user album reviews and manually checking
+                val allUserAlbumReviews = albumReviewService.getAlbumReviewsByUserId(userId)
+                val existingReview = allUserAlbumReviews.find { it.spotifyAlbumId == spotifyAlbumId }
                 
-                // Save the new album review
-                albumReviewService.createAlbumReview(albumReview)
+                if (existingReview != null) {
+                    println("Found existing album review through manual check: ${existingReview.id}")
+                    albumReview = existingReview
+                } else {
+                    // Create a new album review with minimal information
+                    // The calculateRatingAndSetOpinion method will set the rating and opinion
+                    albumReview = com.tunedin.backend.model.AlbumReview(
+                        userId = userId,
+                        spotifyAlbumId = spotifyAlbumId,
+                        description = "Auto-generated from track reviews",
+                        spotifyTrackIds = trackIds
+                    )
+                    
+                    println("Creating new album review for album: $spotifyAlbumId")
+                    // Save the new album review
+                    albumReviewService.createAlbumReview(albumReview)
+                }
             } else {
                 // Update the existing album review
                 // Make sure the track IDs are up to date
                 albumReview.spotifyTrackIds = trackIds
                 
+                println("Updating existing album review: ${albumReview.id}")
                 // Update the album review
                 albumReviewService.updateAlbumReview(albumReview.id, albumReview)
             }
         } catch (e: Exception) {
             // Log the error but don't fail the track review operation
             println("Failed to update album review: ${e.message}")
+            e.printStackTrace()
         }
     }
     

@@ -131,6 +131,11 @@
 						<artifactId>kotlin-maven-allopen</artifactId>
 						<version>${kotlin.version}</version>
 					</dependency>
+					<dependency>
+						<groupId>org.mongodb</groupId>
+						<artifactId>mongodb-driver-sync</artifactId>
+						<version>5.3.0</version>
+					</dependency>
 				</dependencies>
 			</plugin>
 		</plugins>
