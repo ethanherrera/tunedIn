@@ -38,4 +38,28 @@ variable "max_instances" {
   type        = string
 }
 
+variable "api_domain_name" {
+  description = "The domain name for the API (e.g., api.tunedin.app)"
+  type        = string
+  default     = ""
+}
+
+variable "mongodb_uri" {
+  description = "The MongoDB connection URI"
+  type        = string
+  sensitive   = true
+}
+
+variable "spotify_client_id" {
+  description = "The Spotify API client ID"
+  type        = string
+  sensitive   = true
+}
+
+variable "spotify_client_secret" {
+  description = "The Spotify API client secret"
+  type        = string
+  sensitive   = true
+}
+
 # Add more variables as needed for backend configuration 

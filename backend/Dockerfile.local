@@ -19,5 +19,8 @@ LABEL environment="development" \
       description="TunedIn backend service for local development" \
       maintainer="TunedIn Development Team"
 
+# Set environment variables
+ENV SPRING_PROFILES_ACTIVE=local
+
 EXPOSE ${SERVER_PORT:-8000}
 ENTRYPOINT ["java", "-jar", "app.jar"] 

@@ -52,32 +52,58 @@ variable "frontend_max_instances" {
   default     = "2"
 }
 
-# Backend configuration - commented out until implementation
-# variable "backend_container_image" {
-#   description = "The container image for the backend service"
-#   type        = string
-# }
-# 
-# variable "backend_cpu" {
-#   description = "The CPU allocation for the backend Cloud Run instance"
-#   type        = string
-#   default     = "1"
-# }
-# 
-# variable "backend_memory" {
-#   description = "The memory allocation for the backend Cloud Run instance"
-#   type        = string
-#   default     = "512Mi"
-# }
-# 
-# variable "backend_min_instances" {
-#   description = "The minimum number of backend instances"
-#   type        = string
-#   default     = "0"
-# }
-# 
-# variable "backend_max_instances" {
-#   description = "The maximum number of backend instances"
-#   type        = string
-#   default     = "2"
-# } 
+# Backend configuration
+variable "backend_container_image" {
+  description = "The container image for the backend service"
+  type        = string
+}
+
+variable "backend_cpu" {
+  description = "The CPU allocation for the backend Cloud Run instance"
+  type        = string
+  default     = "1"
+}
+
+variable "backend_memory" {
+  description = "The memory allocation for the backend Cloud Run instance"
+  type        = string
+  default     = "512Mi"
+}
+
+variable "backend_min_instances" {
+  description = "The minimum number of backend instances"
+  type        = string
+  default     = "0"
+}
+
+variable "backend_max_instances" {
+  description = "The maximum number of backend instances"
+  type        = string
+  default     = "2"
+}
+
+variable "api_domain_name" {
+  description = "The domain name for the API (e.g., api.tunedin.app)"
+  type        = string
+  default     = ""
+}
+
+# Database configuration
+variable "mongodb_uri" {
+  description = "The MongoDB connection URI"
+  type        = string
+  sensitive   = true
+}
+
+# Spotify API configuration
+variable "spotify_client_id" {
+  description = "The Spotify API client ID"
+  type        = string
+  sensitive   = true
+}
+
+variable "spotify_client_secret" {
+  description = "The Spotify API client secret"
+  type        = string
+  sensitive   = true
+} 

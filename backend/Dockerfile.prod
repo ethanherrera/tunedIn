@@ -1,0 +1,49 @@
+# =====================================================
+# PRODUCTION DOCKERFILE
+# =====================================================
+
+# Build stage
+FROM eclipse-temurin:21-jdk-jammy as builder
+
+WORKDIR /app
+
+# Copy pom.xml first to leverage Docker cache
+COPY pom.xml .
+COPY .mvn .mvn
+COPY mvnw .
+
+# Download dependencies
+RUN ./mvnw dependency:go-offline -B
+
+# Copy source code
+COPY src src
+
+# Build the application
+RUN ./mvnw clean package -DskipTests
+
+# Runtime stage
+FROM eclipse-temurin:21-jre-jammy
+
+WORKDIR /app
+
+# Copy the built JAR from the builder stage
+COPY --from=builder /app/target/*.jar app.jar
+
+# Create a non-root user to run the application
+RUN useradd -m appuser
+USER appuser
+
+# Production environment labels
+LABEL environment="production" \
+      description="TunedIn backend service" \
+      maintainer="TunedIn Development Team"
+
+# Set environment variables
+ENV SPRING_PROFILES_ACTIVE=prod
+ENV SERVER_PORT=8080
+
+# Expose the port the app runs on
+EXPOSE 8080
+
+# Run the application
+ENTRYPOINT ["java", "-jar", "app.jar"] 

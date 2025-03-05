@@ -22,6 +22,11 @@ resource "google_cloud_run_service" "frontend" {
           name  = "ENVIRONMENT"
           value = var.environment
         }
+        
+        env {
+          name  = "API_BASE_URL"
+          value = var.backend_api_url
+        }
       }
       
       # Set a longer timeout for container startup

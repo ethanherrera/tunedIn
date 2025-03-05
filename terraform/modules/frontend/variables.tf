@@ -1,38 +1,39 @@
 variable "project_id" {
-  description = "The GCP project ID"
+  description = "The Google Cloud project ID"
   type        = string
 }
 
 variable "region" {
-  description = "The GCP region to deploy resources"
-  type        = string
-}
-
-variable "frontend_container_image" {
-  description = "The container image for the frontend service"
-  type        = string
-}
-
-variable "domain_name" {
-  description = "The domain name for the application"
+  description = "The Google Cloud region"
   type        = string
 }
 
 variable "environment" {
-  description = "The deployment environment (e.g., prod, staging)"
+  description = "The deployment environment (e.g., dev, prod)"
   type        = string
 }
 
+variable "frontend_container_image" {
+  description = "The container image for the frontend"
+  type        = string
+}
+
+variable "domain_name" {
+  description = "The custom domain name for the frontend"
+  type        = string
+  default     = ""
+}
+
 variable "cpu" {
-  description = "The CPU allocation for the Cloud Run instance"
+  description = "The CPU allocation for the frontend"
   type        = string
   default     = "1"
 }
 
 variable "memory" {
-  description = "The memory allocation for the Cloud Run instance"
+  description = "The memory allocation for the frontend"
   type        = string
-  default     = "256Mi"
+  default     = "512Mi"
 }
 
 variable "min_instances" {
@@ -44,5 +45,10 @@ variable "min_instances" {
 variable "max_instances" {
   description = "The maximum number of instances"
   type        = string
-  default     = "2"
+  default     = "1"
+}
+
+variable "backend_api_url" {
+  description = "The URL of the backend API"
+  type        = string
 } 

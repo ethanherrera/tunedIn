@@ -14,7 +14,31 @@ provider "google" {
   region  = var.region
 }
 
-# Frontend module
+# Backend module - deploy this first
+module "backend" {
+  source = "./modules/backend"
+  
+  project_id                = var.project_id
+  region                    = var.region
+  backend_container_image   = var.backend_container_image
+  environment               = var.environment
+  api_domain_name           = var.api_domain_name
+  
+  # Resource configuration
+  cpu                       = var.backend_cpu
+  memory                    = var.backend_memory
+  min_instances             = var.backend_min_instances
+  max_instances             = var.backend_max_instances
+  
+  # Database configuration
+  mongodb_uri               = var.mongodb_uri
+  
+  # Spotify API configuration
+  spotify_client_id         = var.spotify_client_id
+  spotify_client_secret     = var.spotify_client_secret
+}
+
+# Frontend module - deploy after backend
 module "frontend" {
   source = "./modules/frontend"
   
@@ -24,25 +48,12 @@ module "frontend" {
   domain_name               = var.domain_name
   environment               = var.environment
   
+  # Pass the backend API URL to the frontend
+  backend_api_url           = module.backend.backend_api_url
+  
   # Resource configuration
   cpu                       = var.frontend_cpu
   memory                    = var.frontend_memory
   min_instances             = var.frontend_min_instances
   max_instances             = var.frontend_max_instances
-}
-
-# Backend module - commented out until implementation
-# module "backend" {
-#   source = "./modules/backend"
-#   
-#   project_id                = var.project_id
-#   region                    = var.region
-#   backend_container_image   = var.backend_container_image
-#   environment               = var.environment
-#   
-#   # Resource configuration
-#   cpu                       = var.backend_cpu
-#   memory                    = var.backend_memory
-#   min_instances             = var.backend_min_instances
-#   max_instances             = var.backend_max_instances
-# } 
+} 
