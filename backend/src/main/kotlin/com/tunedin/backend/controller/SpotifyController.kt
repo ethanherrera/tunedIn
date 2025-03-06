@@ -18,7 +18,8 @@ import org.slf4j.LoggerFactory
 class SpotifyController(
     private val spotifyService: SpotifyService,
     private val userService: UserService,
-    @Value("\${frontend.url}") private val frontendUrl: String
+    @Value("\${frontend.url}") private val frontendUrl: String,
+    @Value("\${cookie.domain}") private val cookieDomain: String
 ) {
     private val logger = LoggerFactory.getLogger(SpotifyController::class.java)
     
@@ -55,12 +56,15 @@ class SpotifyController(
             val userProfile = userService.createOrUpdateUser(tokenResponse)
             
             logger.info("User authenticated: ${userProfile.id}, display name: ${userProfile.display_name}")
+            logger.info("Setting cookies with domain: $cookieDomain")
             
             // Create secure HTTP-only cookies
             val userIdCookie = ResponseCookie.from("userId", userProfile.id)
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
+                .domain(cookieDomain)
+                .sameSite("None")
                 .maxAge(Duration.ofDays(7))
                 .build()
                 
@@ -68,6 +72,8 @@ class SpotifyController(
                 .httpOnly(false) // Allow JavaScript to read display name for UI
                 .secure(true)
                 .path("/")
+                .domain(cookieDomain)
+                .sameSite("None")
                 .maxAge(Duration.ofDays(7))
                 .build()
                 
@@ -75,10 +81,17 @@ class SpotifyController(
                 .httpOnly(true) // HTTP-only for security
                 .secure(true)
                 .path("/")
+                .domain(cookieDomain)
+                .sameSite("None")
                 .maxAge(Duration.ofSeconds(tokenResponse.expiresIn.toLong()))
                 .build()
                 
             // Redirect to frontend with cookies
+            logger.info("Setting cookies for redirect:")
+            logger.info("userId cookie: domain=${cookieDomain}, path=/, secure=true, httpOnly=true, sameSite=None")
+            logger.info("displayName cookie: domain=${cookieDomain}, path=/, secure=true, httpOnly=false, sameSite=None")
+            logger.info("accessToken cookie: domain=${cookieDomain}, path=/, secure=true, httpOnly=true, sameSite=None")
+            
             return ResponseEntity.status(HttpStatus.FOUND)
                 .header(HttpHeaders.SET_COOKIE, userIdCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, displayNameCookie.toString())
@@ -122,29 +135,63 @@ class SpotifyController(
     }
     
     @GetMapping("/me")
-    fun getCurrentUser(request: HttpServletRequest): ResponseEntity<*> {
+    fun getCurrentUser(
+        request: HttpServletRequest,
+        @RequestParam(required = false) accessTokenParam: String? = null,
+        @RequestHeader(value = "Authorization", required = false) authHeader: String? = null
+    ): ResponseEntity<*> {
         try {
+            // Log request details
+            logger.info("GET /me request received")
+            logger.info("Request headers: ${request.headerNames.toList().associateWith { request.getHeader(it) }}")
+            
             // Get userId and accessToken from cookies
             val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
-            val userId = request.cookies?.find { it.name == "userId" }?.value
-                ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(SpotifyErrorResponse("User ID not found in cookies. Available cookies: [$cookiesInfo]"))
+            logger.info("Cookies in request: $cookiesInfo")
             
-            val accessToken = request.cookies?.find { it.name == "accessToken" }?.value
-                ?: run {
-                    // If access token cookie is missing, try to get a valid token from the user service
-                    try {
-                        userService.getValidAccessToken(userId)
-                    } catch (e: Exception) {
-                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                            .body(SpotifyErrorResponse("Access token not found and could not be refreshed. Available cookies: [$cookiesInfo]"))
-                    }
+            // Try to get access token from different sources in order of preference:
+            // 1. Cookie
+            // 2. Authorization header (Bearer token)
+            // 3. Query parameter
+            var accessToken: String? = request.cookies?.find { it.name == "accessToken" }?.value
+            var userId: String? = request.cookies?.find { it.name == "userId" }?.value
+            
+            if (accessToken == null && authHeader != null && authHeader.startsWith("Bearer ", ignoreCase = true)) {
+                logger.info("Using access token from Authorization header")
+                accessToken = authHeader.substring(7) // Remove "Bearer " prefix
+            }
+            
+            if (accessToken == null && accessTokenParam != null) {
+                logger.info("Using access token from query parameter")
+                accessToken = accessTokenParam
+            }
+            
+            if (accessToken == null && userId != null) {
+                // If we have userId but no access token, try to refresh
+                logger.warn("Access token not found in cookies, header, or query param, attempting to refresh")
+                try {
+                    accessToken = userService.getValidAccessToken(userId)
+                    logger.info("Successfully refreshed access token")
+                } catch (e: Exception) {
+                    logger.error("Failed to refresh access token", e)
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(SpotifyErrorResponse("Access token not found and could not be refreshed. Available cookies: [$cookiesInfo]"))
                 }
+            }
             
+            if (accessToken == null) {
+                logger.warn("No access token found in cookies, header, query param, and no userId for refresh")
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(SpotifyErrorResponse("No access token found. Please authenticate first."))
+            }
+            
+            logger.info("Using access token (first 10 chars): ${accessToken.take(10)}...")
             val userProfile = spotifyService.getUserProfile(accessToken)
+            logger.info("Successfully retrieved user profile for ${userProfile.id}")
             return ResponseEntity.ok(userProfile)
         } catch (e: Exception) {
             val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
+            logger.error("Error in /me endpoint", e)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(SpotifyErrorResponse("Failed to get user profile: ${e.message}. Available cookies: [$cookiesInfo]"))
         }
@@ -306,5 +353,43 @@ class SpotifyController(
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(SpotifyErrorResponse("Failed to get artist: ${e.message}. Available cookies: [$cookiesInfo]"))
         }
+    }
+
+    @GetMapping("/debug/cookies")
+    fun debugCookies(request: HttpServletRequest): ResponseEntity<Map<String, Any>> {
+        val cookiesMap = mutableMapOf<String, Any>()
+        
+        // Get all cookies
+        val cookies = request.cookies ?: emptyArray()
+        cookiesMap["cookiesCount"] = cookies.size
+        cookiesMap["cookies"] = cookies.map { cookie ->
+            mapOf(
+                "name" to cookie.name,
+                "value" to cookie.value.take(10) + "...", // Only show first 10 chars for security
+                "domain" to cookie.domain,
+                "path" to cookie.path,
+                "maxAge" to cookie.maxAge,
+                "secure" to cookie.secure,
+                "httpOnly" to cookie.isHttpOnly
+            )
+        }
+        
+        // Get all headers
+        val headers = mutableMapOf<String, String>()
+        request.headerNames.asIterator().forEach { headerName ->
+            headers[headerName] = request.getHeader(headerName)
+        }
+        cookiesMap["headers"] = headers
+        
+        // Add request info
+        cookiesMap["requestInfo"] = mapOf(
+            "remoteAddr" to request.remoteAddr,
+            "requestURL" to request.requestURL.toString(),
+            "method" to request.method,
+            "serverName" to request.serverName,
+            "serverPort" to request.serverPort
+        )
+        
+        return ResponseEntity.ok(cookiesMap)
     }
 } 
