@@ -27,7 +27,9 @@ fi
 
 # Generate a tag based on git commit or timestamp if git is not available
 if command -v git &> /dev/null && git rev-parse --is-inside-work-tree &> /dev/null; then
-  TAG=$(git rev-parse --short HEAD)
+  GIT_HASH=$(git rev-parse --short HEAD)
+  # Always include a timestamp to ensure uniqueness for each deployment
+  TAG="${GIT_HASH}-$(date +%Y%m%d%H%M%S)"
 else
   TAG=$(date +%Y%m%d%H%M%S)
 fi
@@ -120,14 +122,18 @@ mongodb_uri = "$MONGODB_URI"
 # Spotify API configuration
 spotify_client_id = "$SPOTIFY_CLIENT_ID"
 spotify_client_secret = "$SPOTIFY_CLIENT_SECRET"
+
+# Force replacement of existing services
+# This creates new revisions of the Cloud Run services without affecting domain mappings
+force_replace = true
 EOF
 
 # Initialize Terraform (using local state)
 echo "=== Initializing Terraform with local state ==="
 terraform init
 
-# Apply Terraform configuration
-echo "=== Applying Terraform configuration ==="
+# Apply Terraform configuration with force_replace=true
+echo "=== Applying Terraform configuration with force replacement ==="
 terraform apply -var-file=terraform.prod.tfvars -auto-approve
 
 # Get the deployed URLs

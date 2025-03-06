@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 5.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
   }
   
   # No remote backend configuration - will use local state
@@ -13,6 +17,8 @@ provider "google" {
   project = var.project_id
   region  = var.region
 }
+
+provider "random" {}
 
 # Backend module - deploy this first
 module "backend" {
@@ -36,6 +42,9 @@ module "backend" {
   # Spotify API configuration
   spotify_client_id         = var.spotify_client_id
   spotify_client_secret     = var.spotify_client_secret
+  
+  # Force replacement configuration
+  force_replace             = var.force_replace
 }
 
 # Frontend module - deploy after backend
@@ -56,4 +65,7 @@ module "frontend" {
   memory                    = var.frontend_memory
   min_instances             = var.frontend_min_instances
   max_instances             = var.frontend_max_instances
+  
+  # Force replacement configuration
+  force_replace             = var.force_replace
 } 

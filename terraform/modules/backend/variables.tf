@@ -62,4 +62,10 @@ variable "spotify_client_secret" {
   sensitive   = true
 }
 
+variable "force_replace" {
+  description = "Whether to force replacement of existing Cloud Run services"
+  type        = bool
+  default     = false
+}
+
 # Add more variables as needed for backend configuration 

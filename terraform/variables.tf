@@ -106,4 +106,11 @@ variable "spotify_client_secret" {
   description = "The Spotify API client secret"
   type        = string
   sensitive   = true
+}
+
+# Force replacement configuration
+variable "force_replace" {
+  description = "Whether to force replacement of existing Cloud Run services"
+  type        = bool
+  default     = false
 } 

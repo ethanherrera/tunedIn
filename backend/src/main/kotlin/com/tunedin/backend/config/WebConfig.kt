@@ -13,7 +13,11 @@ class WebConfig : WebMvcConfigurer {
     
     override fun addCorsMappings(registry: CorsRegistry) {
         registry.addMapping("/api/**")
-            .allowedOrigins(frontendUrl)
+            .allowedOrigins(
+                frontendUrl,
+                "https://tunedin.app",
+                "https://tunedin-frontend-prod-jibc6pxvva-uc.a.run.app"
+            )
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
             .allowedHeaders("*")
             .allowCredentials(true)

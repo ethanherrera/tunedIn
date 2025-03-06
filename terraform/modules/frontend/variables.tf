@@ -51,4 +51,10 @@ variable "max_instances" {
 variable "backend_api_url" {
   description = "The URL of the backend API"
   type        = string
+}
+
+variable "force_replace" {
+  description = "Whether to force replacement of existing Cloud Run services"
+  type        = bool
+  default     = false
 } 
