@@ -1,5 +1,7 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
+import tailwindcss from '@tailwindcss/vite';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -8,7 +10,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   
   return {
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
     server: {
       host: env.VITE_SERVER_HOST || '0.0.0.0',
       port: parseInt(env.VITE_SERVER_PORT || '5137'),
@@ -19,8 +21,13 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '@': '/src',
+        '@': path.resolve(__dirname, './src'),
       },
+      dedupe: ['react', 'react-dom'],
+      preserveSymlinks: true
     },
+    optimizeDeps: {
+      include: ['@radix-ui/react-label', 'react', 'react-dom']
+    }
   };
 });
