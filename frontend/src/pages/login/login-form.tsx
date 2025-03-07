@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils"
-import { Button } from "@/pages/login/ui/button"
+import { Button } from "@/components/ui/button"
 import { spotifyApi } from "@/api/apiClient"
+import { AudioWaveform } from "lucide-react";
 
 export function LoginForm({
   className,
@@ -25,11 +26,7 @@ export function LoginForm({
               className="flex flex-col items-center gap-2 font-medium"
             >
               <div className="flex size-24 items-center justify-center">
-                <img 
-                  src="/tunedIn-logo.png" 
-                  alt="tunedIn logo" 
-                  className="rounded-full w-full h-full"
-                />
+                <AudioWaveform className="w-12 h-12" />
               </div>
             </a>
             <h1 className="text-2xl font-bold">Welcome to tunedIn</h1>

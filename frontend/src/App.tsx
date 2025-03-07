@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import LoginPage from './pages/login/page';
 import { spotifyApi } from './api/apiClient';
 import './app.css';
+import "./index.css"
 import Main from './pages/main/pages/Main';
 import { Progress } from './components/ui/progress';
 

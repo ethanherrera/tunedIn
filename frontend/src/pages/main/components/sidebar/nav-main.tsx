@@ -6,7 +6,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/pages/main/components/sidebar/ui/collapsible"
+} from "@/components/ui/collapsible"
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -16,22 +16,35 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@/pages/main/components/sidebar/ui/sidebar"
+} from "@/components/ui/sidebar"
 
-export function NavMain({
-  items,
-}: {
+// Import ContentView type
+import { type ContentView } from "@/pages/main/pages/Main"
+
+interface NavMainProps {
   items: {
     title: string
-    url: string
+    view?: ContentView
     icon?: LucideIcon
     isActive?: boolean
     items?: {
       title: string
-      url: string
+      view: ContentView
     }[]
   }[]
-}) {
+  onViewChange: (view: ContentView) => void
+  activeView: ContentView
+}
+
+export function NavMain({ items, onViewChange, activeView }: NavMainProps) {
+  // Add a debug log when a menu item is clicked
+  const handleViewChange = (view?: ContentView) => {
+    if (view) {
+      console.log("Changing view to:", view);
+      onViewChange(view);
+    }
+  };
+
   return (
     <SidebarGroup>
       {/* <SidebarGroupLabel>Platform</SidebarGroupLabel> */}
@@ -45,7 +58,10 @@ export function NavMain({
           >
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.title}>
+                <SidebarMenuButton 
+                  tooltip={item.title}
+                  data-active={item.items?.some(subItem => subItem.view === activeView) ? "true" : undefined}
+                >
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -55,10 +71,11 @@ export function NavMain({
                 <SidebarMenuSub>
                   {item.items?.map((subItem) => (
                     <SidebarMenuSubItem key={subItem.title}>
-                      <SidebarMenuSubButton asChild>
-                        <a href={subItem.url}>
-                          <span>{subItem.title}</span>
-                        </a>
+                      <SidebarMenuSubButton 
+                        onClick={() => handleViewChange(subItem.view)}
+                        data-active={subItem.view === activeView ? "true" : undefined}
+                      >
+                        <span>{subItem.title}</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   ))}
