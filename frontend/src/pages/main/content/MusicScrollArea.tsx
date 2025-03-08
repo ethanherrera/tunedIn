@@ -2,31 +2,10 @@ import React, { useState } from "react";
 import { ScrollArea, ScrollBar } from "../../../components/ui/scroll-area";
 import RankingDialog from "./RankingDialog";
 import MusicItem from "./MusicItem";
-
-interface Track {
-  albumImageUrl: string;
-  albumName: string;
-  artistName: string;
-  trackName: string;
-  spotifyId: string;
-  albumId: string;
-}
-
-interface Artist {
-  artistImageUrl: string;
-  artistName: string;
-  spotifyId: string;
-}
-
-interface Album {
-  albumImageUrl: string;
-  albumName: string;
-  artistName: string;
-  spotifyId: string;
-}
+import { UITrack, UIAlbum, UIArtist } from "../../../types/spotify";
 
 interface MusicScrollAreaProps {
-  items: Track[] | Artist[] | Album[]; // support for albums and artists in the future
+  items: UITrack[] | UIAlbum[] | UIArtist[];
   itemType: 'track' | 'album' | 'artist';
 }
 

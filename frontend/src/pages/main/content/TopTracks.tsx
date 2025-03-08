@@ -5,19 +5,7 @@ import { spotifyApi } from "../../../api/apiClient"
 import { Skeleton } from "../../../components/ui/skeleton"
 import MusicScrollArea from "./MusicScrollArea"
 import { Separator } from "../../../components/ui/separator"
-interface Track {
-  albumImageUrl: string;
-  albumName: string;
-  artistName: string;
-  trackName: string;
-  spotifyId: string;
-  albumId: string;
-}
-interface Artist {
-  artistImageUrl: string;
-  artistName: string;
-  spotifyId: string;
-}
+import { UITrack, UIArtist, transformTrackForUI, transformArtistForUI, Track, Artist, PagingObject } from "../../../types/spotify"
 
 interface FilterOptions {
   timeRange: 'short_term' | 'medium_term' | 'long_term';
@@ -26,8 +14,8 @@ interface FilterOptions {
 }
 
 export default function TopTracks() {
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [artists, setArtists] = useState<Artist[]>([]);
+  const [tracks, setTracks] = useState<UITrack[]>([]);
+  const [artists, setArtists] = useState<UIArtist[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [tracksLoading, setTracksLoading] = useState<boolean>(true);
   const [artistsLoading, setArtistsLoading] = useState<boolean>(true);
@@ -53,7 +41,6 @@ export default function TopTracks() {
   const fetchTopTracks = async () => {
     setTracksLoading(true);
     setTracksError(null);
-    
     try {
       const response = await spotifyApi.getTopItems('tracks', {
         timeRange: tracksFilters.timeRange,
@@ -61,20 +48,13 @@ export default function TopTracks() {
         offset: tracksFilters.offset
       });
       
-      // Transform the response to match our Track interface
-      const fetchedTracks: Track[] = response.items.map((item: any) => ({
-        spotifyId: item.id,
-        trackName: item.name,
-        artistName: item.artists[0].name,
-        albumName: item.album.name,
-        albumImageUrl: item.album.images[0]?.url || 'https://via.placeholder.com/300',
-        albumId: item.album.id
-      }));
-      
-      setTracks(fetchedTracks);
-    } catch (err: any) {
-      console.error('Failed to fetch top tracks:', err);
-      setTracksError(err.message || 'Failed to load your top tracks');
+      // Cast the response to the correct type and transform the tracks
+      const tracksResponse = response as PagingObject<Track>;
+      const uiTracks = tracksResponse.items.map(track => transformTrackForUI(track));
+      setTracks(uiTracks);
+    } catch (error) {
+      console.error('Error fetching top tracks:', error);
+      setTracksError('Failed to load top tracks. Please try again later.');
     } finally {
       setTracksLoading(false);
     }
@@ -82,8 +62,7 @@ export default function TopTracks() {
 
   const fetchTopArtists = async () => {
     setArtistsLoading(true);
-    setTracksError(null);
-    
+    setArtistsError(null);
     try {
       const response = await spotifyApi.getTopItems('artists', {
         timeRange: artistsFilters.timeRange,
@@ -91,17 +70,13 @@ export default function TopTracks() {
         offset: artistsFilters.offset
       });
       
-      // Transform the response to match our Track interface
-      const fetchedArtists: Artist[] = response.items.map((item: any) => ({
-        spotifyId: item.id,
-        artistName: item.name,
-        artistImageUrl: item.images[0]?.url || 'https://via.placeholder.com/300',
-      }));
-      
-      setArtists(fetchedArtists);
-    } catch (err: any) {
-      console.error('Failed to fetch top tracks:', err);
-      setArtistsError(err.message || 'Failed to load your top tracks');
+      // Cast the response to the correct type and transform the artists
+      const artistsResponse = response as PagingObject<Artist>;
+      const uiArtists = artistsResponse.items.map(artist => transformArtistForUI(artist));
+      setArtists(uiArtists);
+    } catch (error) {
+      console.error('Error fetching top artists:', error);
+      setArtistsError('Failed to load top artists. Please try again later.');
     } finally {
       setArtistsLoading(false);
     }

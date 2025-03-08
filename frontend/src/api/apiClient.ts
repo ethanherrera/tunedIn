@@ -2,20 +2,20 @@ import axios from 'axios';
 import { env } from 'process';
 
 // Types for Spotify API responses
-interface Image {
+export interface Image {
   url: string;
   height?: number;
   width?: number;
 }
 
-interface User {
+export interface User {
   id: string;
   display_name?: string;
   href: string;
   uri: string;
 }
 
-interface Artist {
+export interface Artist {
   id: string;
   name: string;
   uri: string;
@@ -25,7 +25,7 @@ interface Artist {
   images?: Image[];
 }
 
-interface Album {
+export interface Album {
   id: string;
   name: string;
   uri: string;
@@ -51,7 +51,7 @@ interface Album {
   };
 }
 
-interface Track {
+export interface Track {
   id: string;
   name: string;
   uri: string;
@@ -63,7 +63,7 @@ interface Track {
   album: Album;
 }
 
-interface Playlist {
+export interface Playlist {
   id: string;
   name: string;
   uri: string;
@@ -73,7 +73,7 @@ interface Playlist {
   images: Image[];
 }
 
-interface PagingObject<T> {
+export interface PagingObject<T> {
   href: string;
   items: T[];
   limit: number;
@@ -83,7 +83,7 @@ interface PagingObject<T> {
   total: number;
 }
 
-interface SpotifySearchResponse {
+export interface SpotifySearchResponse {
   tracks?: PagingObject<Track>;
   artists?: PagingObject<Artist>;
   albums?: PagingObject<Album>;
@@ -91,7 +91,7 @@ interface SpotifySearchResponse {
 }
 
 // Review types
-interface SaveReviewRequest {
+export interface SaveReviewRequest {
   spotifyTrackId: string;
   opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
   description: string;
@@ -99,7 +99,7 @@ interface SaveReviewRequest {
   id?: string;  // Optional ID for updates
 }
 
-interface TrackReview {
+export interface TrackReview {
   id: string;
   userId: string;
   spotifyTrackId: string;
@@ -112,7 +112,7 @@ interface TrackReview {
 }
 
 // Add User Profile interface
-interface UserProfile {
+export interface UserProfile {
   id: string;
   display_name: string;
   email: string;
@@ -314,7 +314,7 @@ export const reviewApi = {
 };
 
 // Interface for album review request
-interface AlbumReviewRequest {
+export interface AlbumReviewRequest {
   spotifyAlbumId: string;
   description: string;
   ranking?: number;
@@ -323,7 +323,7 @@ interface AlbumReviewRequest {
 }
 
 // Interface for album review response
-interface AlbumReview {
+export interface AlbumReview {
   id: string;
   userId: string;
   spotifyAlbumId: string;

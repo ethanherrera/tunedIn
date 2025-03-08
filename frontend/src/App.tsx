@@ -6,6 +6,7 @@ import "./index.css"
 import Main from './pages/main/pages/Main';
 import { Progress } from './components/ui/progress';
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "./components/ui/sonner";
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -61,6 +62,7 @@ function App() {
                 <div className="w-1/3 max-w-md">
                     <Progress value={loadingProgress} className="h-2" />
                 </div>
+                <Toaster />
             </div>
             </ThemeProvider>
         );
@@ -72,6 +74,7 @@ function App() {
             <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
             <div className="app ">
                 <LoginPage />
+                <Toaster />
             </div>
             </ThemeProvider>
         );
@@ -82,6 +85,7 @@ function App() {
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
             <div className="app">
                 <Main />
+                <Toaster />
             </div>
         </ThemeProvider>
     );

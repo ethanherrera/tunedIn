@@ -1,35 +1,14 @@
 import React from "react";
 import { Card, CardContent } from "../../../components/ui/card";
-
-export interface Track {
-  albumImageUrl: string;
-  albumName: string;
-  artistName: string;
-  trackName: string;
-  spotifyId: string;
-  albumId: string;
-}
-
-export interface Album {
-  albumImageUrl: string;
-  albumName: string;
-  artistName: string;
-  spotifyId: string;
-}
-
-export interface Artist {
-  artistImageUrl: string;
-  artistName: string;
-  spotifyId: string;
-}
+import { UITrack, UIAlbum, UIArtist } from "../../../types/spotify";
 
 interface MusicItemProps {
-  item: Track | Album | Artist;
-  itemType: 'track' | 'album' | 'artist';  // Make the type more specific
+  item: UITrack | UIAlbum | UIArtist;
+  itemType: 'track' | 'album' | 'artist';
 }
 
 const MusicItem: React.FC<MusicItemProps> = ({ item, itemType }) => {
-  const renderTrackCard = (track: Track) => (
+  const renderTrackCard = (track: UITrack) => (
     <Card className="group w-[15vh] h-[22vh] flex-shrink-0 transform transition-transform duration-400 hover:scale-105 border-none shadow-none py-0">
       <CardContent className="p-2">
         <div className="overflow-hidden rounded-md group-hover:shadow-sm group-hover:shadow-primary">
@@ -48,7 +27,7 @@ const MusicItem: React.FC<MusicItemProps> = ({ item, itemType }) => {
     </Card>
   );
 
-  const renderAlbumCard = (album: Album) => (
+  const renderAlbumCard = (album: UIAlbum) => (
     <Card className="group w-[15vh] h-[22vh] flex-shrink-0 transform transition-transform duration-400 hover:scale-105 border-none shadow-none py-0">
       <CardContent className="p-2">
         <div className="overflow-hidden rounded-md group-hover:shadow-sm group-hover:shadow-primary">
@@ -66,7 +45,7 @@ const MusicItem: React.FC<MusicItemProps> = ({ item, itemType }) => {
     </Card>
   );
 
-  const renderArtistCard = (artist: Artist) => (
+  const renderArtistCard = (artist: UIArtist) => (
     <Card className="group w-[15vh] h-[22vh] flex-shrink-0 transform transition-transform duration-400 hover:scale-105 border-none shadow-none py-0">
       <CardContent className="p-2">
         <div className="overflow-hidden rounded-md group-hover:shadow-sm group-hover:shadow-primary">
@@ -85,9 +64,9 @@ const MusicItem: React.FC<MusicItemProps> = ({ item, itemType }) => {
 
   return (
     <div>
-      {itemType === 'track' && renderTrackCard(item as Track)}
-      {itemType === 'album' && renderAlbumCard(item as Album)}
-      {itemType === 'artist' && renderArtistCard(item as Artist)}
+      {itemType === 'track' && renderTrackCard(item as UITrack)}
+      {itemType === 'album' && renderAlbumCard(item as UIAlbum)}
+      {itemType === 'artist' && renderArtistCard(item as UIArtist)}
     </div>
   );
 };
