@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { spotifyApi } from "@/api/apiClient"
 import { AudioWaveform } from "lucide-react";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export function LoginForm({
   className,
@@ -17,7 +18,7 @@ export function LoginForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-6 text-primary", className)} {...props}>
       <form>
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-center gap-4">
@@ -29,7 +30,10 @@ export function LoginForm({
                 <AudioWaveform className="w-12 h-12" />
               </div>
             </a>
-            <h1 className="text-2xl font-bold">Welcome to tunedIn</h1>
+            <div className="flex flex-row items-center gap-4">
+              <h1 className="text-2xl font-bold">Welcome to tunedIn</h1>
+              <ModeToggle />
+            </div>
           </div>
           <div className="flex flex-col gap-6">
             <Button 

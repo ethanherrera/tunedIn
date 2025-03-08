@@ -5,6 +5,7 @@ import './app.css';
 import "./index.css"
 import Main from './pages/main/pages/Main';
 import { Progress } from './components/ui/progress';
+import { ThemeProvider } from "@/components/theme-provider"
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -55,30 +56,34 @@ function App() {
     // Show loading indicator while checking authentication
     if (isLoading) {
         return (
+            <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
             <div className="flex items-center justify-center h-screen w-full">
                 <div className="w-1/3 max-w-md">
                     <Progress value={loadingProgress} className="h-2" />
                 </div>
             </div>
+            </ThemeProvider>
         );
     }
     
     // If not authenticated, show login page
     if (!isAuthenticated) {
         return (
-            <div className="app">
+            <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+            <div className="app ">
                 <LoginPage />
             </div>
+            </ThemeProvider>
         );
     }
     
     // If authenticated, show main app with logout button
     return (
-        <div className="app">
-            <div className="app-header">
+        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+            <div className="app">
                 <Main />
             </div>
-        </div>
+        </ThemeProvider>
     );
 }
 

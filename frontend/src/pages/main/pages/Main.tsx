@@ -31,7 +31,7 @@ import ProfileInfo from "@/pages/main/content/ProfileInfo"
 import ProfileActivity from "@/pages/main/content/ProfileActivity"
 import GeneralSettings from "@/pages/main/content/GeneralSettings"
 import AccountSettings from "@/pages/main/content/AccountSettings"
-
+import { ModeToggle } from "@/components/mode-toggle"
 // Define content types for type safety
 export type ContentView = 
   | "dashboard" 
@@ -153,10 +153,11 @@ export default function Main() {
     <SidebarProvider>
       {/* Pass the view change handler to your sidebar */}
       <AppSidebar onViewChange={handleViewChange} activeView={activeView} />
-      <SidebarInset>
+      <SidebarInset className="w-1/2 text-primary">
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
+            <ModeToggle />
             <Separator orientation="vertical" className="mr-2 h-4" />
             {/* Updated breadcrumb based on category and subcategory */}
             <Breadcrumb>
@@ -176,9 +177,11 @@ export default function Main() {
             </Breadcrumb>
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0 bg-red-500">
-          {/* Render the active content */}
-          {renderContent()}
+        <div className="w-full flex flex-1 flex-col gap-4 p-4 pt-0 overflow-hidden h-[calc(100vh-4rem)]">
+          <div className="overflow-y-auto overflow-x-hidden h-full">
+            {/* Render the active content */}
+            {renderContent()}
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>

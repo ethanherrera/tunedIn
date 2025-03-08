@@ -10,7 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-
+import "@/index.css"
 export function LogOut() {
   // Use a separate state to control the dialog
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
@@ -32,7 +32,7 @@ export function LogOut() {
   }
 
   return (
-    <>
+    <div className="text-primary">
       {/* Regular button outside of dialog */}
       <button 
         onClick={openDialog} 
@@ -48,7 +48,7 @@ export function LogOut() {
         open={showConfirmDialog} 
         onOpenChange={setShowConfirmDialog}
       >
-        <AlertDialogContent style={{ zIndex: 100, backgroundColor: 'white' }} className="!bg-white dark:!bg-gray-800">
+        <AlertDialogContent style={{ zIndex: 100}} className="!bg-primary dark:!bg-primary">
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure you want to log out?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -56,15 +56,15 @@ export function LogOut() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowConfirmDialog(false)}>
+            <AlertDialogCancel onClick={() => setShowConfirmDialog(false)} className="text-primary">
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleLogout}>
+            <AlertDialogAction onClick={handleLogout} className="text-secondary">
               Log out
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   )
 }
