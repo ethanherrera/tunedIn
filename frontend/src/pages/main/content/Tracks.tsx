@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import {MusicScrollArea} from "./MusicScrollArea";
+import { TrackMusicScrollArea } from "./TrackMusicScrollArea";
 import { UITrack, transformTrackForUI } from "@/types/spotify";
 import { Separator } from "@/components/ui/separator";
 import { reviewApi, spotifyApi } from "@/api/apiClient";
@@ -151,9 +151,8 @@ export default function Tracks() {
         <h2 className="text-xl font-semibold mb-3">{title}</h2>
         <div className="flex flex-col gap-2">
           <Separator />
-          <MusicScrollArea 
+          <TrackMusicScrollArea 
             items={tracks} 
-            itemType="track" 
             reviews={tracks.map(track => track.review).filter(Boolean) as Review[]}
           />
         </div>
