@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { Button } from "../../../components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
-import { spotifyApi } from "../../../api/apiClient"
+import { spotifyApi, reviewApi } from "../../../api/apiClient"
 import { Skeleton } from "../../../components/ui/skeleton"
 import MusicScrollArea from "./MusicScrollArea"
 import { Separator } from "../../../components/ui/separator"
@@ -13,9 +13,23 @@ interface FilterOptions {
   offset: number;
 }
 
+// Define the review interface
+interface Review {
+  id: string;
+  userId: string;
+  spotifyTrackId: string;
+  opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
+  description: string;
+  rating: number;
+  ranking: number;
+  createdAt: number;
+  genres: string[];
+}
+
 export default function TopTracks() {
   const [tracks, setTracks] = useState<UITrack[]>([]);
   const [artists, setArtists] = useState<UIArtist[]>([]);
+  const [userReviews, setUserReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [tracksLoading, setTracksLoading] = useState<boolean>(true);
   const [artistsLoading, setArtistsLoading] = useState<boolean>(true);
@@ -35,8 +49,18 @@ export default function TopTracks() {
   useEffect(() => {
     fetchTopTracks();
     fetchTopArtists();
+    fetchUserReviews();
     setLoading(false);
   }, []);
+
+  const fetchUserReviews = async () => {
+    try {
+      const reviews = await reviewApi.getUserReviews();
+      setUserReviews(reviews);
+    } catch (error) {
+      console.error('Error fetching user reviews:', error);
+    }
+  };
 
   const fetchTopTracks = async () => {
     setTracksLoading(true);
@@ -100,6 +124,20 @@ export default function TopTracks() {
     setLoading(false);
   };
 
+  // Get track-related reviews
+  const getTrackReviews = () => {
+    return userReviews.filter(review => 
+      tracks.some(track => track.spotifyId === review.spotifyTrackId)
+    );
+  };
+
+  // Get artist-related reviews
+  const getArtistReviews = () => {
+    return userReviews.filter(review => 
+      artists.some(artist => artist.spotifyId === review.spotifyTrackId)
+    );
+  };
+
   const timeRangeLabels = {
     'short_term': 'Last 4 Weeks',
     'medium_term': 'Last 6 Months',
@@ -130,7 +168,10 @@ export default function TopTracks() {
           
           <Button 
             variant="outline" 
-            onClick={() => fetchTopTracks()}
+            onClick={() => {
+              fetchTopTracks();
+              fetchUserReviews();
+            }}
             disabled={loading || tracksLoading}
             size="sm"
           >
@@ -154,7 +195,7 @@ export default function TopTracks() {
           <div>
             <div className="flex flex-col gap-2">
               <Separator />
-              <MusicScrollArea items={tracks} itemType="track"/>
+              <MusicScrollArea items={tracks} itemType="track" reviews={getTrackReviews()} showRating={true}/>
             </div>
           </div>
         )}
@@ -181,7 +222,10 @@ export default function TopTracks() {
           
           <Button 
             variant="outline" 
-            onClick={() => fetchTopArtists()}
+            onClick={() => {
+              fetchTopArtists();
+              fetchUserReviews();
+            }}
             disabled={loading || artistsLoading}
             size="sm"
           >
@@ -204,7 +248,7 @@ export default function TopTracks() {
           <div>
             <div className="flex flex-col gap-2">
               <Separator />
-              <MusicScrollArea items={artists} itemType="artist"/>
+              <MusicScrollArea items={artists} itemType="artist" reviews={getArtistReviews()}/>
             </div>
           </div>
         )}
