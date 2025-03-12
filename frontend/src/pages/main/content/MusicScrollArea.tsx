@@ -1,35 +1,22 @@
 import React from "react";
-import { UITrack, UIAlbum, UIArtist } from "../../../types/spotify";
+import {Track, Album, Artist, TrackReview, AlbumReview} from "../../../api/apiClient";
 import TrackMusicScrollArea from "./TrackMusicScrollArea";
-import AlbumMusicScrollArea from "./AlbumMusicScrollArea";
+// import AlbumMusicScrollArea from "./AlbumMusicScrollArea";
 import ArtistMusicScrollArea from "./ArtistMusicScrollArea";
 
-// Define the review interface
-interface Review {
-  id: string;
-  userId: string;
-  spotifyTrackId: string;
-  opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
-  description: string;
-  rating: number;
-  ranking: number;
-  createdAt: number;
-  genres: string[];
-}
-
 interface MusicScrollAreaProps {
-  items: UITrack[] | UIAlbum[] | UIArtist[];
+  items: Track[] | Album[] | Artist[];
   itemType: 'track' | 'album' | 'artist';
-  reviews?: Review[];
+  reviews?: TrackReview[] | AlbumReview[];
   showRating?: boolean;
 }
 
-export const MusicScrollArea: React.FC<MusicScrollAreaProps> = ({ items, itemType, reviews = [], showRating = false }) => {
+export const MusicScrollArea: React.FC<MusicScrollAreaProps> = ({ items=[], itemType='track', reviews = []}) => {
   return (
     <div>
-      {itemType === 'track' && <TrackMusicScrollArea items={items as UITrack[]} reviews={reviews} showRating={showRating} />}
-      {itemType === 'album' && <AlbumMusicScrollArea items={items as UIAlbum[]} reviews={reviews} showRating={showRating} />}
-      {itemType === 'artist' && <ArtistMusicScrollArea items={items as UIArtist[]} reviews={reviews} showRating={showRating} />}
+      {itemType === 'track' && <TrackMusicScrollArea items={items as Track[]} reviews={reviews as TrackReview[]}/>}
+      {/* {itemType === 'album' && <AlbumMusicScrollArea items={items} reviews={reviews}/>} */}
+      { itemType === 'artist' && <ArtistMusicScrollArea items={items as Artist[]}/>}
     </div>
   );
 };

@@ -257,7 +257,7 @@ export const spotifyApi = {
 };
 
 export const reviewApi = {
-  saveReview: async (reviewData: SaveReviewRequest): Promise<TrackReview> => {
+  saveTrackReview: async (reviewData: SaveReviewRequest): Promise<TrackReview> => {
     const response = await apiClient.post<TrackReview>('/reviews', reviewData);
     return response.data;
   },
@@ -290,12 +290,12 @@ export const reviewApi = {
   
   // For backward compatibility
   createReview: async (reviewData: SaveReviewRequest): Promise<TrackReview> => {
-    return reviewApi.saveReview(reviewData);
+    return reviewApi.saveTrackReview(reviewData);
   },
   
   // For backward compatibility
   updateReview: async (reviewId: string, reviewData: SaveReviewRequest): Promise<TrackReview> => {
-    return reviewApi.saveReview({ ...reviewData, id: reviewId });
+    return reviewApi.saveTrackReview({ ...reviewData, id: reviewId });
   },
   
   /**

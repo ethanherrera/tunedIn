@@ -19,7 +19,7 @@ import {
 import Dashboard from "@/pages/main/content/Dashboard"
 import Search from "@/pages/main/content/Search"
 import ForYou from "@/pages/main/content/ForYou"
-import Tracks from "@/pages/main/content/Tracks"
+import Tracks from "@/pages/main/content/ReviewedTracks"
 import Albums from "@/pages/main/content/Albums"
 import Artists from "@/pages/main/content/Artists"
 import TopTracks from "@/pages/main/content/TopTracks"

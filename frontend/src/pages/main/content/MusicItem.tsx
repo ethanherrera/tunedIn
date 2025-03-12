@@ -1,9 +1,9 @@
 import React from "react";
-import { UITrack, UIAlbum, UIArtist } from "../../../types/spotify";
+import { UITrack, UIAlbum, UIArtist, Track, Album, Artist } from "../../../types/spotify";
 import TrackMusicItem from "./TrackMusicItem";
 import AlbumMusicItem from "./AlbumMusicItem";
 import ArtistMusicItem from "./ArtistMusicItem";
-
+import { TrackReview, AlbumReview } from "../../../api/apiClient";
 // Define the review interface
 interface Review {
   id: string;
@@ -18,18 +18,20 @@ interface Review {
 }
 
 interface MusicItemProps {
-  item: UITrack | UIAlbum | UIArtist;
+  item: Track | Album | Artist;
+  items: (Track | Album | Artist)[];
   itemType: 'track' | 'album' | 'artist';
-  review?: Review;
+  review?: TrackReview | AlbumReview;
+  reviews?: (TrackReview | AlbumReview)[];
   showRating?: boolean;
 }
 
-const MusicItem: React.FC<MusicItemProps> = ({ item, itemType, review, showRating = false }) => {
+const MusicItem: React.FC<MusicItemProps> = ({ item, items=[], itemType, review, reviews=[] }) => {
   return (
     <div>
-      {itemType === 'track' && <TrackMusicItem item={item as UITrack} review={review} showRating={showRating} />}
-      {itemType === 'album' && <AlbumMusicItem item={item as UIAlbum} review={review} showRating={showRating} />}
-      {itemType === 'artist' && <ArtistMusicItem item={item as UIArtist} review={review} showRating={showRating} />}
+      {itemType === 'track' && <TrackMusicItem item={item as Track} reviews={reviews as TrackReview[]} review={review as TrackReview} />}
+      {itemType === 'album' && <AlbumMusicItem item={item as Album} reviews={reviews as AlbumReview[]} review={review as AlbumReview} />}
+      {itemType === 'artist' && <ArtistMusicItem item={item as Artist} />}
     </div>
   );
 };

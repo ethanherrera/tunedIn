@@ -1,28 +1,23 @@
 import React from "react";
 import { Card, CardContent } from "../../../components/ui/card";
-import { UIArtist } from "../../../types/spotify";
 import { ThumbsUp, ThumbsDown, Minus } from "lucide-react";
+// import { Artist, ArtistReview } from "../../../api/apiClient";
+import { Artist } from "../../../api/apiClient";
 
-// Define the review interface
-interface Review {
-  id: string;
-  userId: string;
-  spotifyTrackId: string;
+// Using TrackReview structure as a temporary type until ArtistReview is implemented
+interface ArtistReview {
   opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
-  description: string;
   rating: number;
-  ranking: number;
-  createdAt: number;
-  genres: string[];
 }
 
 interface ArtistMusicItemProps {
-  item: UIArtist;
-  review?: Review;
-  showRating?: boolean;
+  item: Artist;
+  items?: (Artist)[];
+  reviews?: (ArtistReview)[];
+  review?: ArtistReview;
 }
 
-const ArtistMusicItem: React.FC<ArtistMusicItemProps> = ({ item, review, showRating = false }) => {
+const ArtistMusicItem: React.FC<ArtistMusicItemProps> = ({ item, items=[], reviews=[], review }) => {
   // Function to render the opinion icon
   const renderOpinionIcon = () => {
     if (!review) return null;
@@ -44,25 +39,25 @@ const ArtistMusicItem: React.FC<ArtistMusicItemProps> = ({ item, review, showRat
       <CardContent className="p-2">
         <div className="overflow-hidden rounded-md group-hover:shadow-sm group-hover:shadow-primary">
           <img
-            src={item.artistImageUrl}
-            alt={`${item.artistName} profile`}
+            src={item.images && item.images.length > 0 ? item.images[0].url : ''}
+            alt={`${item.name} profile`}
             className="aspect-square h-auto w-full object-cover"
           />
         </div>
         <div className="pt-2">
           <div className="flex justify-between items-start">
             <div className="flex-1 min-w-0">
-              <h3 className="font-medium truncate text-xs sm:text-sm">{item.artistName}</h3>
+              <h3 className="font-medium truncate text-xs sm:text-sm">{item.name}</h3>
             </div>
             {review && (
-              <div className={`flex-shrink-0 inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full text-primary text-[10px] sm:text-xs ml-1
+              <div className={`flex-shrink-0 inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 md:w-9 md:h-9 rounded-full text-primary font-bold text-[10px] sm:text-xs ml-1
                 ${review.opinion === 'LIKED' ? 'bg-green-500' : 
                   review.opinion === 'DISLIKE' ? 'bg-red-500' : 'bg-yellow-500'}`}>
                 {review.rating.toFixed(1)}
-              </div>
-            )}
+              </div>)
+            }
             {
-              !review && showRating && (<div className={`flex-shrink-0 inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full text-primary font-bold text-[10px] sm:text-xs ml-1 bg-gray-500`}>
+              !review && (<div className={`flex-shrink-0 inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 md:w-9 md:h-9 rounded-full text-primary font-bold text-[10px] sm:text-xs ml-1 bg-gray-500`}>
                 {'~'}
               </div>)
             }

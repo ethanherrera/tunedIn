@@ -288,7 +288,7 @@ const TrackRankingModal: React.FC<TrackRankingModalProps> = ({ isOpen, onClose, 
       
       // Use the unified saveReview method
       try {
-        const reviewResponse = await reviewApi.saveReview(reviewData);
+        const reviewResponse = await reviewApi.saveTrackReview(reviewData);
         console.log(existingReviewId ? 'Review updated:' : 'Review created:', reviewResponse);
         
         // Mark as submitted to prevent duplicate submissions

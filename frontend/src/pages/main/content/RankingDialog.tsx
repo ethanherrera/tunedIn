@@ -8,18 +8,18 @@ import { Textarea } from "../../../components/ui/textarea";
 import { DialogTitle } from "../../../components/ui/dialog";
 import { Progress } from "../../../components/ui/progress";
 import MusicItem from "./MusicItem";
-import { UITrack, UIAlbum, UIArtist } from "../../../types/spotify";
-import { reviewApi, spotifyApi } from "@/api/apiClient";
+import { Album, Artist, reviewApi, Track, TrackReview, AlbumReview } from "@/api/apiClient";
 import { toast } from "sonner";
-
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import MusicItemUI from "./MusicItemUI";
 interface RankingDialogProps {
   children: React.ReactNode;
-  isOpen: boolean;
-  onClose: () => void;
-  item: UITrack | UIAlbum | UIArtist;
+  item: Track | Album | Artist;
+  items: (Track | Album | Artist)[];
   itemType: "track" | "album" | "artist";
-  existingReviewId?: string;
-  onAlbumReviewSaved?: () => void;
+  review: TrackReview | AlbumReview;
+  reviews?: (TrackReview | AlbumReview)[];
+  onOpenChange?: (open: boolean) => void;
 }
 
 interface ReviewData {
@@ -30,48 +30,31 @@ interface ReviewData {
   ranking: number;
 }
 
-interface ComparisonItem {
-  albumImageUrl?: string;
-  albumName?: string;
-  artistName?: string;
-  trackName?: string;
-  artistImageUrl?: string;
-  spotifyId: string;
-  ranking?: number;
-}
-
-interface ReviewWithItem extends ComparisonItem {
-  ranking: number;
-  reviewId: string;
-}
-
 // Interface for cached comparison data
 interface CachedComparisonData {
-  items: ReviewWithItem[];
+  items: (Track | Album)[];
+  reviews: (TrackReview | AlbumReview)[];
   noItemsAvailable: boolean;
   finalRanking: number | null;
 }
 
-const RankingDialog: React.FC<RankingDialogProps> = ({ children, isOpen, onClose, item, itemType, existingReviewId, onAlbumReviewSaved }) => {
-  const [review, setReview] = useState("");
+const RankingDialog: React.FC<RankingDialogProps> = ({item, items=[], itemType, review, reviews=[], onOpenChange}) => {
+  const [reviewText, setReviewText] = useState("");
   const maxLength = 300;
   const [isComparing, setIsComparing] = useState(false);
   const [opinion, setOpinion] = useState<'DISLIKE' | 'NEUTRAL' | 'LIKED' | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [progress, setProgress] = useState(0);
   
   // Comparison specific states
-  const [existingReview, setExistingReview] = useState<ReviewData | null>(null);
-  const [isLoadingExistingReview, setIsLoadingExistingReview] = useState(false);
   const [finalRanking, setFinalRanking] = useState<number | null>(null);
   const [comparisonDataReady, setComparisonDataReady] = useState(false);
-  const [comparisonsComplete, setComparisonsComplete] = useState(false);
   
   // Comparison states
-  const [reviewedItems, setReviewedItems] = useState<ReviewWithItem[]>([]);
-  const [currentComparisonItem, setCurrentComparisonItem] = useState<ComparisonItem | null>(null);
+  const [reviewedItems, setReviewedItems] = useState<(Track | Album)[]>([]);
+  const [reviewsMap, setReviewsMap] = useState<Map<string, TrackReview | AlbumReview>>(new Map());
+  const [currentComparisonItem, setCurrentComparisonItem] = useState<Track | Album | null>(null);
   const [low, setLow] = useState<number>(0);
   const [high, setHigh] = useState<number>(0);
   const [mid, setMid] = useState<number>(0);
@@ -85,6 +68,40 @@ const RankingDialog: React.FC<RankingDialogProps> = ({ children, isOpen, onClose
     'LIKED': null
   });
   const [isPrefetching, setIsPrefetching] = useState(false);
+
+  // Get the query client for cache invalidation
+  const queryClient = useQueryClient();
+
+  // Create a mutation for saving reviews
+  const saveReviewMutation = useMutation({
+    mutationFn: (reviewData: ReviewData) => reviewApi.saveTrackReview(reviewData),
+    onSuccess: (data) => {
+      // Invalidate relevant queries to refetch data
+      queryClient.invalidateQueries({ queryKey: ['userReviews'] });
+      queryClient.invalidateQueries({ queryKey: ['trackReviews'] });
+      queryClient.invalidateQueries({ queryKey: ['tracks'] });
+      
+      // Update UI state
+      setIsSubmitted(true);
+      setIsSubmitting(false);
+      
+      // Show success toast notification
+      toast.success("Review submitted successfully!", {
+        description: `Your ${itemType} review has been saved.`,
+        duration: 3000,
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to save review:', error);
+      setIsSubmitting(false);
+      
+      // Show error toast notification
+      toast.error("Failed to submit review", {
+        description: "Please try again later.",
+        duration: 5000,
+      });
+    }
+  });
 
   // Progress animation effect
   useEffect(() => {
@@ -112,47 +129,6 @@ const RankingDialog: React.FC<RankingDialogProps> = ({ children, isOpen, onClose
     };
   }, [isSubmitting, isSubmitted]);
 
-  // Prefetch comparison data when the dialog opens
-  useEffect(() => {
-    if (isOpen && !isPrefetching) {
-      prefetchComparisonData();
-    }
-  }, [isOpen]);
-
-  // Fetch existing review data when the dialog opens with an existingReviewId
-  useEffect(() => {
-    const fetchExistingReview = async () => {
-      if (!existingReviewId || !isOpen) return;
-      
-      setIsLoadingExistingReview(true);
-      try {
-        if (itemType === "track") {
-          // Use the reviewApi to get the review by ID
-          const trackItem = item as UITrack;
-          const response = await reviewApi.getTrackReviews(trackItem.spotifyId);
-          const reviewData = response.find(r => r.id === existingReviewId);
-          
-          if (reviewData) {
-            setExistingReview(reviewData);
-            // Autofill the description field with the existing review's description
-            setReview(reviewData.description);
-            // Set the initial opinion based on the existing review's opinion
-            setOpinion(reviewData.opinion);
-            setFinalRanking(reviewData.ranking);
-          }
-        }
-        // TODO: Handle album and artist existing reviews
-      } catch (err) {
-        console.error('Failed to fetch existing review:', err);
-        setError('Failed to load your existing review. You can still create a new one.');
-      } finally {
-        setIsLoadingExistingReview(false);
-      }
-    };
-    
-    fetchExistingReview();
-  }, [existingReviewId, isOpen, item, itemType]);
-
   // Update mid point when low or high changes (binary search)
   useEffect(() => {
     if (reviewedItems.length > 0) {
@@ -162,300 +138,221 @@ const RankingDialog: React.FC<RankingDialogProps> = ({ children, isOpen, onClose
       // Set the current comparison item to the item at the mid point
       if (newMid >= 0 && newMid < reviewedItems.length) {
         setCurrentComparisonItem(reviewedItems[newMid]);
+        
+        // Log the current state of the binary search
+        const midItemId = getItemId(reviewedItems[newMid]);
+        const midReview = reviewsMap.get(midItemId);
+        
+        console.log(`Binary Search State: low=${low}, high=${high}, mid=${newMid}`);
+        if (midReview) {
+          console.log(`Comparing with item at mid=${newMid}, ranking=${midReview.ranking}, opinion=${midReview.opinion}`);
+        }
+        
+        // Log the rankings of items at low and high if they exist
+        if (low >= 0 && low < reviewedItems.length) {
+          const lowItemId = getItemId(reviewedItems[low]);
+          const lowReview = reviewsMap.get(lowItemId);
+          if (lowReview) {
+            console.log(`Item at low=${low}, ranking=${lowReview.ranking}, opinion=${lowReview.opinion}`);
+          }
+        }
+        
+        if (high >= 0 && high < reviewedItems.length) {
+          const highItemId = getItemId(reviewedItems[high]);
+          const highReview = reviewsMap.get(highItemId);
+          if (highReview) {
+            console.log(`Item at high=${high}, ranking=${highReview.ranking}, opinion=${highReview.opinion}`);
+          }
+        }
       }
     }
-  }, [low, high, reviewedItems]);
+  }, [low, high, reviewedItems, reviewsMap]);
 
-  // Function to prefetch comparison data for all opinion types
-  const prefetchComparisonData = async () => {
-    if (isPrefetching) return;
-    
-    setIsPrefetching(true);
-    
-    // Prefetch for all three opinion types
-    const opinionTypes: ('DISLIKE' | 'NEUTRAL' | 'LIKED')[] = ['DISLIKE', 'NEUTRAL', 'LIKED'];
-    
-    try {
-      // Fetch data for each opinion type in parallel
-      await Promise.all(opinionTypes.map(async (opinionType) => {
-        try {
-          const data = await fetchComparisonDataForOpinion(opinionType);
-          setPrefetchedData(prev => ({
-            ...prev,
-            [opinionType]: data
-          }));
-        } catch (error) {
-          console.error(`Error prefetching data for ${opinionType}:`, error);
-        }
-      }));
-    } finally {
-      setIsPrefetching(false);
+  // Update the parent component when the dialog is closed after submission
+  useEffect(() => {
+    if (isSubmitted && onOpenChange) {
+      // Give some time for the user to see the success message
+      const timer = setTimeout(() => {
+        onOpenChange(false);
+      }, 1500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isSubmitted, onOpenChange]);
+
+  // Helper function to get the ID from an item based on its type
+  const getItemId = (item: Track | Album | Artist): string => {
+    if (itemType === "track") {
+      return (item as Track).id;
+    } else if (itemType === "album") {
+      return (item as Album).id;
+    } else {
+      return (item as Artist).id;
     }
   };
 
-  // Function to fetch comparison data for a specific opinion
-  const fetchComparisonDataForOpinion = async (opinionType: 'DISLIKE' | 'NEUTRAL' | 'LIKED'): Promise<CachedComparisonData> => {
-    const result: CachedComparisonData = {
-      items: [],
-      noItemsAvailable: false,
-      finalRanking: null
-    };
+  // Helper function to get the ID from a review
+  const getReviewItemId = (review: TrackReview | AlbumReview): string => {
+    if ('spotifyTrackId' in review) {
+      return review.spotifyTrackId;
+    } else if ('spotifyAlbumId' in review) {
+      return review.spotifyAlbumId;
+    }
+    return '';
+  };
+
+  // Prepare comparison data for a specific opinion
+  const prepareComparisonData = (opinionType: 'DISLIKE' | 'NEUTRAL' | 'LIKED') => {
+    setLoadingComparisons(true);
+    console.log(`Preparing comparison data for opinion: ${opinionType}`);
     
-    if (itemType === "track") {
-      // Get user reviews from the backend filtered by opinion
-      const userReviews = await reviewApi.getUserReviews([opinionType]);
+    try {
+      // Filter reviews by opinion and item type
+      const filteredReviews = reviews?.filter(r => {
+        // Match by opinion
+        if (r.opinion !== opinionType) return false;
+        
+        // Make sure we don't include the current item
+        const currentItemId = getItemId(item);
+        const reviewItemId = getReviewItemId(r);
+        
+        return reviewItemId !== currentItemId;
+      }) || [];
+      
+      console.log(`Found ${filteredReviews.length} reviews with opinion ${opinionType}`);
       
       // If no reviews, mark as no items available
-      if (userReviews.length === 0) {
-        result.noItemsAvailable = true;
-        result.finalRanking = 1;
-        return result;
-      }
-      
-      const trackItem = item as UITrack;
-      
-      // Filter out the current item being reviewed if it's in the user's reviews
-      const filteredReviews = userReviews.filter(review => 
-        review.spotifyTrackId !== trackItem.spotifyId
-      );
-      
       if (filteredReviews.length === 0) {
-        // If no reviewed items after filtering, mark as no items available
-        result.noItemsAvailable = true;
-        result.finalRanking = 1;
-        return result;
-      }
-      
-      // Extract all track IDs from the filtered reviews
-      const trackIds = filteredReviews.map(review => review.spotifyTrackId);
-      
-      // Create a map to store track data
-      const tracksDataMap: Record<string, any> = {};
-      
-      try {
-        // Fetch tracks in batches of 50 (Spotify API limit)
-        const batchSize = 50;
-        const trackBatches = [];
-        
-        for (let i = 0; i < trackIds.length; i += batchSize) {
-          trackBatches.push(trackIds.slice(i, i + batchSize));
-        }
-        
-        // Fetch all batches in parallel
-        const batchResults = await Promise.all(
-          trackBatches.map(batch => spotifyApi.getTracksBatch(batch))
-        );
-        
-        // Combine all batch results
-        const allTracks = batchResults.flatMap(result => result.tracks);
-        
-        // Create a map of track ID to track data for easy lookup
-        allTracks.forEach(track => {
-          tracksDataMap[track.id] = track;
-        });
-      } catch (batchError) {
-        console.error('Failed to fetch tracks in batch:', batchError);
-        // Fall back to individual fetches if batch fails
-        for (const trackId of trackIds) {
-          try {
-            const trackData = await spotifyApi.getTrack(trackId);
-            tracksDataMap[trackId] = trackData;
-          } catch (trackError) {
-            console.error(`Failed to fetch track ${trackId}:`, trackError);
-          }
-        }
-      }
-      
-      // Create an array to hold items with details
-      const reviewedItems: ReviewWithItem[] = [];
-      
-      // Map the reviews to items with details
-      for (const review of filteredReviews) {
-        const trackData = tracksDataMap[review.spotifyTrackId];
-        
-        if (trackData) {
-          // Ensure we have a valid album image URL or use a fallback
-          const albumImageUrl = trackData.album.images && 
-                               trackData.album.images.length > 0 && 
-                               trackData.album.images[0]?.url ? 
-                               trackData.album.images[0].url : 
-                               'https://via.placeholder.com/300';
-          
-          reviewedItems.push({
-            albumImageUrl: albumImageUrl,
-            albumName: trackData.album.name,
-            artistName: trackData.artists[0].name,
-            trackName: trackData.name,
-            spotifyId: trackData.id,
-            ranking: review.ranking,
-            reviewId: review.id
-          });
-        }
-      }
-      
-      if (reviewedItems.length === 0) {
-        // If no reviewed items after fetching data, mark as no items available
-        result.noItemsAvailable = true;
-        result.finalRanking = 1;
-        return result;
-      }
-      
-      // Sort items by ranking (lowest to highest)
-      result.items = [...reviewedItems].sort((a, b) => a.ranking - b.ranking);
-      
-      // If there's only one item, set the final ranking
-      if (result.items.length === 1) {
-        result.finalRanking = result.items[0].ranking;
-      }
-    } else if (itemType === "album" || itemType === "artist") {
-      // TODO: Implement album and artist comparison logic
-      result.noItemsAvailable = true;
-      result.finalRanking = 1;
-    }
-    
-    return result;
-  };
-
-  // Function to reset all state when modal is closed
-  const resetState = () => {
-    setReview("");
-    setIsComparing(false);
-    setOpinion(null);
-    setError(null);
-    setIsSubmitted(false);
-    setIsSubmitting(false);
-    setProgress(0);
-    setFinalRanking(null);
-    setComparisonDataReady(false);
-    setComparisonsComplete(false);
-    setReviewedItems([]);
-    setCurrentComparisonItem(null);
-    setLow(0);
-    setHigh(0);
-    setMid(0);
-    setNoItemsAvailable(false);
-    setLoadingComparisons(false);
-    
-    // Reset prefetched data
-    setPrefetchedData({
-      'DISLIKE': null,
-      'NEUTRAL': null,
-      'LIKED': null
-    });
-  };
-
-  // Handle modal close with state reset
-  const handleClose = () => {
-    resetState();
-    onClose();
-  };
-
-  // Fetch user's reviewed items for comparison
-  const fetchUserReviewedItems = async (selectedOpinion?: 'DISLIKE' | 'NEUTRAL' | 'LIKED') => {
-    // Use the passed opinion parameter or fall back to the state
-    const opinionToUse = selectedOpinion || opinion;
-    
-    // Safety check - if no opinion is set, we can't fetch items
-    if (!opinionToUse) {
-      setLoadingComparisons(false);
-      setNoItemsAvailable(true);
-      return;
-    }
-    
-    // Reset data ready flag
-    setComparisonDataReady(false);
-    setLoadingComparisons(true);
-    
-    try {
-      // Check if we have prefetched data for this opinion
-      if (prefetchedData[opinionToUse]) {
-        const cachedData = prefetchedData[opinionToUse]!;
-        
-        // Use the prefetched data
-        setReviewedItems(cachedData.items);
-        setNoItemsAvailable(cachedData.noItemsAvailable);
-        
-        if (cachedData.finalRanking) {
-          setFinalRanking(cachedData.finalRanking);
-        }
-        
-        // If there are no items available, mark as complete
-        if (cachedData.noItemsAvailable) {
-          setComparisonsComplete(true);
-        } else if (cachedData.items.length > 0) {
-          // Set up binary search with prefetched items
-          if (cachedData.items.length === 1) {
-            setLow(0);
-            setHigh(0);
-            setMid(0);
-            setCurrentComparisonItem(cachedData.items[0]);
-          } else {
-            // Initialize binary search pointers
-            setLow(0);
-            setHigh(cachedData.items.length - 1);
-            
-            // Set initial mid point
-            const initialMid = Math.floor((0 + (cachedData.items.length - 1)) / 2);
-            setMid(initialMid);
-            
-            // Set initial comparison item
-            setCurrentComparisonItem(cachedData.items[initialMid]);
-          }
-        }
-        
-        // Mark data as ready
+        console.log(`No reviews found for opinion: ${opinionType}, setting ranking to 0`);
+        setNoItemsAvailable(true);
+        setFinalRanking(0);
         setComparisonDataReady(true);
         setLoadingComparisons(false);
         return;
       }
       
-      // If no prefetched data, fetch it now
-      const data = await fetchComparisonDataForOpinion(opinionToUse);
+      // Create a map to store item data
+      const itemsMap = new Map<string, Track | Album>();
       
-      // Update the prefetched data cache
-      setPrefetchedData(prev => ({
-        ...prev,
-        [opinionToUse]: data
-      }));
+      // Only include items of the correct type
+      const typedItems = items.filter(i => {
+        if (itemType === "track" && 'album' in i) return true;
+        if (itemType === "album" && 'album_type' in i) return true;
+        return false;
+      }) as (Track | Album)[];
       
-      // Use the fetched data
-      setReviewedItems(data.items);
-      setNoItemsAvailable(data.noItemsAvailable);
+      console.log(`Found ${typedItems.length} items of type ${itemType}`);
       
-      if (data.finalRanking) {
-        setFinalRanking(data.finalRanking);
-      }
+      // Map items by their ID for easy lookup
+      typedItems.forEach(i => {
+        itemsMap.set(getItemId(i), i);
+      });
       
-      // If there are no items available, mark as complete
-      if (data.noItemsAvailable) {
-        setComparisonsComplete(true);
-      } else if (data.items.length > 0) {
-        // Set up binary search with fetched items
-        if (data.items.length === 1) {
-          setLow(0);
-          setHigh(0);
-          setMid(0);
-          setCurrentComparisonItem(data.items[0]);
-        } else {
-          // Initialize binary search pointers
-          setLow(0);
-          setHigh(data.items.length - 1);
-          
-          // Set initial mid point
-          const initialMid = Math.floor((0 + (data.items.length - 1)) / 2);
-          setMid(initialMid);
-          
-          // Set initial comparison item
-          setCurrentComparisonItem(data.items[initialMid]);
+      // Create arrays to hold items and their reviews
+      const filteredItems: (Track | Album)[] = [];
+      const reviewsMapTemp = new Map<string, TrackReview | AlbumReview>();
+      
+      // Map the reviews to items with details
+      for (const r of filteredReviews) {
+        const reviewItemId = getReviewItemId(r);
+        const itemData = itemsMap.get(reviewItemId);
+        
+        if (itemData) {
+          filteredItems.push(itemData);
+          reviewsMapTemp.set(reviewItemId, r);
+          console.log(`Added item ${reviewItemId} with ranking ${r.ranking} to filtered items`);
         }
       }
       
-      // Set data ready flag at the very end when everything is loaded
+      if (filteredItems.length === 0) {
+        // If no reviewed items after filtering, mark as no items available
+        console.log("No items found after filtering, setting ranking to 0");
+        setNoItemsAvailable(true);
+        setFinalRanking(0);
+        setComparisonDataReady(true);
+        setLoadingComparisons(false);
+        return;
+      }
+      
+      // Sort items by their review rankings (lowest to highest)
+      // This ensures that lower index = better ranking (1 is best)
+      const sortedItems: (Track | Album)[] = [];
+      const sortedReviews: (TrackReview | AlbumReview)[] = [];
+      
+      // Create pairs of [item, review] for sorting
+      const itemReviewPairs = filteredItems.map((item, index) => {
+        const itemId = getItemId(item);
+        const review = reviewsMapTemp.get(itemId);
+        return { item, review };
+      }).filter(pair => pair.review !== undefined);
+      
+      console.log(`Created ${itemReviewPairs.length} item-review pairs for sorting`);
+      
+      // Sort by ranking (lowest to highest)
+      itemReviewPairs.sort((a, b) => {
+        if (!a.review || !b.review) return 0;
+        return a.review.ranking - b.review.ranking;
+      });
+      
+      // Log the sorted items and their rankings
+      console.log("Sorted items by ranking:");
+      itemReviewPairs.forEach((pair, index) => {
+        if (pair.review) {
+          console.log(`Item ${index}: ${getItemId(pair.item)}, Ranking: ${pair.review.ranking}, Opinion: ${pair.review.opinion}`);
+        }
+      });
+      
+      // Separate the sorted items and reviews
+      itemReviewPairs.forEach(pair => {
+        if (pair.item && pair.review) {
+          sortedItems.push(pair.item);
+          sortedReviews.push(pair.review);
+        }
+      });
+      
+      console.log(`Final sorted items count: ${sortedItems.length}`);
+      
+      // Store the sorted items and reviews map
+      setReviewedItems(sortedItems);
+      setReviewsMap(reviewsMapTemp);
+      
+      // If there's only one item, set the final ranking
+      if (sortedItems.length === 1) {
+        const itemId = getItemId(sortedItems[0]);
+        const review = reviewsMapTemp.get(itemId);
+        if (review) {
+          console.log(`Only one item found with ranking ${review.ranking}, using as reference`);
+          setFinalRanking(review.ranking);
+        }
+      }
+      
+      // Set up binary search with items
+      if (sortedItems.length === 1) {
+        console.log("Setting up binary search with single item");
+        setLow(0);
+        setHigh(0);
+        setMid(0);
+        setCurrentComparisonItem(sortedItems[0]);
+      } else {
+        // Initialize binary search pointers
+        console.log(`Setting up binary search with ${sortedItems.length} items`);
+        setLow(0);
+        setHigh(sortedItems.length - 1);
+        
+        // Set initial mid point
+        const initialMid = Math.floor((0 + (sortedItems.length - 1)) / 2);
+        setMid(initialMid);
+        
+        // Set initial comparison item
+        setCurrentComparisonItem(sortedItems[initialMid]);
+        console.log(`Initial binary search state: low=0, high=${sortedItems.length - 1}, mid=${initialMid}`);
+      }
+      
+      // Mark data as ready
       setComparisonDataReady(true);
       
     } catch (err) {
-      console.error('Failed to fetch user reviewed items:', err);
-      setError('Failed to load your reviewed items. Please try again.');
+      console.error('Failed to prepare comparison data:', err);
       setNoItemsAvailable(true);
       setComparisonDataReady(false); // Make sure data ready is false on error
     } finally {
@@ -464,14 +361,13 @@ const RankingDialog: React.FC<RankingDialogProps> = ({ children, isOpen, onClose
     }
   };
 
-  const startComparison = async (e: 'DISLIKE' | 'NEUTRAL' | 'LIKED') => {
+  const startComparison = (e: 'DISLIKE' | 'NEUTRAL' | 'LIKED') => {
     // Safety check - if no opinion is set, we can't start comparison
     if (!e) {
       return;
     }
     
     // Reset comparison-related states
-    setComparisonsComplete(false);
     setNoItemsAvailable(false);
     setCurrentComparisonItem(null);
     setReviewedItems([]);
@@ -481,30 +377,37 @@ const RankingDialog: React.FC<RankingDialogProps> = ({ children, isOpen, onClose
     // Set comparing to true to show the comparison UI
     setIsComparing(true);
     
-    // Fetch items for comparison
-    await fetchUserReviewedItems(e);
+    // Prepare items for comparison
+    prepareComparisonData(e);
   };
 
   // Handle item selection for binary search
   const handleItemSelect = (isCurrentItemBetter: boolean) => {
     if (!currentComparisonItem) return;
     
+    console.log(`User selected: current item is ${isCurrentItemBetter ? 'BETTER' : 'WORSE'} than comparison item`);
+    
     // Special case for single item comparison
     if (reviewedItems.length === 1) {
       let newRanking: number;
+      const itemId = getItemId(currentComparisonItem);
+      const review = reviewsMap.get(itemId);
+      
+      if (!review) return;
       
       if (isCurrentItemBetter) {
         // User thinks current item is better than the only item
-        // Insert it before that item
-        newRanking = reviewedItems[0].ranking;
+        // Use a ranking that's one less than the compared item to ensure it comes first in the sorted array
+        newRanking = Math.max(1, review.ranking - 1);
+        console.log(`Single item comparison: Current item is better than item with ranking ${review.ranking}, assigning ranking ${newRanking}`);
       } else {
         // User thinks the only item is better than current item
-        // Insert current item after that item
-        newRanking = reviewedItems[0].ranking + 1;
+        // Use a ranking that's one more than the compared item to ensure it comes after in the sorted array
+        newRanking = review.ranking + 1;
+        console.log(`Single item comparison: Current item is worse than item with ranking ${review.ranking}, assigning ranking ${newRanking}`);
       }
       
       setFinalRanking(newRanking);
-      setComparisonsComplete(true);
       submitReview(newRanking);
       return;
     }
@@ -514,24 +417,38 @@ const RankingDialog: React.FC<RankingDialogProps> = ({ children, isOpen, onClose
       // Determine final ranking based on the last comparison
       let newRanking: number;
       
-      // Special case: if low is 0 and the user selected the current item as better,
-      // this means the item should be at the very top (rank 1)
-      if (low === 0 && isCurrentItemBetter) {
-        // User thinks current item is better than the highest ranked item
-        // It should get the top ranking (1)
-        newRanking = 1;
-      } else if (isCurrentItemBetter) {
+      // Get the reviews for the items at low and high positions
+      const lowItemId = getItemId(reviewedItems[low]);
+      const highItemId = getItemId(reviewedItems[high]);
+      const lowReview = reviewsMap.get(lowItemId);
+      const highReview = reviewsMap.get(highItemId);
+      
+      if (!lowReview || !highReview) return;
+      
+      console.log(`Binary search complete: low=${low} (ranking=${lowReview.ranking}), high=${high} (ranking=${highReview.ranking})`);
+      
+      if (isCurrentItemBetter) {
         // User thinks current item is better than the high item
-        // Insert it before the high item
-        newRanking = reviewedItems[high].ranking;
+        // If we're at the top of the list (low=0), use a ranking that's one less than the lowest item
+        if (low === 0) {
+          newRanking = Math.max(1, lowReview.ranking - 1);
+          console.log(`Binary search complete: Current item is better than top items, assigning ranking ${newRanking}`);
+        } else {
+          // Otherwise, use a ranking between the low and high items
+          // This ensures it will be sorted correctly
+          const midRanking = Math.floor((lowReview.ranking + highReview.ranking) / 2);
+          newRanking = midRanking;
+          console.log(`Binary search complete: Current item is between low (${lowReview.ranking}) and high (${highReview.ranking}), assigning ranking ${newRanking}`);
+        }
       } else {
         // User thinks high item is better than current item
-        // Insert current item after the high item
-        newRanking = reviewedItems[high].ranking + 1;
+        // Use a ranking that's one more than the high item to ensure it comes after in the sorted array
+        newRanking = highReview.ranking + 1;
+        console.log(`Binary search complete: Current item is worse than item at high (${high}) with ranking ${highReview.ranking}, assigning ranking ${newRanking}`);
       }
       
+      console.log(`Final ranking determined: ${newRanking} (low=${low}, high=${high})`);
       setFinalRanking(newRanking);
-      setComparisonsComplete(true);
       submitReview(newRanking);
       return;
     }
@@ -540,10 +457,27 @@ const RankingDialog: React.FC<RankingDialogProps> = ({ children, isOpen, onClose
     if (isCurrentItemBetter) {
       // User thinks current item is better than mid item
       // Search in the lower half (better rankings)
+      console.log(`Current item is better than mid item, updating high from ${high} to ${mid}`);
       setHigh(mid);
+      
+      // Special case: If we're comparing with the top item and user says their item is better
+      if (mid === 0 && isCurrentItemBetter) {
+        // Use a ranking that's one less than the top item to ensure it comes first in the sorted array
+        const topItemId = getItemId(reviewedItems[0]);
+        const topReview = reviewsMap.get(topItemId);
+        
+        if (topReview) {
+          const newRanking = Math.max(1, topReview.ranking - 1);
+          console.log(`User selected their item as better than the top ranked item, assigning ranking ${newRanking}`);
+          setFinalRanking(newRanking);
+          submitReview(newRanking);
+          return;
+        }
+      }
     } else {
       // User thinks mid item is better than current item
       // Search in the upper half (worse rankings)
+      console.log(`Current item is worse than mid item, updating low from ${low} to ${mid + 1}`);
       setLow(mid + 1);
     }
   };
@@ -553,76 +487,31 @@ const RankingDialog: React.FC<RankingDialogProps> = ({ children, isOpen, onClose
     setIsSubmitting(true);
     
     if (opinion) {
-      let itemId = '';
+      const itemId = getItemId(item);
       
-      if (itemType === "track") {
-        itemId = (item as UITrack).spotifyId;
-      } else if (itemType === "album") {
-        itemId = (item as UIAlbum).spotifyId;
-      } else if (itemType === "artist") {
-        itemId = (item as UIArtist).spotifyId;
-      }
+      // Use ranking if provided, otherwise finalRanking if set, otherwise default to 1 (top position)
+      const finalRank = ranking || finalRanking || 1;
+      console.log(`Submitting review with opinion: ${opinion}, ranking: ${finalRank}, item ID: ${itemId}`);
       
       const reviewData: ReviewData = {
         spotifyTrackId: itemId, // This will need to be updated when album/artist reviews are implemented
         opinion: opinion,
-        description: review,
-        ranking: ranking || finalRanking || 0,
-        ...(existingReviewId && { id: existingReviewId })
+        description: reviewText,
+        ranking: finalRank,
       };
       
-      // Call the API to save the review
-      reviewApi.saveReview(reviewData)
-        .then(response => {
-          setIsSubmitted(true);
-          setIsSubmitting(false);
-          
-          // Show success toast notification
-          toast.success("Review submitted successfully!", {
-            description: `Your ${itemType} review has been saved.`,
-            duration: 3000,
-          });
-          
-          // Call the callback if provided
-          if (onAlbumReviewSaved) {
-            onAlbumReviewSaved();
-          }
-          
-          // Close the dialog after a short delay
-          setTimeout(() => {
-            handleClose();
-          }, 200);
-        })
-        .catch(error => {
-          console.error('Error saving review:', error);
-          setError(`Failed to save review: ${error.response?.data?.error || error.message || 'Unknown error'}`);
-          setIsSubmitting(false);
-        });
-    } else {
-      // Simulate successful submission for now
-      setTimeout(() => {
-        setIsSubmitted(true);
-        setIsSubmitting(false);
-        
-        // Show success toast notification
-        toast.success("Review submitted successfully!", {
-          description: `Your ${itemType} review has been saved.`,
-          duration: 3000,
-        });
-        
-        // Close the dialog after a short delay
-        setTimeout(() => {
-          handleClose();
-        }, 200);
-      }, 200);
+      // Use the mutation to save the review
+      console.log("Submitting review data to API:", reviewData);
+      saveReviewMutation.mutate(reviewData);
     }
   };
 
   const onOpinionSelected = (e: 'DISLIKE' | 'NEUTRAL' | 'LIKED') => {
     // If we have review text, submit the review regardless of opinion change
-    if (review.trim().length > 0) {
+    if (reviewText.trim().length > 0) {
       setOpinion(e);
-      submitReview();
+      // When submitting a review with text, use a very low ranking (0) to ensure it gets the highest score
+      submitReview(0);
       return;
     }
     
@@ -638,53 +527,25 @@ const RankingDialog: React.FC<RankingDialogProps> = ({ children, isOpen, onClose
     }
   }
 
-  // Helper function to create a temporary UI item from a comparison item
-  const createUIItem = (comparisonItem: ComparisonItem) => {
-    if (itemType === "track") {
-      return {
-        spotifyId: comparisonItem.spotifyId,
-        trackName: comparisonItem.trackName || '',
-        artistName: comparisonItem.artistName || '',
-        albumName: comparisonItem.albumName || '',
-        albumId: comparisonItem.spotifyId,
-        albumImageUrl: comparisonItem.albumImageUrl || 'https://via.placeholder.com/300',
-      } as UITrack;
-    } else if (itemType === "album") {
-      return {
-        spotifyId: comparisonItem.spotifyId,
-        albumName: comparisonItem.albumName || '',
-        artistName: comparisonItem.artistName || '',
-        albumImageUrl: comparisonItem.albumImageUrl || 'https://via.placeholder.com/300',
-      } as UIAlbum;
-    } else {
-      return {
-        spotifyId: comparisonItem.spotifyId,
-        artistName: comparisonItem.artistName || '',
-        artistImageUrl: comparisonItem.artistImageUrl || 'https://via.placeholder.com/300',
-      } as UIArtist;
-    }
-  };
-
   return (
     <>
-      {children}
-      <Dialog open={isOpen} onOpenChange={handleClose}>
+      <Dialog defaultOpen={true} onOpenChange={(open) => onOpenChange && onOpenChange(open)}>
         <DialogContent className="p-0 text-primary border-none">
           <div className="flex flex-col items-center gap-4 overflow-x-hidden m-5">
           <DialogTitle className="text-center text-2xl font-bold">Tell us what you think</DialogTitle>
             {/** This is the review section */}
-            <MusicItem item={item} itemType={itemType} />
+            <MusicItemUI item={item} itemType={itemType} />
             <div className="w-full space-y-2">
               <Textarea 
-                value={review}
-                onChange={(e) => setReview(e.target.value)}
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
                 placeholder="Write your review here..."
                 maxLength={maxLength}
                 className="resize-none"
                 disabled={isSubmitting || isSubmitted}
               />
               <div className="text-sm text-muted-foreground text-right">
-                {review.length}/{maxLength} characters
+                {reviewText.length}/{maxLength} characters
               </div>
             </div>
             {/** This is the rating section */}
@@ -739,7 +600,11 @@ const RankingDialog: React.FC<RankingDialogProps> = ({ children, isOpen, onClose
                     <div className="hidden">
                       {(() => {
                         // Use setTimeout to avoid blocking the UI
-                        setTimeout(() => submitReview(1), 1500);
+                        console.log("No items available for comparison, setting ranking to 0");
+                        setTimeout(() => {
+                          setFinalRanking(0);
+                          submitReview(0);
+                        }, 1500);
                         return null;
                       })()}
                     </div>
@@ -750,14 +615,13 @@ const RankingDialog: React.FC<RankingDialogProps> = ({ children, isOpen, onClose
                     <div className="text-lg font-bold text-center">Which of these do you like more?</div>
                     <div className="flex flex-row justify-between align-items-center w-full">
                       <div onClick={() => handleItemSelect(true)} style={{ cursor: 'pointer' }} className="hover:opacity-80 transition-opacity">
-                        <MusicItem item={item} itemType={itemType} />
+                        <MusicItemUI item={item} itemType={itemType} />
                       </div>
                       <div className="text-lg font-bold text-center text-align-center text-justify-center m-4">or</div>
                       <div onClick={() => handleItemSelect(false)} style={{ cursor: 'pointer' }} className="hover:opacity-80 transition-opacity">
-                        {/* Create a temporary UI item from currentComparisonItem */}
-                        <MusicItem 
-                          item={createUIItem(currentComparisonItem)}
-                          itemType={itemType} 
+                        <MusicItemUI
+                          item={currentComparisonItem}
+                          itemType={itemType}
                         />
                       </div>
                     </div>
