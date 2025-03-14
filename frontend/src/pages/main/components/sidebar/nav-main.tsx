@@ -16,6 +16,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 
 // Import ContentView type
@@ -37,11 +38,21 @@ interface NavMainProps {
 }
 
 export function NavMain({ items, onViewChange, activeView }: NavMainProps) {
-  // Add a debug log when a menu item is clicked
+  // Get sidebar context to access mobile state and close function
+  const { isMobile, setOpenMobile } = useSidebar();
+  
+  // Handle view change and automatically collapse sidebar on mobile
   const handleViewChange = (view?: ContentView) => {
     if (view) {
       console.log("Changing view to:", view);
       onViewChange(view);
+      
+      // If on mobile, close the sidebar after selecting a menu item
+      if (isMobile) {
+        setTimeout(() => {
+          setOpenMobile(false);
+        }, 150); // Small delay for better UX
+      }
     }
   };
 
@@ -61,6 +72,7 @@ export function NavMain({ items, onViewChange, activeView }: NavMainProps) {
                 <SidebarMenuButton 
                   tooltip={item.title}
                   data-active={item.items?.some(subItem => subItem.view === activeView) ? "true" : undefined}
+                  onClick={() => item.view && handleViewChange(item.view)}
                 >
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>

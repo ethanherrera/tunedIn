@@ -13,7 +13,12 @@ import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
+import { Menu, PanelLeftIcon, X } from "lucide-react"
+import { ModeToggle } from "@/components/mode-toggle"
+import { cn } from "@/lib/utils"
 
 // Import all content components
 import Dashboard from "@/pages/main/content/Dashboard"
@@ -31,7 +36,33 @@ import ProfileInfo from "@/pages/main/content/ProfileInfo"
 import ProfileActivity from "@/pages/main/content/ProfileActivity"
 import GeneralSettings from "@/pages/main/content/GeneralSettings"
 import AccountSettings from "@/pages/main/content/AccountSettings"
-import { ModeToggle } from "@/components/mode-toggle"
+
+// Mobile Sidebar Trigger component
+function MobileSidebarTrigger() {
+  const { toggleSidebar, isMobile, openMobile } = useSidebar()
+  
+  if (!isMobile) return null
+  
+  return (
+    <Button
+      onClick={toggleSidebar}
+      className={`fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 ${
+        openMobile ? 'bg-destructive text-destructive-foreground rotate-90' : 'bg-primary text-primary-foreground'
+      }`}
+      size="icon"
+      variant="default"
+      aria-label="Toggle Menu"
+    >
+      {openMobile ? (
+        <X className="h-6 w-6 transition-transform duration-300" />
+      ) : (
+        <Menu className="h-6 w-6 transition-transform duration-300" />
+      )}
+      <span className="sr-only">{openMobile ? 'Close' : 'Open'} Menu</span>
+    </Button>
+  )
+}
+
 // Define content types for type safety
 export type ContentView = 
   | "dashboard" 
@@ -156,7 +187,7 @@ export default function Main() {
       <SidebarInset className="w-1/2 text-primary">
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
+            <SidebarTrigger className="-ml-1 md:flex hidden" />
             <ModeToggle />
             <Separator orientation="vertical" className="mr-2 h-4" />
             {/* Updated breadcrumb based on category and subcategory */}
@@ -184,6 +215,9 @@ export default function Main() {
           </div>
         </div>
       </SidebarInset>
+      
+      {/* Add the mobile sidebar trigger */}
+      <MobileSidebarTrigger />
     </SidebarProvider>
   )
 }
