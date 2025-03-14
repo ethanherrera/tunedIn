@@ -41,7 +41,7 @@ interface NavMainProps {
 
 export function NavMain({ items, onViewChange, activeView }: NavMainProps) {
   const location = useLocation();
-  const { isMobile, setOpenMobile } = useSidebar();
+  const { isMobile, setOpenMobile, state, setOpen } = useSidebar();
   
   // Handle view change and automatically collapse sidebar on mobile
   const handleViewChange = (view?: ContentView) => {
@@ -55,6 +55,23 @@ export function NavMain({ items, onViewChange, activeView }: NavMainProps) {
           setOpenMobile(false);
         }, 150); // Small delay for better UX
       }
+    }
+  };
+
+  // Handle icon click when sidebar is collapsed
+  const handleIconClick = (item: NavMainProps['items'][0]) => {
+    // If sidebar is collapsed, expand it
+    if (state === 'collapsed') {
+      setOpen(true);
+    }
+
+    // If the item has a direct view, navigate to it
+    if (item.view) {
+      handleViewChange(item.view);
+    } 
+    // If the item has subitems, navigate to the first one
+    else if (item.items && item.items.length > 0) {
+      handleViewChange(item.items[0].view);
     }
   };
 
@@ -73,7 +90,7 @@ export function NavMain({ items, onViewChange, activeView }: NavMainProps) {
                 <SidebarMenuButton 
                   tooltip={item.title}
                   data-active={item.items?.some(subItem => subItem.view === activeView) ? "true" : undefined}
-                  onClick={() => item.view && handleViewChange(item.view)}
+                  onClick={() => handleIconClick(item)}
                 >
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
