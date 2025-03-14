@@ -11,15 +11,6 @@ import com.tunedin.backend.model.spotify.SpotifyErrorResponse
 import org.springframework.http.HttpStatus
 import org.slf4j.LoggerFactory
 
-data class SaveReviewRequest(
-    val spotifyTrackId: String,
-    val opinion: Opinion,
-    val description: String,
-    val rating: Double,
-    val ranking: Int = 0,
-    val id: UUID? = null  // Optional ID for updates
-)
-
 @RestController
 @RequestMapping("/api/reviews")
 class TrackReviewController(

@@ -1,8 +1,7 @@
 package com.tunedin.backend.model
 
-enum class AlbumOpinion {
+enum class Opinion {
     DISLIKE,
     NEUTRAL,
-    LIKED,
-    UNDEFINED
-} 
+    LIKED
+}

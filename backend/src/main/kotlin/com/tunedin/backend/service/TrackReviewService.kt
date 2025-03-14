@@ -12,8 +12,6 @@ import kotlin.math.max
 class TrackReviewService(
     private val trackReviewRepository: TrackReviewRepository,
     private val spotifyService: SpotifyService,
-    private val albumReviewService: AlbumReviewService,
-    private val userService: UserService
 ) {
     private val logger = LoggerFactory.getLogger(TrackReviewService::class.java)
     
@@ -75,9 +73,6 @@ class TrackReviewService(
             // Rescore all reviews for this user
             rescoreReviews(userId)
             
-            // Update the album review for this track
-            updateAlbumReviewForTrack(userId, track.album.id, spotifyTrackId, accessToken)
-            
             return savedReview
         }
         
@@ -106,9 +101,6 @@ class TrackReviewService(
         
         // Rescore all reviews for this user
         rescoreReviews(userId)
-        
-        // Update the album review for this track
-        updateAlbumReviewForTrack(userId, track.album.id, spotifyTrackId, accessToken)
         
         return savedReview
     }
@@ -269,14 +261,6 @@ class TrackReviewService(
             // Rescore all reviews for this user
             rescoreReviews(userId)
             
-            // Try to update album reviews
-            try {
-                updateAlbumReviewsByTrackId(userId, spotifyTrackId)
-            } catch (e: Exception) {
-                // Log the error but don't fail the review deletion
-                println("Failed to update album review: ${e.message}")
-            }
-            
             return true
         }
         return false
@@ -292,14 +276,6 @@ class TrackReviewService(
             
             // Rescore all reviews for this user
             rescoreReviews(userId)
-            
-            // Try to update album reviews
-            try {
-                updateAlbumReviewsByTrackId(userId, spotifyTrackId)
-            } catch (e: Exception) {
-                // Log the error but don't fail the review deletion
-                println("Failed to update album review: ${e.message}")
-            }
             
             return true
         }
@@ -383,18 +359,6 @@ class TrackReviewService(
                 logger.info("Rescoring reviews for user")
                 rescoreReviews(userId)
                 
-                // Get the track to get the album ID
-                try {
-                    // We need to get the track to get the album ID
-                    // This requires an access token, which we don't have in this method
-                    // So we'll try to find the album review by track ID
-                    logger.info("Updating album reviews by track ID")
-                    updateAlbumReviewsByTrackId(userId, spotifyTrackId)
-                } catch (e: Exception) {
-                    // Log the error but don't fail the review update
-                    logger.error("Failed to update album review: ${e.message}", e)
-                }
-                
                 return savedReview
             } else if (ranking > 0 && ranking != existingReview.ranking) {
                 // Opinion didn't change but ranking did - update the ranking
@@ -417,15 +381,6 @@ class TrackReviewService(
                 logger.info("Rescoring reviews for user")
                 rescoreReviews(userId)
                 
-                // Try to update album reviews
-                try {
-                    logger.info("Updating album reviews by track ID")
-                    updateAlbumReviewsByTrackId(userId, spotifyTrackId)
-                } catch (e: Exception) {
-                    // Log the error but don't fail the review update
-                    logger.error("Failed to update album review: ${e.message}", e)
-                }
-                
                 return savedReview
             } else {
                 // Don't update the createdAt timestamp to preserve the original review date
@@ -435,15 +390,6 @@ class TrackReviewService(
                 // Rescore all reviews for this user
                 logger.info("Rescoring reviews for user")
                 rescoreReviews(userId)
-                
-                // Try to update album reviews
-                try {
-                    logger.info("Updating album reviews by track ID")
-                    updateAlbumReviewsByTrackId(userId, spotifyTrackId)
-                } catch (e: Exception) {
-                    // Log the error but don't fail the review update
-                    logger.error("Failed to update album review: ${e.message}", e)
-                }
                 
                 return savedReview
             }
@@ -574,84 +520,4 @@ class TrackReviewService(
         return ranking
     }
 
-    /**
-     * Updates the album review for a track
-     * @param userId The user ID
-     * @param spotifyAlbumId The Spotify album ID
-     * @param spotifyTrackId The Spotify track ID
-     * @param accessToken The Spotify access token
-     */
-    private fun updateAlbumReviewForTrack(userId: String, spotifyAlbumId: String, spotifyTrackId: String, accessToken: String) {
-        try {
-            println("Updating album review for track: userId=$userId, albumId=$spotifyAlbumId, trackId=$spotifyTrackId")
-            
-            // Get the album to get all track IDs
-            val album = spotifyService.getAlbum(spotifyAlbumId, accessToken)
-            
-            // Get all track IDs from the album
-            val trackIds = album.tracks?.items?.map { it.id } ?: emptyList()
-            
-            // Check if the user already has a review for this album
-            var albumReview = albumReviewService.getUserAlbumReview(userId, spotifyAlbumId)
-            
-            println("Existing album review found: ${albumReview != null}, albumId=$spotifyAlbumId")
-            
-            if (albumReview == null) {
-                // Double-check by getting all user album reviews and manually checking
-                val allUserAlbumReviews = albumReviewService.getAlbumReviewsByUserId(userId)
-                val existingReview = allUserAlbumReviews.find { it.spotifyAlbumId == spotifyAlbumId }
-                
-                if (existingReview != null) {
-                    println("Found existing album review through manual check: ${existingReview.id}")
-                    albumReview = existingReview
-                } else {
-                    // Create a new album review with minimal information
-                    // The calculateRatingAndSetOpinion method will set the rating and opinion
-                    albumReview = com.tunedin.backend.model.AlbumReview(
-                        userId = userId,
-                        spotifyAlbumId = spotifyAlbumId,
-                        description = "Auto-generated from track reviews",
-                        spotifyTrackIds = trackIds
-                    )
-                    
-                    println("Creating new album review for album: $spotifyAlbumId")
-                    // Save the new album review
-                    albumReviewService.createAlbumReview(albumReview)
-                }
-            } else {
-                // Update the existing album review
-                // Make sure the track IDs are up to date
-                albumReview.spotifyTrackIds = trackIds
-                
-                println("Updating existing album review: ${albumReview.id}")
-                // Update the album review
-                albumReviewService.updateAlbumReview(albumReview.id, albumReview)
-            }
-        } catch (e: Exception) {
-            // Log the error but don't fail the track review operation
-            println("Failed to update album review: ${e.message}")
-            e.printStackTrace()
-        }
-    }
-    
-    /**
-     * Updates all album reviews that contain the given track ID
-     * This is used when we don't have an access token to fetch the album
-     * @param userId The user ID
-     * @param spotifyTrackId The Spotify track ID
-     */
-    private fun updateAlbumReviewsByTrackId(userId: String, spotifyTrackId: String) {
-        // Get all album reviews for this user
-        val albumReviews = albumReviewService.getAlbumReviewsByUserId(userId)
-        
-        // Find album reviews that contain this track
-        val relevantAlbumReviews = albumReviews.filter { review ->
-            spotifyTrackId in review.spotifyTrackIds
-        }
-        
-        // Update each relevant album review
-        for (albumReview in relevantAlbumReviews) {
-            albumReviewService.updateAlbumReview(albumReview.id, albumReview)
-        }
-    }
-} 
+}

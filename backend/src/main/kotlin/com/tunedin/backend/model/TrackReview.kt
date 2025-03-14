@@ -2,12 +2,6 @@ package com.tunedin.backend.model
 
 import java.util.UUID
 
-enum class Opinion {
-    DISLIKE,
-    NEUTRAL,
-    LIKED
-}
-
 data class TrackReview(
     var id: UUID = UUID.randomUUID(),
     var userId: String,

@@ -152,7 +152,7 @@ class SpotifyService(
      * @param market Optional market code (ISO 3166-1 alpha-2 country code)
      * @return List of Track objects
      */
-    fun getTracksBatch(trackIds: List<String>, accessToken: String, market: String? = null): List<Track> {
+    fun getTracksBatch(trackIds: List<String>, accessToken: String, market: String? = null): List<SpotifyTrack> {
         if (trackIds.isEmpty()) {
             return emptyList()
         }
@@ -181,7 +181,7 @@ class SpotifyService(
             url,
             HttpMethod.GET,
             HttpEntity<Any>(headers),
-            object : ParameterizedTypeReference<Map<String, List<Track>>>() {}
+            object : ParameterizedTypeReference<Map<String, List<SpotifyTrack>>>() {}
         )
         
         val responseBody = response.body ?: throw RuntimeException("Failed to get tracks details")
