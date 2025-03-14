@@ -1,14 +1,14 @@
 import React, { useState } from "react";
-import { Card, CardContent } from "../../../components/ui/card";
+import { Card, CardContent } from "@/components/ui/card.tsx";
 import { ThumbsUp, ThumbsDown, Minus } from "lucide-react";
-import { Track, TrackReview } from "../../../api/apiClient";
+import { Track, TrackReview } from "@/api/apiClient.ts";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../../../components/ui/dropdown-menu";
-import RankingDialog from "./RankingDialog";
+} from "@/components/ui/dropdown-menu.tsx";
+import RankingDialog from "@/components/RankingDialog.tsx";
 
 interface TrackCardProps {
   item: Track;

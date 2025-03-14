@@ -17,18 +17,18 @@ import {
   User,
 } from "lucide-react"
 
-import { NavMain } from "@/pages/main/components/sidebar/nav-main"
-import { NavUser } from "@/pages/main/components/sidebar/nav-user"
-import { TeamSwitcher } from "@/pages/main/components/sidebar/team-switcher"
+import { NavMain } from "@/components/sidebar/nav-main.tsx"
+import { NavUser } from "@/components/sidebar/nav-user.tsx"
+import { TeamSwitcher } from "@/components/sidebar/team-switcher.tsx"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import { userApi } from "@/api/apiClient"
-import { type ContentView } from "@/pages/main/Main.tsx"
+} from "@/components/ui/sidebar.tsx"
+import { userApi } from "@/api/apiClient.ts"
+import { type ContentView } from "@/pages/main.tsx"
 import "@/index.css" 
 
 // Default data values

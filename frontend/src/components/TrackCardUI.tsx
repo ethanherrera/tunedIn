@@ -1,21 +1,21 @@
 import React, { useState } from "react";
-import { Card, CardContent } from "../../../components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { ThumbsUp, ThumbsDown, Minus } from "lucide-react";
-import { Track, TrackReview } from "../../../api/apiClient";
+import { Track, TrackReview } from "@/api/apiClient";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../../../components/ui/dropdown-menu";
-import RankingDialog from "./RankingDialog";
+} from "@/components/ui/dropdown-menu";
+import RankingDialog from "@/components/RankingDialog.tsx";
 
-interface TrackMusicItemProps {
+interface TrackCardUIProps {
   item: Track;
   disableInteraction?: boolean;
 }
 
-const TrackMusicItemUI: React.FC<TrackMusicItemProps> = ({ item }) => {
+const TrackCardUI: React.FC<TrackCardUIProps> = ({ item }) => {
 
   return (
     <>
@@ -43,4 +43,4 @@ const TrackMusicItemUI: React.FC<TrackMusicItemProps> = ({ item }) => {
   );
 };
 
-export default TrackMusicItemUI; 
+export default TrackCardUI;

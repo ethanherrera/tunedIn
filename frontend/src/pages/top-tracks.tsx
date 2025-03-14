@@ -1,12 +1,12 @@
 import React from "react"
-import { Button } from "../../../components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
-import { Skeleton } from "../../../components/ui/skeleton"
-import MusicScrollArea from "./MusicScrollArea"
-import { Separator } from "../../../components/ui/separator"
-import { UITrack, UIArtist, transformTrackForUI, transformArtistForUI, Track, Artist, PagingObject } from "../../../types/spotify"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
+import MusicScrollArea from "@/components/MusicScrollArea.tsx"
+import { Separator } from "@/components/ui/separator"
+import { UITrack, UIArtist, transformTrackForUI, transformArtistForUI, Track, Artist, PagingObject } from "@/types/spotify"
 import { useQuery } from "@tanstack/react-query"
-import { spotifyApi, reviewApi } from "../../../api/apiClient"
+import { spotifyApi, reviewApi } from "@/api/apiClient"
 
 interface FilterOptions {
   timeRange: 'short_term' | 'medium_term' | 'long_term';

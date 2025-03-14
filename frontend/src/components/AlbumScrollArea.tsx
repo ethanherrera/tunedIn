@@ -1,7 +1,7 @@
 import React from "react";
-import { ScrollArea, ScrollBar } from "../../../components/ui/scroll-area";
-import AlbumCard from "./AlbumCard.tsx";
-import { Album, AlbumReview } from "../../../api/apiClient";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import AlbumCard from "@/components/AlbumCard.tsx";
+import { Album, AlbumReview } from "@/api/apiClient";
 
 interface AlbumScrollAreaProps {
   items: Album[];

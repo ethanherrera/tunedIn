@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { ScrollArea, ScrollBar } from "../../../components/ui/scroll-area";
-import RankingDialog from "./RankingDialog";
-import TrackCard from "./TrackCard.tsx";
-import { reviewApi, Track, TrackReview } from "../../../api/apiClient";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import RankingDialog from "@/components/RankingDialog.tsx";
+import TrackCard from "@/components/TrackCard.tsx";
+import { reviewApi, Track, TrackReview } from "@/api/apiClient";
 
 // Define the review interface
 interface Review {
@@ -17,13 +17,13 @@ interface Review {
   genres: string[];
 }
 
-interface TrackMusicScrollAreaProps {
+interface TrackScrollAreaProps {
   items: Track[];
   reviews?: TrackReview[];
   showRating?: boolean;
 }
 
-export const TrackMusicScrollArea: React.FC<TrackMusicScrollAreaProps> = ({ items = [], reviews = [] }) => {
+export const TrackScrollArea: React.FC<TrackScrollAreaProps> = ({ items = [], reviews = [] }) => {
 
 
   const getReviewForItem = (itemId: string): TrackReview | undefined => {
@@ -51,4 +51,4 @@ export const TrackMusicScrollArea: React.FC<TrackMusicScrollAreaProps> = ({ item
   );
 };
 
-export default TrackMusicScrollArea; 
+export default TrackScrollArea;

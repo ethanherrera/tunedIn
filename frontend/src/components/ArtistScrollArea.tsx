@@ -1,7 +1,7 @@
 import React from "react";
-import { ScrollArea, ScrollBar } from "../../../components/ui/scroll-area";
-import ArtistCard from "./ArtistCard.tsx";
-import { Artist } from "../../../api/apiClient";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import ArtistCard from "@/components/ArtistCard.tsx";
+import { Artist } from "@/api/apiClient";
 
 // Using TrackReview structure as a temporary type until ArtistReview is implemented
 interface ArtistReview {

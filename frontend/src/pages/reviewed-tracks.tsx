@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TrackMusicScrollArea } from "./TrackMusicScrollArea";
+import { TrackScrollArea } from "@/components/TrackScrollArea.tsx";
 import { Separator } from "@/components/ui/separator";
 import { reviewApi, spotifyApi, Track, TrackReview } from "@/api/apiClient";
 import { useQuery } from "@tanstack/react-query";
@@ -89,7 +89,7 @@ export default function ReviewedTracks() {
         <h2 className="text-xl font-semibold mb-3">{title}</h2>
         <div className="flex flex-col gap-2">
           <Separator />
-          <TrackMusicScrollArea 
+          <TrackScrollArea
             items={tracks} 
             reviews={reviews}
           />

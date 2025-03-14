@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import LoginPage from './pages/login/page';
-import { spotifyApi } from './api/apiClient';
-import './app.css';
-import "./index.css"
-import Main from './pages/main/pages/Main';
-import { Progress } from './components/ui/progress';
-import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "./components/ui/sonner";
+import LoginPage from '@/pages/login-page.tsx';
+import { spotifyApi } from '@/api/apiClient';
+import '@/app.css';
+import "@/index.css"
+import Main from '@/pages/Main.tsx';
+import { Progress } from '@/components/ui/progress';
+import { ThemeProvider } from "@/components/shadcn-composed/theme-provider.tsx"
+import { Toaster } from "@/components/ui/sonner";
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);

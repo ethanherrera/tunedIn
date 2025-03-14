@@ -1,9 +1,9 @@
 import React from "react";
-import { Track, Album, Artist } from "../../../types/spotify";
-import TrackCard from "./TrackCard.tsx";
-import AlbumCard from "./AlbumCard.tsx";
-import ArtistCard from "./ArtistCard.tsx";
-import { TrackReview, AlbumReview } from "../../../api/apiClient";
+import { Track, Album, Artist } from "@/types/spotify";
+import TrackCard from "@/components/TrackCard.tsx";
+import AlbumCard from "@/components/AlbumCard.tsx";
+import ArtistCard from "@/components/ArtistCard.tsx";
+import { TrackReview, AlbumReview } from "@/api/apiClient";
 
 interface MusicCardProps {
   item: Track | Album | Artist;

@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
-} from "../../../components/ui/dialog";
-import { Button } from "../../../components/ui/button";
-import { Textarea } from "../../../components/ui/textarea";
-import { DialogTitle } from "../../../components/ui/dialog";
-import { Progress } from "../../../components/ui/progress";
+} from "./ui/dialog.tsx";
+import { Button } from "./ui/button.tsx";
+import { Textarea } from "./ui/textarea.tsx";
+import { DialogTitle } from "./ui/dialog.tsx";
+import { Progress } from "./ui/progress.tsx";
 import MusicCard from "./MusicCard.tsx";
-import { Album, Artist, reviewApi, Track, TrackReview, AlbumReview } from "@/api/apiClient";
+import { Album, Artist, reviewApi, Track, TrackReview, AlbumReview } from "@/api/apiClient.ts";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import MusicCardUI from "./MusicCardUI.tsx";

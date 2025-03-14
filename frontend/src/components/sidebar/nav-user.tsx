@@ -12,7 +12,7 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@/components/ui/avatar"
+} from "@/components/ui/avatar.tsx"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,14 +21,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/pages/main/components/sidebar/dropdown-menu"
+} from "@/components/sidebar/dropdown-menu.tsx"
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
-import { LogOut } from "@/pages/main/components/sidebar/log-out"
+} from "@/components/ui/sidebar.tsx"
+import { LogOut } from "@/components/sidebar/log-out.tsx"
 
 export function NavUser({
   user,

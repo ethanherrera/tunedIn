@@ -1,8 +1,8 @@
 import React from "react";
-import { Card, CardContent } from "../../../components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { ThumbsUp, ThumbsDown, Minus } from "lucide-react";
-// import { Artist, ArtistReview } from "../../../api/apiClient";
-import { Artist } from "../../../api/apiClient";
+// import { Artist, ArtistReview } from "@/api/apiClient";
+import { Artist } from "@/api/apiClient";
 
 // Using TrackReview structure as a temporary type until ArtistReview is implemented
 interface ArtistReview {

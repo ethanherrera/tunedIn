@@ -1,7 +1,7 @@
 import React from "react";
-import { Card, CardContent } from "../components/ui/card";
+import { Card, CardContent } from "@/components/ui/card.tsx";
 import { ThumbsUp, ThumbsDown, Minus } from "lucide-react";
-import { Album, AlbumReview } from "../../../api/apiClient";
+import { Album, AlbumReview } from "@/api/apiClient";
 
 interface AlbumCardProps {
   item: Album;

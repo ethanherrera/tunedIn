@@ -1,8 +1,8 @@
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { spotifyApi } from "@/api/apiClient"
+import { cn } from "@/lib/utils.ts"
+import { Button } from "@/components/ui/button.tsx"
+import { spotifyApi } from "@/api/apiClient.ts"
 import { AudioWaveform } from "lucide-react";
-import { ModeToggle } from "@/components/mode-toggle";
+import { ModeToggle } from "@/components/shadcn-composed/mode-toggle.tsx";
 
 export function LoginForm({
   className,

@@ -6,7 +6,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/components/ui/collapsible.tsx"
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -17,10 +17,10 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   useSidebar,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar.tsx"
 
 // Import ContentView type
-import { type ContentView } from "@/pages/main/Main.tsx"
+import { type ContentView } from "@/pages/main.tsx"
 
 interface NavMainProps {
   items: {
