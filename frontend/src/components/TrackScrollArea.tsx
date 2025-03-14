@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ScrollArea, ScrollBar } from "../../../components/ui/scroll-area";
 import RankingDialog from "./RankingDialog";
-import TrackMusicItem from "./TrackMusicItem";
+import TrackCard from "./TrackCard.tsx";
 import { reviewApi, Track, TrackReview } from "../../../api/apiClient";
 
 // Define the review interface
@@ -36,7 +36,7 @@ export const TrackMusicScrollArea: React.FC<TrackMusicScrollAreaProps> = ({ item
         <div className="flex gap-4 p-4">
           {items.map((item) => (
               <div key={item.id}>
-                <TrackMusicItem 
+                <TrackCard
                   item={item} 
                   items={items}
                   reviews={reviews}

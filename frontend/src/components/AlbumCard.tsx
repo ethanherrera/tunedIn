@@ -1,23 +1,16 @@
 import React from "react";
-import { Card, CardContent } from "../../../components/ui/card";
+import { Card, CardContent } from "../components/ui/card";
 import { ThumbsUp, ThumbsDown, Minus } from "lucide-react";
-// import { Artist, ArtistReview } from "../../../api/apiClient";
-import { Artist } from "../../../api/apiClient";
+import { Album, AlbumReview } from "../../../api/apiClient";
 
-// Using TrackReview structure as a temporary type until ArtistReview is implemented
-interface ArtistReview {
-  opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
-  rating: number;
+interface AlbumCardProps {
+  item: Album;
+  items?: (Album)[];
+  reviews?: (AlbumReview)[];
+  review?: AlbumReview;
 }
 
-interface ArtistMusicItemProps {
-  item: Artist;
-  items?: (Artist)[];
-  reviews?: (ArtistReview)[];
-  review?: ArtistReview;
-}
-
-const ArtistMusicItem: React.FC<ArtistMusicItemProps> = ({ item, items=[], reviews=[], review }) => {
+const AlbumCard: React.FC<AlbumCardProps> = ({ item, items=[], reviews=[], review }) => {
   // Function to render the opinion icon
   const renderOpinionIcon = () => {
     if (!review) return null;
@@ -40,7 +33,7 @@ const ArtistMusicItem: React.FC<ArtistMusicItemProps> = ({ item, items=[], revie
         <div className="overflow-hidden rounded-md group-hover:shadow-sm group-hover:shadow-primary">
           <img
             src={item.images && item.images.length > 0 ? item.images[0].url : ''}
-            alt={`${item.name} profile`}
+            alt={`${item.name} cover`}
             className="aspect-square h-auto w-full object-cover"
           />
         </div>
@@ -48,6 +41,7 @@ const ArtistMusicItem: React.FC<ArtistMusicItemProps> = ({ item, items=[], revie
           <div className="flex justify-between items-start">
             <div className="flex-1 min-w-0">
               <h3 className="font-medium truncate text-xs sm:text-sm">{item.name}</h3>
+              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{item.artists && item.artists.length > 0 ? item.artists[0].name : ''}</p>
             </div>
             {review && (
               <div className={`flex-shrink-0 inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 md:w-9 md:h-9 rounded-full text-primary font-bold text-[10px] sm:text-xs ml-1
@@ -68,4 +62,4 @@ const ArtistMusicItem: React.FC<ArtistMusicItemProps> = ({ item, items=[], revie
   );
 };
 
-export default ArtistMusicItem; 
+export default AlbumCard;

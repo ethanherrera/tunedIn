@@ -3,14 +3,14 @@ import { Card, CardContent } from "../../../components/ui/card";
 import { ThumbsUp, ThumbsDown, Minus } from "lucide-react";
 import { Album, AlbumReview } from "../../../api/apiClient";
 
-interface AlbumMusicItemUIProps {
+interface AlbumCardUIProps {
   item: Album;
   items?: (Album)[];
   reviews?: (AlbumReview)[];
   review?: AlbumReview;
 }
 
-const AlbumMusicItemUI: React.FC<AlbumMusicItemUIProps> = ({ item }) => {
+const AlbumCardUI: React.FC<AlbumCardUIProps> = ({ item }) => {
 
   return (
     <Card className="group w-[15vh] h-[22vh] flex-shrink-0 transform transition-transform duration-400 hover:scale-105 border-none shadow-none py-0">
@@ -35,4 +35,4 @@ const AlbumMusicItemUI: React.FC<AlbumMusicItemUIProps> = ({ item }) => {
   );
 };
 
-export default AlbumMusicItemUI; 
+export default AlbumCardUI;

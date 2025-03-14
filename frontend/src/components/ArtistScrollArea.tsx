@@ -1,6 +1,6 @@
 import React from "react";
 import { ScrollArea, ScrollBar } from "../../../components/ui/scroll-area";
-import ArtistMusicItem from "./ArtistMusicItem";
+import ArtistCard from "./ArtistCard.tsx";
 import { Artist } from "../../../api/apiClient";
 
 // Using TrackReview structure as a temporary type until ArtistReview is implemented
@@ -10,12 +10,12 @@ interface ArtistReview {
   rating: number;
 }
 
-interface ArtistMusicScrollAreaProps {
+interface ArtistScrollAreaProps {
   items: Artist[];
   reviews?: ArtistReview[];
 }
 
-export const ArtistMusicScrollArea: React.FC<ArtistMusicScrollAreaProps> = ({ items = [], reviews = [] }) => {
+export const ArtistScrollArea: React.FC<ArtistScrollAreaProps> = ({ items = [], reviews = [] }) => {
   const getReviewForItem = (itemId: string): ArtistReview | undefined => {
     return reviews.find(review => review.spotifyArtistId === itemId);
   };
@@ -26,7 +26,7 @@ export const ArtistMusicScrollArea: React.FC<ArtistMusicScrollAreaProps> = ({ it
         <div className="flex gap-4 p-4">
           {items.map((item) => (
               <div key={item.id}>
-                <ArtistMusicItem 
+                <ArtistCard
                   item={item} 
                   review={getReviewForItem(item.id)}
                 />
@@ -39,4 +39,4 @@ export const ArtistMusicScrollArea: React.FC<ArtistMusicScrollAreaProps> = ({ it
   );
 };
 
-export default ArtistMusicScrollArea; 
+export default ArtistScrollArea;

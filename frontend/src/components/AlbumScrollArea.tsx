@@ -1,14 +1,14 @@
 import React from "react";
 import { ScrollArea, ScrollBar } from "../../../components/ui/scroll-area";
-import AlbumMusicItem from "./AlbumMusicItem";
+import AlbumCard from "./AlbumCard.tsx";
 import { Album, AlbumReview } from "../../../api/apiClient";
 
-interface AlbumMusicScrollAreaProps {
+interface AlbumScrollAreaProps {
   items: Album[];
   reviews?: AlbumReview[];
 }
 
-export const AlbumMusicScrollArea: React.FC<AlbumMusicScrollAreaProps> = ({ items = [], reviews = [] }) => {
+export const AlbumScrollArea: React.FC<AlbumScrollAreaProps> = ({ items = [], reviews = [] }) => {
   const getReviewForItem = (itemId: string): AlbumReview | undefined => {
     return reviews.find(review => review.spotifyAlbumId === itemId);
   };
@@ -19,7 +19,7 @@ export const AlbumMusicScrollArea: React.FC<AlbumMusicScrollAreaProps> = ({ item
         <div className="flex gap-4 p-4">
           {items.map((item) => (
               <div key={item.id}>
-                <AlbumMusicItem 
+                <AlbumCard
                   item={item} 
                   review={getReviewForItem(item.id)}
                 />
@@ -32,4 +32,4 @@ export const AlbumMusicScrollArea: React.FC<AlbumMusicScrollAreaProps> = ({ item
   );
 };
 
-export default AlbumMusicScrollArea; 
+export default AlbumScrollArea;

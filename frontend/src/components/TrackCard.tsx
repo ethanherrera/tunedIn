@@ -10,7 +10,7 @@ import {
 } from "../../../components/ui/dropdown-menu";
 import RankingDialog from "./RankingDialog";
 
-interface TrackMusicItemProps {
+interface TrackCardProps {
   item: Track;
   items?: (Track)[];
   reviews?: (TrackReview)[];
@@ -18,13 +18,13 @@ interface TrackMusicItemProps {
   disableInteraction?: boolean;
 }
 
-const TrackMusicItem: React.FC<TrackMusicItemProps> = ({ item, items=[], reviews=[], review, disableInteraction=false}) => {
+const TrackCard: React.FC<TrackCardProps> = ({ item, items=[], reviews=[], review, disableInteraction=false}) => {
   const [showRankingDialog, setShowRankingDialog] = useState(false);
-  
+
   // Function to render the opinion icon
   const renderOpinionIcon = () => {
     if (!review) return null;
-    
+
     switch (review.opinion) {
       case 'LIKED':
         return <ThumbsUp className="h-3 w-3 text-green-500 mr-1" />;
@@ -83,9 +83,9 @@ const TrackMusicItem: React.FC<TrackMusicItemProps> = ({ item, items=[], reviews
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      
+
       {showRankingDialog && !disableInteraction && (
-        <RankingDialog 
+        <RankingDialog
           item={item}
           items={items as Track[]}
           itemType="track"
@@ -100,4 +100,4 @@ const TrackMusicItem: React.FC<TrackMusicItemProps> = ({ item, items=[], reviews
   );
 };
 
-export default TrackMusicItem; 
+export default TrackCard;

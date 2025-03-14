@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/sidebar"
 
 // Import ContentView type
-import { type ContentView } from "@/pages/main/pages/Main"
+import { type ContentView } from "@/pages/main/Main.tsx"
 
 interface NavMainProps {
   items: {

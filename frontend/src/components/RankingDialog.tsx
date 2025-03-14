@@ -7,11 +7,11 @@ import { Button } from "../../../components/ui/button";
 import { Textarea } from "../../../components/ui/textarea";
 import { DialogTitle } from "../../../components/ui/dialog";
 import { Progress } from "../../../components/ui/progress";
-import MusicItem from "./MusicItem";
+import MusicCard from "./MusicCard.tsx";
 import { Album, Artist, reviewApi, Track, TrackReview, AlbumReview } from "@/api/apiClient";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import MusicItemUI from "./MusicItemUI";
+import MusicCardUI from "./MusicCardUI.tsx";
 interface RankingDialogProps {
   children: React.ReactNode;
   item: Track | Album | Artist;
@@ -534,7 +534,7 @@ const RankingDialog: React.FC<RankingDialogProps> = ({item, items=[], itemType, 
           <div className="flex flex-col items-center gap-4 overflow-x-hidden m-5">
           <DialogTitle className="text-center text-2xl font-bold">Tell us what you think</DialogTitle>
             {/** This is the review section */}
-            <MusicItemUI item={item} itemType={itemType} />
+            <MusicCardUI item={item} itemType={itemType} />
             <div className="w-full space-y-2">
               <Textarea 
                 value={reviewText}
@@ -615,11 +615,11 @@ const RankingDialog: React.FC<RankingDialogProps> = ({item, items=[], itemType, 
                     <div className="text-lg font-bold text-center">Which of these do you like more?</div>
                     <div className="flex flex-row justify-between align-items-center w-full">
                       <div onClick={() => handleItemSelect(true)} style={{ cursor: 'pointer' }} className="hover:opacity-80 transition-opacity">
-                        <MusicItemUI item={item} itemType={itemType} />
+                        <MusicCardUI item={item} itemType={itemType} />
                       </div>
                       <div className="text-lg font-bold text-center text-align-center text-justify-center m-4">or</div>
                       <div onClick={() => handleItemSelect(false)} style={{ cursor: 'pointer' }} className="hover:opacity-80 transition-opacity">
-                        <MusicItemUI
+                        <MusicCardUI
                           item={currentComparisonItem}
                           itemType={itemType}
                         />

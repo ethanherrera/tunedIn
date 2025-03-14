@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { AppSidebar } from "@/pages/main/components/sidebar/app-sidebar"
+import { AppSidebar } from "@/components/sidebar/app-sidebar.tsx"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -7,18 +7,18 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
+} from "@/components/ui/breadcrumb.tsx"
+import { Separator } from "@/components/ui/separator.tsx"
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
   useSidebar,
-} from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/sidebar.tsx"
+import { Button } from "@/components/ui/button.tsx"
 import { Menu, PanelLeftIcon, X } from "lucide-react"
-import { ModeToggle } from "@/components/mode-toggle"
-import { cn } from "@/lib/utils"
+import { ModeToggle } from "@/components/shadcn-composed/mode-toggle.tsx"
+import { cn } from "@/lib/utils.ts"
 
 // Import all content components
 import Dashboard from "@/pages/main/content/Dashboard"

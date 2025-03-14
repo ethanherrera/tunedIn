@@ -28,7 +28,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { userApi } from "@/api/apiClient"
-import { type ContentView } from "@/pages/main/pages/Main"
+import { type ContentView } from "@/pages/main/Main.tsx"
 import "@/index.css" 
 
 // Default data values
