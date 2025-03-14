@@ -60,19 +60,20 @@ export function NavMain({ items, onViewChange, activeView }: NavMainProps) {
 
   // Handle icon click when sidebar is collapsed
   const handleIconClick = (item: NavMainProps['items'][0]) => {
-    // If sidebar is collapsed, expand it
+    // If sidebar is collapsed, expand it and navigate to first subitem
     if (state === 'collapsed') {
       setOpen(true);
+      
+      // If the item has a direct view, navigate to it
+      if (item.view) {
+        handleViewChange(item.view);
+      } 
+      // If the item has subitems, navigate to the first one
+      else if (item.items && item.items.length > 0) {
+        handleViewChange(item.items[0].view);
+      }
     }
-
-    // If the item has a direct view, navigate to it
-    if (item.view) {
-      handleViewChange(item.view);
-    } 
-    // If the item has subitems, navigate to the first one
-    else if (item.items && item.items.length > 0) {
-      handleViewChange(item.items[0].view);
-    }
+    // If sidebar is expanded, don't navigate anywhere - just let the dropdown toggle
   };
 
   return (

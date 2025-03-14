@@ -34,8 +34,8 @@ export const TrackScrollArea: React.FC<TrackScrollAreaProps> = ({ items = [], re
     <div className="w-full">
       <ScrollArea className="w-full">
         <div className="flex gap-4 p-4">
-          {items.map((item) => (
-              <div key={item.id}>
+          {items.map((item, index) => (
+              <div key={`${item.id}-${index}`}>
                 <TrackCard
                   item={item} 
                   items={items}
