@@ -355,6 +355,30 @@ class SpotifyController(
         }
     }
 
+    @GetMapping("/me/player/recently-played")
+    fun getRecentlyPlayedTracks(
+        @RequestParam(required = false, defaultValue = "20") limit: Int,
+        @RequestParam(required = false) after: Int?,
+        @RequestParam(required = false) before: Int?,
+        request: HttpServletRequest
+    ): ResponseEntity<*> {
+        try {
+            // Get access token from cookie
+            val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
+            val accessToken = request.cookies?.find { it.name == "accessToken" }?.value
+                ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(SpotifyErrorResponse("Access token not found in cookies. Available cookies: [$cookiesInfo]"))
+            
+            val recentlyPlayed = spotifyService.getRecentlyPlayedTracks(limit, after, before, accessToken)
+            return ResponseEntity.ok(recentlyPlayed)
+        } catch (e: Exception) {
+            val cookiesInfo = request.cookies?.joinToString(", ") { "${it.name}: ${it.value}" } ?: "No cookies found"
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(SpotifyErrorResponse("Failed to get recently played tracks: ${e.message}. Available cookies: [$cookiesInfo]"))
+        }
+    }
+    
+
     @GetMapping("/debug/cookies")
     fun debugCookies(request: HttpServletRequest): ResponseEntity<Map<String, Any>> {
         val cookiesMap = mutableMapOf<String, Any>()

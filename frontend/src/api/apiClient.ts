@@ -130,6 +130,29 @@ interface RecentActivity {
   timestamp: number;
 }
 
+export interface PlayHistoryItem {
+  track: Track;
+  played_at: string;
+  context?: {
+    type: string;
+    href: string;
+    external_urls: { spotify: string };
+    uri: string;
+  };
+}
+
+export interface RecentlyPlayedResponse {
+  href: string;
+  limit: number;
+  next: string | null;
+  cursors: {
+    after: string;
+    before: string;
+  };
+  total: number;
+  items: PlayHistoryItem[];
+}
+
 // Use VITE_ prefixed env var or fallback to environment variable or default
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -252,6 +275,21 @@ export const spotifyApi = {
 
   getArtist: async (artistId: string) => {
     const response = await apiClient.get<Artist>(`/spotify/artists/${artistId}`);
+    return response.data;
+  },
+  
+  getRecentlyPlayed: async (params?: {
+    limit?: number;
+    after?: number;
+    before?: number;
+  }) => {
+    const response = await apiClient.get<RecentlyPlayedResponse>('/spotify/me/player/recently-played', {
+      params: {
+        limit: params?.limit || 20,
+        after: params?.after,
+        before: params?.before
+      }
+    });
     return response.data;
   }
 };

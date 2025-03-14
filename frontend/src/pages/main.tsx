@@ -36,7 +36,7 @@ import ProfileInfo from "@/pages/profile-info.tsx"
 import ProfileActivity from "@/pages/profile-activity.tsx"
 import GeneralSettings from "@/pages/general-settings.tsx"
 import AccountSettings from "@/pages/account-settings.tsx"
-
+import RecentlyPlayed from "@/pages/recently-played.tsx"
 // Mobile Sidebar Trigger component
 function MobileSidebarTrigger() {
   const { toggleSidebar, isMobile, openMobile } = useSidebar()
@@ -73,6 +73,7 @@ export type ContentView =
   | "artists" 
   | "topTracks" 
   | "topArtists" 
+  | "recentlyPlayed"
   | "recentActivity" 
   | "yourFriends" 
   | "manageFriends" 
@@ -115,7 +116,7 @@ export default function Main() {
       // Spotify category
       "topTracks": { category: "Spotify", subcategory: "Top Tracks" },
       "topArtists": { category: "Spotify", subcategory: "Top Artists" },
-      
+      "recentlyPlayed": { category: "Spotify", subcategory: "Recently Played" },
       // Friends category
       "recentActivity": { category: "Friends", subcategory: "Recent Activity" },
       "yourFriends": { category: "Friends", subcategory: "Your Friends" },
@@ -156,6 +157,8 @@ export default function Main() {
         return <TopTracks />
       case "topArtists":
         return <TopArtists />
+      case "recentlyPlayed":
+        return <RecentlyPlayed />
       case "recentActivity":
         return <RecentActivity />
       case "yourFriends":

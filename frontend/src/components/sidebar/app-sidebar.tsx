@@ -101,6 +101,10 @@ const defaultNavMain = [
         title: "Top Artists",
         view: "topArtists",
       },
+      {
+        title: "Recently Played",
+        view: "recentlyPlayed",
+      },
     ]
   },
   {

@@ -19,10 +19,6 @@ class SpotifyService(
     @Value("\${spotify.client.secret}") private val clientSecret: String,
     @Value("\${spotify.redirect.uri}") private val redirectUri: String,
 ) {
-    companion object {
-        private const val SPOTIFY_ACCESS_TOKEN = "spotify_access_token"
-        private const val SPOTIFY_REFRESH_TOKEN = "spotify_refresh_token"
-    }
 
     private val scopes = listOf(
         "user-read-private",
@@ -30,7 +26,8 @@ class SpotifyService(
         "playlist-read-private",
         "playlist-modify-public",
         "playlist-modify-private",
-        "user-top-read"
+        "user-top-read",
+        "user-read-recently-played",
     )
 
     fun generateAuthUrl(): String {
@@ -352,5 +349,54 @@ class SpotifyService(
         )
 
         return response.body ?: throw RuntimeException("No response body from Spotify artist API")
+    }
+    
+    /**
+     * Get the current user's recently played tracks
+     * @param limit The maximum number of items to return (default: 20, maximum: 50)
+     * @param after Return items after this cursor position (Unix timestamp in milliseconds)
+     * @param before Return items before this cursor position (Unix timestamp in milliseconds)
+     * @param accessToken Spotify access token
+     * @return SpotifyRecentlyPlayedTracksResponse containing the recently played tracks
+     */
+    fun getRecentlyPlayedTracks(
+        limit: Int = 20,
+        after: Int? = null,
+        before: Int? = null,
+        accessToken: String
+    ): SpotifyRecentlyPlayedTracksResponse {
+        if (limit < 1 || limit > 50) {
+            throw IllegalArgumentException("Limit must be between 1 and 50")
+        }
+        
+        if (after != null && before != null) {
+            throw IllegalArgumentException("Only one of 'after' or 'before' should be specified, not both")
+        }
+        
+        val restTemplate = RestTemplate()
+        val urlBuilder = UriComponentsBuilder
+            .fromUriString("https://api.spotify.com/v1/me/player/recently-played")
+            .queryParam("limit", limit)
+        
+        // Add either after or before parameter, but not both
+        when {
+            after != null -> urlBuilder.queryParam("after", after)
+            before != null -> urlBuilder.queryParam("before", before)
+        }
+        
+        val url = urlBuilder.build().toUriString()
+        
+        val headers = HttpHeaders().apply {
+            setBearerAuth(accessToken)
+        }
+        
+        val response = restTemplate.exchange(
+            url,
+            HttpMethod.GET,
+            HttpEntity<Any>(headers),
+            SpotifyRecentlyPlayedTracksResponse::class.java
+        )
+        
+        return response.body ?: throw RuntimeException("Failed to get recently played tracks")
     }
 } 
