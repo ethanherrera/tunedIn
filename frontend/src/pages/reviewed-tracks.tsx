@@ -2,9 +2,14 @@ import { useState } from "react";
 import { TrackScrollArea } from "@/components/TrackScrollArea.tsx";
 import { Separator } from "@/components/ui/separator";
 import { reviewApi, spotifyApi, Track, TrackReview } from "@/api/apiClient";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { PageHeader } from "@/components/ui/page-header";
+import { toast } from "sonner";
 
 export default function ReviewedTracks() {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const queryClient = useQueryClient();
+  
   // React Query for all track reviews
   const { 
     data: trackReviews, 
@@ -75,6 +80,26 @@ export default function ReviewedTracks() {
     enabled: trackIds.length > 0, // Only run query if we have track IDs
   });
   
+  // Function to refresh data
+  const refreshData = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['trackReviews'] }),
+        queryClient.invalidateQueries({ queryKey: ['tracks'] })
+      ]);
+      toast.success("Data refreshed", {
+        description: "Your reviewed tracks have been updated"
+      });
+    } catch (error) {
+      toast.error("Refresh failed", {
+        description: "Failed to refresh your reviewed tracks"
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+  
   // Helper function to render a section
   const renderSection = (title: string, tracks: Track[]) => {
     if (!tracks || tracks.length === 0) return null;
@@ -105,9 +130,12 @@ export default function ReviewedTracks() {
 
   return (
     <div className="content-container">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Your Reviewed Tracks</h1>
-      </div>
+      <PageHeader 
+        title="Your Reviewed Tracks" 
+        onRefresh={refreshData}
+        isRefreshing={isRefreshing}
+        isLoading={isLoading}
+      />
       
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
@@ -115,7 +143,7 @@ export default function ReviewedTracks() {
         </div>
       ) : error ? (
         <div className="flex justify-center items-center h-64 text-red-500">
-          <p>{error.message}</p>
+          <p>{(error as Error).message}</p>
         </div>
       ) : !groupedTracks || (
           groupedTracks.liked.length === 0 && 

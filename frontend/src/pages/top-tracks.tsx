@@ -1,12 +1,14 @@
-import React from "react"
+import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import MusicScrollArea from "@/components/MusicScrollArea.tsx"
 import { Separator } from "@/components/ui/separator"
 import { UITrack, UIArtist, transformTrackForUI, transformArtistForUI, Track, Artist, PagingObject } from "@/types/spotify"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { spotifyApi, reviewApi } from "@/api/apiClient"
+import { PageHeader } from "@/components/ui/page-header"
+import { toast } from "sonner"
 
 interface FilterOptions {
   timeRange: 'short_term' | 'medium_term' | 'long_term';
@@ -15,6 +17,10 @@ interface FilterOptions {
 }
 
 export default function TopTracks() {
+  const [isRefreshingTracks, setIsRefreshingTracks] = useState(false)
+  const [isRefreshingArtists, setIsRefreshingArtists] = useState(false)
+  const queryClient = useQueryClient()
+  
   const [tracksFilters, setTracksFilters] = React.useState<FilterOptions>({
     timeRange: 'medium_term',
     limit: 50,
@@ -54,6 +60,43 @@ export default function TopTracks() {
     queryKey: ['trackReviews'],
     queryFn: () => reviewApi.getUserReviews(),
   });
+  
+  // Function to refresh tracks data
+  const refreshTracksData = async () => {
+    setIsRefreshingTracks(true)
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['topTracks'] }),
+        queryClient.invalidateQueries({ queryKey: ['trackReviews'] })
+      ])
+      toast.success("Data refreshed", {
+        description: "Top tracks have been updated"
+      })
+    } catch (error) {
+      toast.error("Refresh failed", {
+        description: "Failed to refresh top tracks data"
+      })
+    } finally {
+      setIsRefreshingTracks(false)
+    }
+  }
+  
+  // Function to refresh artists data
+  const refreshArtistsData = async () => {
+    setIsRefreshingArtists(true)
+    try {
+      await queryClient.invalidateQueries({ queryKey: ['topArtists'] })
+      toast.success("Data refreshed", {
+        description: "Top artists have been updated"
+      })
+    } catch (error) {
+      toast.error("Refresh failed", {
+        description: "Failed to refresh top artists data"
+      })
+    } finally {
+      setIsRefreshingArtists(false)
+    }
+  }
 
   const handleTracksTimeRangeChange = (value: string) => {
     setTracksFilters(prev => ({
@@ -77,27 +120,28 @@ export default function TopTracks() {
 
   return (
     <div className="w-full h-full flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4 shrink-0">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-xl font-bold text-primary">Your Top Tracks</h1>
-          <h2 className="text-sm text-muted-foreground">You can see your top spotify tracks from the last 4 weeks, 6 months, or all time.</h2>
-        </div>
-        <div className="flex items-center gap-2 text-primary">
-          <Select
-            value={tracksFilters.timeRange}
-            onValueChange={handleTracksTimeRangeChange}
-          >
-            <SelectTrigger className="w-[12vw] min-w-[130px] p-2">
-              <SelectValue placeholder="Time range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="short_term">{timeRangeLabels.short_term}</SelectItem>
-              <SelectItem value="medium_term">{timeRangeLabels.medium_term}</SelectItem>
-              <SelectItem value="long_term">{timeRangeLabels.long_term}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <PageHeader 
+        title="Your Top Tracks" 
+        onRefresh={refreshTracksData}
+        isRefreshing={isRefreshingTracks}
+        isLoading={tracksLoading}
+      >
+        <Select
+          value={tracksFilters.timeRange}
+          onValueChange={handleTracksTimeRangeChange}
+        >
+          <SelectTrigger className="w-[12vw] min-w-[130px] p-2">
+            <SelectValue placeholder="Time range" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="short_term">{timeRangeLabels.short_term}</SelectItem>
+            <SelectItem value="medium_term">{timeRangeLabels.medium_term}</SelectItem>
+            <SelectItem value="long_term">{timeRangeLabels.long_term}</SelectItem>
+          </SelectContent>
+        </Select>
+      </PageHeader>
+      
+      <h2 className="text-sm text-muted-foreground mb-4">You can see your top spotify tracks from the last 4 weeks, 6 months, or all time.</h2>
       
       {isTracksError && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 shrink-0">
@@ -120,27 +164,29 @@ export default function TopTracks() {
         )}
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4 shrink-0">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-xl font-bold text-primary">Your Top Artists</h1>
-          <h2 className="text-sm text-muted-foreground">You can see your top spotify artists from the last 4 weeks, 6 months, or all time.</h2>
-        </div>
-        <div className="flex items-center gap-2 text-primary">
-          <Select
-            value={artistsFilters.timeRange}
-            onValueChange={handleArtistsTimeRangeChange}
-          >
-            <SelectTrigger className="w-[12vw] min-w-[130px]">
-              <SelectValue placeholder="Time range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="short_term">{timeRangeLabels.short_term}</SelectItem>
-              <SelectItem value="medium_term">{timeRangeLabels.medium_term}</SelectItem>
-              <SelectItem value="long_term">{timeRangeLabels.long_term}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <PageHeader 
+        title="Your Top Artists" 
+        onRefresh={refreshArtistsData}
+        isRefreshing={isRefreshingArtists}
+        isLoading={artistsLoading}
+        className="mt-8"
+      >
+        <Select
+          value={artistsFilters.timeRange}
+          onValueChange={handleArtistsTimeRangeChange}
+        >
+          <SelectTrigger className="w-[12vw] min-w-[130px]">
+            <SelectValue placeholder="Time range" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="short_term">{timeRangeLabels.short_term}</SelectItem>
+            <SelectItem value="medium_term">{timeRangeLabels.medium_term}</SelectItem>
+            <SelectItem value="long_term">{timeRangeLabels.long_term}</SelectItem>
+          </SelectContent>
+        </Select>
+      </PageHeader>
+
+      <h2 className="text-sm text-muted-foreground mb-4">You can see your top spotify artists from the last 4 weeks, 6 months, or all time.</h2>
 
       {isArtistsError && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 shrink-0">

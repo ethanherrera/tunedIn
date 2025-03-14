@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { friendsApi } from '@/api/apiClient'
 import { toast } from 'sonner'
+import { PageHeader } from '@/components/ui/page-header'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +24,7 @@ export default function ManageFriends() {
   const [activeTab, setActiveTab] = useState('friends')
   const [isSearching, setIsSearching] = useState(false)
   const [searchResult, setSearchResult] = useState<{ exists: boolean } | null>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const queryClient = useQueryClient()
   
   // Alert dialog state
@@ -69,6 +71,27 @@ export default function ManageFriends() {
     queryKey: ['receivedRequests'],
     queryFn: friendsApi.getPendingRequests
   })
+  
+  // Function to refresh all friend-related data
+  const refreshData = async () => {
+    setIsRefreshing(true)
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['friends'] }),
+        queryClient.invalidateQueries({ queryKey: ['sentRequests'] }),
+        queryClient.invalidateQueries({ queryKey: ['receivedRequests'] })
+      ])
+      toast.success("Data refreshed", {
+        description: "Friend information has been updated"
+      })
+    } catch (error) {
+      toast.error("Refresh failed", {
+        description: "Failed to refresh data"
+      })
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
   
   // Mutation for sending friend requests
   const sendRequestMutation = useMutation({
@@ -251,7 +274,12 @@ export default function ManageFriends() {
   
   return (
     <div className="content-container">
-      <h1 className="text-2xl font-bold mb-4">Manage Friends</h1>
+      <PageHeader 
+        title="Manage Friends" 
+        onRefresh={refreshData}
+        isRefreshing={isRefreshing}
+        isLoading={isLoadingFriends || isLoadingSentRequests || isLoadingReceivedRequests}
+      />
       
       {/* Confirmation Dialog */}
       <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
