@@ -1,6 +1,7 @@
 "use client"
 
 import { ChevronRight, type LucideIcon } from "lucide-react"
+import { Link, useLocation } from "react-router-dom"
 
 import {
   Collapsible,
@@ -20,7 +21,8 @@ import {
 } from "@/components/ui/sidebar.tsx"
 
 // Import ContentView type
-import { type ContentView } from "@/pages/main.tsx"
+import { type ContentView } from "@/pages/Main.tsx"
+import { cn } from "@/lib/utils"
 
 interface NavMainProps {
   items: {
@@ -38,7 +40,7 @@ interface NavMainProps {
 }
 
 export function NavMain({ items, onViewChange, activeView }: NavMainProps) {
-  // Get sidebar context to access mobile state and close function
+  const location = useLocation();
   const { isMobile, setOpenMobile } = useSidebar();
   
   // Handle view change and automatically collapse sidebar on mobile
@@ -58,7 +60,6 @@ export function NavMain({ items, onViewChange, activeView }: NavMainProps) {
 
   return (
     <SidebarGroup>
-      {/* <SidebarGroupLabel>Platform</SidebarGroupLabel> */}
       <SidebarMenu>
         {items.map((item) => (
           <Collapsible
@@ -83,12 +84,17 @@ export function NavMain({ items, onViewChange, activeView }: NavMainProps) {
                 <SidebarMenuSub>
                   {item.items?.map((subItem) => (
                     <SidebarMenuSubItem key={subItem.title}>
-                      <SidebarMenuSubButton 
+                      <Link
+                        to={`/${subItem.view}`}
                         onClick={() => handleViewChange(subItem.view)}
-                        data-active={subItem.view === activeView ? "true" : undefined}
+                        className="w-full"
                       >
-                        <span>{subItem.title}</span>
-                      </SidebarMenuSubButton>
+                        <SidebarMenuSubButton 
+                          data-active={subItem.view === activeView ? "true" : undefined}
+                        >
+                          <span>{subItem.title}</span>
+                        </SidebarMenuSubButton>
+                      </Link>
                     </SidebarMenuSubItem>
                   ))}
                 </SidebarMenuSub>

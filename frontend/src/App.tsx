@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import LoginPage from '@/pages/login-page.tsx';
 import { spotifyApi } from '@/api/apiClient';
 import '@/app.css';
@@ -58,12 +59,12 @@ function App() {
     if (isLoading) {
         return (
             <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-            <div className="flex items-center justify-center h-screen w-full">
-                <div className="w-1/3 max-w-md">
-                    <Progress value={loadingProgress} className="h-2" />
+                <div className="flex items-center justify-center h-screen w-full">
+                    <div className="w-1/3 max-w-md">
+                        <Progress value={loadingProgress} className="h-2" />
+                    </div>
+                    <Toaster />
                 </div>
-                <Toaster />
-            </div>
             </ThemeProvider>
         );
     }
@@ -72,21 +73,23 @@ function App() {
     if (!isAuthenticated) {
         return (
             <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-            <div className="app ">
-                <LoginPage />
-                <Toaster />
-            </div>
+                <div className="app">
+                    <LoginPage />
+                    <Toaster />
+                </div>
             </ThemeProvider>
         );
     }
     
-    // If authenticated, show main app with logout button
+    // If authenticated, show main app with router
     return (
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-            <div className="app">
-                <Main />
-                <Toaster />
-            </div>
+            <BrowserRouter>
+                <div className="app">
+                    <Main />
+                    <Toaster />
+                </div>
+            </BrowserRouter>
         </ThemeProvider>
     );
 }

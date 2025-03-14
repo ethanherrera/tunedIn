@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom"
 import { AppSidebar } from "@/components/sidebar/app-sidebar.tsx"
 import {
   Breadcrumb,
@@ -37,6 +38,7 @@ import ProfileActivity from "@/pages/profile-activity.tsx"
 import GeneralSettings from "@/pages/general-settings.tsx"
 import AccountSettings from "@/pages/account-settings.tsx"
 import RecentlyPlayed from "@/pages/recently-played.tsx"
+
 // Mobile Sidebar Trigger component
 function MobileSidebarTrigger() {
   const { toggleSidebar, isMobile, openMobile } = useSidebar()
@@ -85,19 +87,24 @@ export type ContentView =
   | "accountSettings"
 
 export default function Main() {
-  // State to track which content to display
-  const [activeView, setActiveView] = useState<ContentView>("search")
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [activeView, setActiveView] = useState<ContentView>("search");
+  
+  // Update activeView based on current location
+  useEffect(() => {
+    const path = location.pathname.slice(1); // Remove leading slash
+    if (path && path !== activeView) {
+      setActiveView(path as ContentView);
+    }
+  }, [location.pathname]);
   
   // Function to change the active view - pass this to your sidebar
   const handleViewChange = (view: ContentView) => {
     console.log("Main received view change:", view);
-    setActiveView(view)
+    setActiveView(view);
+    navigate(`/${view}`);
   }
-  
-  // Debug effect to log when activeView changes
-  useEffect(() => {
-    console.log("Active view in Main is now:", activeView);
-  }, [activeView]);
   
   // Function to get the parent category and subcategory for breadcrumbs
   const getBreadcrumbInfo = () => {
@@ -135,53 +142,6 @@ export default function Main() {
     
     return viewToCategory[activeView] || { category: "Dashboard", subcategory: "" };
   };
-  
-  // Render the appropriate content based on activeView
-  const renderContent = () => {
-    console.log("Rendering content for view:", activeView);
-    
-    switch (activeView) {
-      case "dashboard":
-        return <Dashboard />
-      case "search":
-        return <Search />
-      case "forYou":
-        return <ForYou />
-      case "tracks":
-        return <Tracks />
-      case "albums":
-        return <Albums />
-      case "artists":
-        return <Artists />
-      case "topTracks":
-        return <TopTracks />
-      case "topArtists":
-        return <TopArtists />
-      case "recentlyPlayed":
-        return <RecentlyPlayed />
-      case "recentActivity":
-        return <RecentActivity />
-      case "yourFriends":
-        return <YourFriends />
-      case "manageFriends":
-        return <ManageFriends />
-      case "profile": // Handle parent-level "profile" view
-        return <ProfileInfo /> // Default to ProfileInfo for parent view
-      case "profileInfo":
-        return <ProfileInfo />
-      case "profileActivity":
-        return <ProfileActivity />
-      case "settings": // Handle parent-level "settings" view
-        return <GeneralSettings /> // Default to GeneralSettings for parent view
-      case "generalSettings":
-        return <GeneralSettings />
-      case "accountSettings":
-        return <AccountSettings />
-      default:
-        console.log("Default case hit with activeView:", activeView);
-        return <Dashboard />
-    }
-  }
 
   return (
     <SidebarProvider>
@@ -213,8 +173,27 @@ export default function Main() {
         </header>
         <div className="w-full flex flex-1 flex-col gap-4 p-4 pt-0 overflow-hidden h-[calc(100vh-4rem)]">
           <div className="overflow-y-auto overflow-x-hidden h-full">
-            {/* Render the active content */}
-            {renderContent()}
+            <Routes>
+              <Route path="/" element={<Search />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/search" element={<Search />} />
+              <Route path="/forYou" element={<ForYou />} />
+              <Route path="/tracks" element={<Tracks />} />
+              <Route path="/albums" element={<Albums />} />
+              <Route path="/artists" element={<Artists />} />
+              <Route path="/topTracks" element={<TopTracks />} />
+              <Route path="/topArtists" element={<TopArtists />} />
+              <Route path="/recentlyPlayed" element={<RecentlyPlayed />} />
+              <Route path="/recentActivity" element={<RecentActivity />} />
+              <Route path="/yourFriends" element={<YourFriends />} />
+              <Route path="/manageFriends" element={<ManageFriends />} />
+              <Route path="/profile" element={<ProfileInfo />} />
+              <Route path="/profileInfo" element={<ProfileInfo />} />
+              <Route path="/profileActivity" element={<ProfileActivity />} />
+              <Route path="/settings" element={<GeneralSettings />} />
+              <Route path="/generalSettings" element={<GeneralSettings />} />
+              <Route path="/accountSettings" element={<AccountSettings />} />
+            </Routes>
           </div>
         </div>
       </SidebarInset>
