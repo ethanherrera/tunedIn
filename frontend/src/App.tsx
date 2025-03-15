@@ -4,7 +4,7 @@ import LoginPage from '@/pages/login-page.tsx';
 import { spotifyApi } from '@/api/apiClient';
 import '@/app.css';
 import "@/index.css"
-import Main from '@/pages/Main.tsx';
+import Main from '@/pages/main.tsx';
 import { Progress } from '@/components/ui/progress';
 import { ThemeProvider } from "@/components/shadcn-composed/theme-provider.tsx"
 import { Toaster } from "@/components/ui/sonner";

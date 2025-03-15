@@ -4,7 +4,7 @@ import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Cooldown period in milliseconds (3 seconds)
-const REFRESH_COOLDOWN = 3000;
+const REFRESH_COOLDOWN = 10000;
 
 interface PageHeaderProps {
   title: string;

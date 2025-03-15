@@ -1,10 +1,8 @@
 import React, { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import MusicScrollArea from "@/components/MusicScrollArea.tsx"
 import { Separator } from "@/components/ui/separator"
-import { UITrack, UIArtist, transformTrackForUI, transformArtistForUI, Track, Artist, PagingObject } from "@/types/spotify"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { spotifyApi, reviewApi } from "@/api/apiClient"
 import { PageHeader } from "@/components/ui/page-header"
@@ -16,7 +14,7 @@ interface FilterOptions {
   offset: number;
 }
 
-export default function TopTracks() {
+export default function TopTracksAndArtists() {
   const [isRefreshingTracks, setIsRefreshingTracks] = useState(false)
   const [isRefreshingArtists, setIsRefreshingArtists] = useState(false)
   const queryClient = useQueryClient()

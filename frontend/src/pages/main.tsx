@@ -28,8 +28,7 @@ import ForYou from "@/pages/for-you.tsx"
 import Tracks from "@/pages/reviewed-tracks.tsx"
 import Albums from "@/pages/albums.tsx"
 import Artists from "@/components/Artists.tsx"
-import TopTracks from "@/pages/top-tracks.tsx"
-import TopArtists from "@/pages/top-artists.tsx"
+import TopTracksAndArtists from "@/pages/top-tracks-and-artists.tsx"
 import RecentActivity from "@/pages/recent-activity.tsx"
 import YourFriends from "@/pages/your-friends.tsx"
 import ManageFriends from "@/pages/manage-friends.tsx"
@@ -73,8 +72,7 @@ export type ContentView =
   | "tracks" 
   | "albums" 
   | "artists" 
-  | "topTracks" 
-  | "topArtists" 
+  | "topTracksAndArtists"
   | "recentlyPlayed"
   | "recentActivity" 
   | "yourFriends" 
@@ -121,8 +119,7 @@ export default function Main() {
       "artists": { category: "Your Reviews", subcategory: "Artists" },
       
       // Spotify category
-      "topTracks": { category: "Spotify", subcategory: "Top Tracks" },
-      "topArtists": { category: "Spotify", subcategory: "Top Artists" },
+      "topTracksAndArtists": { category: "Spotify", subcategory: "Top Tracks & Artists" },
       "recentlyPlayed": { category: "Spotify", subcategory: "Recently Played" },
       // Friends category
       "recentActivity": { category: "Friends", subcategory: "Recent Activity" },
@@ -181,8 +178,7 @@ export default function Main() {
               <Route path="/tracks" element={<Tracks />} />
               <Route path="/albums" element={<Albums />} />
               <Route path="/artists" element={<Artists />} />
-              <Route path="/topTracks" element={<TopTracks />} />
-              <Route path="/topArtists" element={<TopArtists />} />
+              <Route path="/topTracksAndArtists" element={<TopTracksAndArtists />} />
               <Route path="/recentlyPlayed" element={<RecentlyPlayed />} />
               <Route path="/recentActivity" element={<RecentActivity />} />
               <Route path="/yourFriends" element={<YourFriends />} />

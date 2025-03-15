@@ -94,12 +94,8 @@ const defaultNavMain = [
     icon: Music,
     items: [
       {
-        title: "Top Tracks",
-        view: "topTracks",
-      },
-      {
-        title: "Top Artists",
-        view: "topArtists",
+        title: "Top Tracks & Artists",
+        view: "topTracksAndArtists",
       },
       {
         title: "Recently Played",
