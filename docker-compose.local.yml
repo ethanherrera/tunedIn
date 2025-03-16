@@ -6,6 +6,24 @@ version: '3.8'
 # =====================================================
 
 services:
+  nginx:
+    build:
+      context: ./reverse-proxy/dev
+      dockerfile: Dockerfile.dev
+    container_name: nginx-dev-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./reverse-proxy/dev/nginx.conf.dev:/etc/nginx/conf.d/default.conf
+    restart: unless-stopped
+    networks:
+      - tunedIn-network-local
+    labels:
+      - "com.tunedin.environment=development"
+      - "com.tunedin.description=Local development Nginx reverse proxy"
+    depends_on:
+      - frontend
+
   mongodb:
     build:
       context: ./database
