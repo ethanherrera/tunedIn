@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ThumbsUp, ThumbsDown, Minus } from "lucide-react";
 // import { Artist, ArtistReview } from "@/api/apiClient";
 import { Artist } from "@/api/apiClient";
+import { useDominantColor } from "@/lib/colorExtractor";
 
 // Using TrackReview structure as a temporary type until ArtistReview is implemented
 interface ArtistReview {
@@ -18,6 +19,9 @@ interface ArtistCardProps {
 }
 
 const ArtistCard: React.FC<ArtistCardProps> = ({ item, items=[], reviews=[], review }) => {
+  const { color } = useDominantColor(item.images && item.images.length > 0 ? item.images[0].url : '');
+  const [isHovered, setIsHovered] = useState(false);
+  
   // Function to render the opinion icon
   const renderOpinionIcon = () => {
     if (!review) return null;
@@ -35,9 +39,17 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ item, items=[], reviews=[], rev
   };
 
   return (
-    <Card className="group w-[15vh] h-[22vh] flex-shrink-0 transform transition-transform duration-400 hover:scale-105 border-none shadow-none py-0">
+    <Card 
+      className="group w-[15vh] h-[22vh] flex-shrink-0 transform transition-transform duration-400 hover:scale-105 border-none shadow-none py-0 relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        boxShadow: isHovered ? `0 0 15px 5px ${color}` : 'none',
+        transition: 'box-shadow 0.3s ease, transform 0.4s ease'
+      }}
+    >
       <CardContent className="p-2">
-        <div className="overflow-hidden rounded-md group-hover:shadow-sm group-hover:shadow-primary">
+        <div className="overflow-hidden rounded-md">
           <img
             src={item.images && item.images.length > 0 ? item.images[0].url : ''}
             alt={`${item.name} profile`}

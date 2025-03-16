@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import RankingDialog from "@/components/RankingDialog.tsx";
+import { useDominantColor } from "@/lib/colorExtractor";
 
 interface TrackCardProps {
   item: Track;
@@ -20,6 +21,8 @@ interface TrackCardProps {
 
 const TrackCard: React.FC<TrackCardProps> = ({ item, items=[], reviews=[], review, disableInteraction=false}) => {
   const [showRankingDialog, setShowRankingDialog] = useState(false);
+  const { color } = useDominantColor(item.album.images[0]?.url);
+  const [isHovered, setIsHovered] = useState(false);
 
   // Function to render the opinion icon
   const renderOpinionIcon = () => {
@@ -41,9 +44,17 @@ const TrackCard: React.FC<TrackCardProps> = ({ item, items=[], reviews=[], revie
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Card className="group w-[15vh] h-[22vh] flex-shrink-0 transform transition-transform duration-400 hover:scale-105 border-none shadow-none py-0 cursor-pointer">
+          <Card 
+            className="group w-[15vh] h-[22vh] flex-shrink-0 transform transition-transform duration-400 hover:scale-105 border-none shadow-none py-0 cursor-pointer relative"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            style={{
+              boxShadow: isHovered ? `0 0 15px 5px ${color}` : 'none',
+              transition: 'box-shadow 0.3s ease, transform 0.4s ease'
+            }}
+          >
             <CardContent className="p-2">
-              <div className="overflow-hidden rounded-md group-hover:shadow-sm group-hover:shadow-primary">
+              <div className="overflow-hidden rounded-md">
                 <img
                   src={item.album.images[0].url}
                   alt={`${item.album.name} album cover`}
