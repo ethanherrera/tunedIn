@@ -70,9 +70,7 @@ class TrackReviewService(
             // Don't update the createdAt timestamp to preserve the original review date
             val savedReview = trackReviewRepository.save(existingReview)
             
-            // Rescore all reviews for this user
-            rescoreReviews(userId)
-            
+
             return savedReview
         }
         
@@ -80,7 +78,6 @@ class TrackReviewService(
         val nextRank = if (ranking > 0) {
             // If a specific ranking is provided (from binary search), use it
             // and shift other reviews to make room
-            shiftReviewsForInsertion(userId, opinion, ranking)
             ranking
         } else {
             // Otherwise get the next available rank for this opinion group
@@ -98,9 +95,6 @@ class TrackReviewService(
             genres = allGenres
         )
         val savedReview = trackReviewRepository.save(review)
-        
-        // Rescore all reviews for this user
-        rescoreReviews(userId)
         
         return savedReview
     }
@@ -258,9 +252,6 @@ class TrackReviewService(
             // Reorder remaining reviews to maintain consistent ranking
             reorderReviewsAfterDeletion(userId)
             
-            // Rescore all reviews for this user
-            rescoreReviews(userId)
-            
             return true
         }
         return false
@@ -273,10 +264,7 @@ class TrackReviewService(
             
             // Reorder remaining reviews to maintain consistent ranking
             reorderReviewsAfterDeletion(userId)
-            
-            // Rescore all reviews for this user
-            rescoreReviews(userId)
-            
+
             return true
         }
         return false
@@ -338,8 +326,6 @@ class TrackReviewService(
                 // If a specific ranking is provided (from binary search), use it
                 existingReview.ranking = if (ranking > 0) {
                     logger.info("Using provided ranking: $ranking")
-                    // Shift other reviews to make room for this ranking
-                    shiftReviewsForInsertion(userId, opinion, ranking)
                     ranking
                 } else {
                     logger.info("Calculating next rank for opinion group")
@@ -357,8 +343,7 @@ class TrackReviewService(
                 
                 // Rescore all reviews for this user
                 logger.info("Rescoring reviews for user")
-                rescoreReviews(userId)
-                
+
                 return savedReview
             } else if (ranking > 0 && ranking != existingReview.ranking) {
                 // Opinion didn't change but ranking did - update the ranking
@@ -377,10 +362,7 @@ class TrackReviewService(
                 logger.info("Reordering reviews after ranking change")
                 reorderReviewsAfterRankingChange(userId, opinion, oldRanking, ranking)
                 
-                // Rescore all reviews for this user
-                logger.info("Rescoring reviews for user")
-                rescoreReviews(userId)
-                
+
                 return savedReview
             } else {
                 // Don't update the createdAt timestamp to preserve the original review date
@@ -389,8 +371,7 @@ class TrackReviewService(
                 
                 // Rescore all reviews for this user
                 logger.info("Rescoring reviews for user")
-                rescoreReviews(userId)
-                
+
                 return savedReview
             }
         } catch (e: Exception) {
@@ -428,96 +409,4 @@ class TrackReviewService(
             }
         }
     }
-    
-    /**
-     * Rescores all reviews for a user according to their opinion category and ranking.
-     * - Liked reviews are distributed in the range 7.0-10.0
-     * - Neutral reviews are distributed in the range 4.0-6.9
-     * - Disliked reviews are distributed in the range 0.0-3.9
-     * 
-     * Within each category, reviews are evenly distributed with the highest-ranked item
-     * getting the top score for that category.
-     */
-    fun rescoreReviews(userId: String) {
-        val logger = LoggerFactory.getLogger(TrackReviewService::class.java)
-        logger.info("Rescoring reviews for user: $userId")
-        val userReviews = trackReviewRepository.findByUserId(userId)
-        
-        // Group reviews by opinion and sort by ranking (lower ranking = higher position)
-        val likedReviews = userReviews.filter { it.opinion == Opinion.LIKED }.sortedBy { it.ranking }
-        val neutralReviews = userReviews.filter { it.opinion == Opinion.NEUTRAL }.sortedBy { it.ranking }
-        val dislikedReviews = userReviews.filter { it.opinion == Opinion.DISLIKE }.sortedBy { it.ranking }
-        
-        logger.info("Found ${likedReviews.size} liked reviews, ${neutralReviews.size} neutral reviews, ${dislikedReviews.size} disliked reviews")
-        
-        // Rescore liked reviews (7.0-10.0)
-        if (likedReviews.isNotEmpty()) {
-            val likedRange = 10.0 - 7.0
-            val likedStep = if (likedReviews.size > 1) likedRange / (likedReviews.size - 1) else 0.0
-            
-            likedReviews.forEachIndexed { index, review ->
-                // Lower index (lower ranking) gets higher score
-                // For example, with 3 reviews: index 0 gets 10.0, index 1 gets 8.5, index 2 gets 7.0
-                val calculatedRating = 10.0 - (index * likedStep)
-                // Ensure rating is never negative due to floating point errors
-                review.rating = max(0.0, calculatedRating)
-                logger.info("Setting liked review ${review.id} with ranking ${review.ranking} to rating ${review.rating}")
-                trackReviewRepository.save(review)
-            }
-        }
-        
-        // Rescore neutral reviews (4.0-6.9)
-        if (neutralReviews.isNotEmpty()) {
-            val neutralRange = 6.9 - 4.0
-            val neutralStep = if (neutralReviews.size > 1) neutralRange / (neutralReviews.size - 1) else 0.0
-            
-            neutralReviews.forEachIndexed { index, review ->
-                // Lower index (lower ranking) gets higher score
-                val calculatedRating = 6.9 - (index * neutralStep)
-                // Ensure rating is never negative due to floating point errors
-                review.rating = max(0.0, calculatedRating)
-                logger.info("Setting neutral review ${review.id} with ranking ${review.ranking} to rating ${review.rating}")
-                trackReviewRepository.save(review)
-            }
-        }
-        
-        // Rescore disliked reviews (0.0-3.9)
-        if (dislikedReviews.isNotEmpty()) {
-            val dislikedRange = 3.9 - 0.0
-            val dislikedStep = if (dislikedReviews.size > 1) dislikedRange / (dislikedReviews.size - 1) else 0.0
-            
-            dislikedReviews.forEachIndexed { index, review ->
-                // Lower index (lower ranking) gets higher score
-                val calculatedRating = 3.9 - (index * dislikedStep)
-                // Ensure rating is never negative due to floating point errors
-                review.rating = max(0.0, calculatedRating)
-                logger.info("Setting disliked review ${review.id} with ranking ${review.ranking} to rating ${review.rating}")
-                trackReviewRepository.save(review)
-            }
-        }
-        
-        logger.info("Finished rescoring reviews for user: $userId")
-    }
-
-    /**
-     * Shifts existing reviews to make room for a new review at the specified ranking
-     * Returns the provided ranking for insertion
-     */
-    private fun shiftReviewsForInsertion(userId: String, opinion: Opinion, ranking: Int): Int {
-        val userReviews = trackReviewRepository.findByUserId(userId)
-        
-        // Get reviews with the same opinion that need to be shifted
-        val reviewsToShift = userReviews.filter { 
-            it.opinion == opinion && it.ranking >= ranking 
-        }.sortedBy { it.ranking }
-        
-        // Shift rankings of affected reviews
-        for (review in reviewsToShift) {
-            review.ranking += 1
-            trackReviewRepository.save(review)
-        }
-        
-        return ranking
-    }
-
 }
