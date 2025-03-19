@@ -14,6 +14,7 @@ data class TrackReview(
     var opinion: Opinion,
     var description: String,
     var rating: Double = 5.0,
+    var ranking: Double = 5.0,
     var createdAt: Instant = Instant.now(),
     var updatedAt: Instant = Instant.now()
 ) {

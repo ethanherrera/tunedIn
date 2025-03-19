@@ -39,6 +39,8 @@ class TrackReviewService(
         if (existingReview != null) {
             existingReview.opinion = review.opinion
             existingReview.description = review.description
+            existingReview.rating = review.rating
+            existingReview.ranking = review.ranking
             existingReview.updateTimestamp()
 
             return trackReviewRepository.save(existingReview)

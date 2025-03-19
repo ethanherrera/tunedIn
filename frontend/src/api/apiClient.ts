@@ -95,7 +95,8 @@ export interface SaveReviewRequest {
   trackId: string;
   opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
   description: string;
-  ranking?: number;
+  rating: number | null;
+  ranking: number | null;
   id?: string;  // Optional ID for updates
 }
 

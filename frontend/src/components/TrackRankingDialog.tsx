@@ -7,9 +7,9 @@ import { Button } from "./ui/button.tsx";
 import { Textarea } from "./ui/textarea.tsx";
 import { DialogTitle } from "./ui/dialog.tsx";
 import { Progress } from "./ui/progress.tsx";
-import { Album, Artist, reviewApi, Track, TrackReview, AlbumReview } from "@/api/apiClient.ts";
+import { Album, Artist, reviewApi, Track, TrackReview, AlbumReview, userApi } from "@/api/apiClient.ts";
 import { toast } from "sonner";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import MusicCardUI from "./MusicCardUI.tsx";
 import TrackCardUI from "./TrackCardUI.tsx";
 
@@ -28,6 +28,13 @@ const TrackRankingDialog: React.FC<TrackRankingDialogProps> = ({item, items=[], 
   const [opinion, setOpinion] = useState<'DISLIKE' | 'NEUTRAL' | 'LIKED' | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
+  
+  // Fetch current user profile to get user ID
+  const { data: userProfile } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: userApi.getProfile,
+  });
 
   useEffect(() => {
     if (isSubmitted && onOpenChange) {
@@ -39,8 +46,70 @@ const TrackRankingDialog: React.FC<TrackRankingDialogProps> = ({item, items=[], 
     }
   }, [isSubmitted, onOpenChange]);
 
+  // Generate random rating based on opinion
+  const generateRandomRating = (selectedOpinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED') => {
+    let min = 0;
+    let max = 0;
+    
+    switch (selectedOpinion) {
+      case 'LIKED':
+        min = 7.0;
+        max = 10.0;
+        break;
+      case 'NEUTRAL':
+        min = 4.0;
+        max = 6.9;
+        break;
+      case 'DISLIKE':
+        min = 0.0;
+        max = 3.9;
+        break;
+    }
+    
+    // Generate random number with one decimal place
+    return Math.round((min + Math.random() * (max - min)) * 10) / 10;
+  };
+
+  // React Query mutation for saving the review
+  const saveMutation = useMutation({
+    mutationFn: (reviewData: any) => {
+      // The backend expects a TrackReview object with a userId
+      return reviewApi.saveTrackReview({
+        ...reviewData,
+      });
+    },
+    onSuccess: () => {
+      setIsSubmitted(true);
+      toast.success("Review saved successfully!");
+      queryClient.invalidateQueries({ queryKey: ['trackReviews'] });
+      queryClient.invalidateQueries({ queryKey: ['tracks'] });
+    },
+    onError: (error) => {
+      console.error("Error saving review:", error);
+      toast.error("Failed to save review");
+      setIsSubmitting(false);
+    }
+  });
+
   const onOpinionSelected = (newOpinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED') => {
+    if (!userProfile || !userProfile.id) {
+      toast.error("Unable to save review: User profile not loaded");
+      return;
+    }
+    
     setOpinion(newOpinion);
+    const newRating = generateRandomRating(newOpinion);
+    setIsSubmitting(true);
+    
+    // Save the review with React Query
+    saveMutation.mutate({
+      trackId: item.id,
+      userId: userProfile.id,
+      opinion: newOpinion,
+      description: reviewText,
+      rating: newRating,
+      ranking: newRating,
+    });
   };
 
   return (
