@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import RankingDialog from "@/components/RankingDialog.tsx";
+import TrackRankingDialog from "@/components/TrackRankingDialog";
 import TrackCard from "@/components/TrackCard.tsx";
 import { reviewApi, Track, TrackReview } from "@/api/apiClient";
 

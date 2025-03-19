@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import RankingDialog from "@/components/RankingDialog.tsx";
+import TrackRankingDialog from "@/components/TrackRankingDialog";
 
 interface TrackCardUIProps {
   item: Track;
