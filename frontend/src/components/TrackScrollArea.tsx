@@ -8,7 +8,7 @@ import { reviewApi, Track, TrackReview } from "@/api/apiClient";
 interface Review {
   id: string;
   userId: string;
-  spotifyTrackId: string;
+  trackId: string;
   opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
   description: string;
   rating: number;
@@ -27,7 +27,7 @@ export const TrackScrollArea: React.FC<TrackScrollAreaProps> = ({ items = [], re
 
 
   const getReviewForItem = (itemId: string): TrackReview | undefined => {
-    return reviews.find(review => review.spotifyTrackId === itemId);
+    return reviews.find(review => review.trackId === itemId);
   };
 
   return (

@@ -5,7 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { friendsApi } from '@/api/apiClient'
+import { friendsApi, userApi } from '@/api/apiClient'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/ui/page-header'
 import {
@@ -206,10 +206,11 @@ export default function ManageFriends() {
     
     setIsSearching(true)
     try {
-      const result = await friendsApi.checkUserExists(searchQuery)
-      setSearchResult(result)
+      const userProfile = await userApi.getUserProfileById(searchQuery)
+      const userExists = userProfile !== null
+      setSearchResult({ exists: userExists })
       
-      if (result.exists) {
+      if (userExists) {
         // Check if already friends or request already sent
         const isFriend = friends?.some(friend => friend.userId === searchQuery)
         const isRequestSent = sentRequests?.some(request => request.receiverId === searchQuery)

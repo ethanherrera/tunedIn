@@ -7,7 +7,7 @@ import java.util.UUID
 
 @Repository
 interface TrackReviewRepository : MongoRepository<TrackReview, UUID> {
-    fun findBySpotifyTrackId(spotifyTrackId: String): List<TrackReview>
+    fun findByTrackId(trackId: String): List<TrackReview>
     fun findByUserId(userId: String): List<TrackReview>
-    fun findByUserIdAndSpotifyTrackId(userId: String, spotifyTrackId: String): TrackReview?
+    fun findByUserIdAndTrackId(userId: String, trackId: String): TrackReview?
 } 

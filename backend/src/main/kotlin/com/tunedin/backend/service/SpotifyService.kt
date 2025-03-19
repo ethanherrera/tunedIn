@@ -7,8 +7,6 @@ import org.springframework.http.*
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.client.RestTemplate
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
 import org.springframework.web.util.UriComponentsBuilder
 import java.net.URLEncoder
 import java.util.*
@@ -44,21 +42,18 @@ class SpotifyService(
 
     fun exchangeCode(code: String): SpotifyTokenResponse {
         val restTemplate = RestTemplate()
-        
-        // Create headers with Basic auth using client credentials
+
         val headers = HttpHeaders()
         val credentials = "$clientId:$clientSecret"
         val encodedCredentials = Base64.getEncoder().encodeToString(credentials.toByteArray())
         headers.set("Authorization", "Basic $encodedCredentials")
         headers.contentType = MediaType.APPLICATION_FORM_URLENCODED
 
-        // Create request body
         val body = LinkedMultiValueMap<String, String>()
         body.add("grant_type", "authorization_code")
         body.add("code", code)
         body.add("redirect_uri", redirectUri)
 
-        // Make the request
         val request = HttpEntity(body, headers)
         val response = restTemplate.exchange(
             "https://accounts.spotify.com/api/token",
@@ -67,9 +62,7 @@ class SpotifyService(
             SpotifyTokenResponse::class.java
         )
 
-        val tokenResponse = response.body ?: throw RuntimeException("Failed to get token response")
-        
-        return tokenResponse
+        return response.body ?: throw RuntimeException("Failed to get token response")
     }
 
     fun search(
@@ -142,13 +135,6 @@ class SpotifyService(
         return response.body ?: throw RuntimeException("Failed to get track details")
     }
 
-    /**
-     * Get multiple tracks in a single request using Spotify's batch API
-     * @param trackIds List of Spotify track IDs (maximum 50)
-     * @param accessToken Spotify access token
-     * @param market Optional market code (ISO 3166-1 alpha-2 country code)
-     * @return List of Track objects
-     */
     fun getTracksBatch(trackIds: List<String>, accessToken: String, market: String? = null): List<SpotifyTrack> {
         if (trackIds.isEmpty()) {
             return emptyList()
@@ -183,30 +169,6 @@ class SpotifyService(
         
         val responseBody = response.body ?: throw RuntimeException("Failed to get tracks details")
         return responseBody["tracks"] ?: throw RuntimeException("No tracks found in response")
-    }
-
-    fun refreshAccessToken(refreshToken: String): SpotifyTokenResponse {
-        val restTemplate = RestTemplate()
-        
-        val headers = HttpHeaders()
-        val credentials = "$clientId:$clientSecret"
-        val encodedCredentials = Base64.getEncoder().encodeToString(credentials.toByteArray())
-        headers.set("Authorization", "Basic $encodedCredentials")
-        headers.contentType = MediaType.APPLICATION_FORM_URLENCODED
-        
-        val body = LinkedMultiValueMap<String, String>()
-        body.add("grant_type", "refresh_token")
-        body.add("refresh_token", refreshToken)
-        
-        val request = HttpEntity(body, headers)
-        val response = restTemplate.exchange(
-            "https://accounts.spotify.com/api/token",
-            HttpMethod.POST,
-            request,
-            SpotifyTokenResponse::class.java
-        )
-        
-        return response.body ?: throw RuntimeException("Failed to refresh token")
     }
 
     fun getUserTopItems(
@@ -251,14 +213,7 @@ class SpotifyService(
             else -> throw IllegalArgumentException("Invalid type parameter. Must be 'artists' or 'tracks'")
         }
     }
-    
-    /**
-     * Get multiple albums in a single request using Spotify's batch API
-     * @param albumIds List of Spotify album IDs (maximum 20)
-     * @param accessToken Spotify access token
-     * @param market Optional market code (ISO 3166-1 alpha-2 country code)
-     * @return List of Album objects
-     */
+
     fun getAlbumsBatch(albumIds: List<String>, accessToken: String, market: String? = null): List<Album> {
         if (albumIds.isEmpty()) {
             return emptyList()
@@ -294,14 +249,7 @@ class SpotifyService(
         val responseBody = response.body ?: throw RuntimeException("Failed to get albums details")
         return responseBody["albums"] ?: throw RuntimeException("No albums found in response")
     }
-    
-    /**
-     * Get a single album with its tracks
-     * @param albumId Spotify album ID
-     * @param accessToken Spotify access token
-     * @param market Optional market code (ISO 3166-1 alpha-2 country code)
-     * @return Album object with tracks
-     */
+
     fun getAlbum(albumId: String, accessToken: String, market: String? = null): Album {
         val restTemplate = RestTemplate()
         val headers = HttpHeaders().apply {
@@ -327,12 +275,6 @@ class SpotifyService(
         return response.body ?: throw RuntimeException("Failed to get album details")
     }
 
-    /**
-     * Get a single artist by their Spotify ID
-     * @param id The Spotify ID of the artist
-     * @param accessToken Spotify access token
-     * @return Artist object
-     */
     fun getArtist(id: String, accessToken: String): Artist {
         val restTemplate = RestTemplate()
         val url = "https://api.spotify.com/v1/artists/$id"
@@ -350,15 +292,7 @@ class SpotifyService(
 
         return response.body ?: throw RuntimeException("No response body from Spotify artist API")
     }
-    
-    /**
-     * Get the current user's recently played tracks
-     * @param limit The maximum number of items to return (default: 20, maximum: 50)
-     * @param after Return items after this cursor position (Unix timestamp in milliseconds)
-     * @param before Return items before this cursor position (Unix timestamp in milliseconds)
-     * @param accessToken Spotify access token
-     * @return SpotifyRecentlyPlayedTracksResponse containing the recently played tracks
-     */
+
     fun getRecentlyPlayedTracks(
         limit: Int = 20,
         after: Int? = null,
@@ -378,7 +312,6 @@ class SpotifyService(
             .fromUriString("https://api.spotify.com/v1/me/player/recently-played")
             .queryParam("limit", limit)
         
-        // Add either after or before parameter, but not both
         when {
             after != null -> urlBuilder.queryParam("after", after)
             before != null -> urlBuilder.queryParam("before", before)

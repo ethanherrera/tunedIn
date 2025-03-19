@@ -24,7 +24,7 @@ interface RankingDialogProps {
 
 interface ReviewData {
   id?: string;
-  spotifyTrackId?: string;
+  trackId?: string;
   spotifyAlbumId?: string;
   opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
   description: string;
@@ -58,7 +58,7 @@ const RankingDialog: React.FC<RankingDialogProps> = ({item, items=[], itemType, 
       if (itemType === "track") {
         return reviewApi.saveTrackReview({
           ...reviewData,
-          spotifyTrackId: reviewData.spotifyTrackId!
+          trackId: reviewData.trackId!
         });
       } else {
         // TODO: Add support for album and artist reviews
@@ -159,8 +159,8 @@ const RankingDialog: React.FC<RankingDialogProps> = ({item, items=[], itemType, 
   // Helper function to get the ID from a review based on its type
   const getReviewItemId = useCallback((review: TrackReview | AlbumReview): string => {
     // For now, only handle track reviews
-    if ('spotifyTrackId' in review) {
-      return (review as TrackReview).spotifyTrackId;
+    if ('trackId' in review) {
+      return (review as TrackReview).trackId;
     }
     // TODO: Add support for album and artist reviews
     return '';
@@ -232,7 +232,7 @@ const RankingDialog: React.FC<RankingDialogProps> = ({item, items=[], itemType, 
     
     // Set the appropriate ID field based on item type
     if (itemType === "track") {
-      reviewData.spotifyTrackId = itemId;
+      reviewData.trackId = itemId;
     } else {
       // TODO: Add support for album and artist reviews
       console.warn(`Unsupported item type: ${itemType}`);

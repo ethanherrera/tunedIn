@@ -42,8 +42,8 @@ const TrackCard: React.FC<TrackCardProps> = ({ item, items=[], reviews=[], revie
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+      {/* <DropdownMenu> */}
+        {/* <DropdownMenuTrigger asChild> */}
           <Card 
             className="group w-[15vh] h-[22vh] flex-shrink-0 transform transition-transform duration-400 hover:scale-105 border-none shadow-none py-0 cursor-pointer relative"
             onMouseEnter={() => setIsHovered(true)}
@@ -84,7 +84,7 @@ const TrackCard: React.FC<TrackCardProps> = ({ item, items=[], reviews=[], revie
               </div>
             </CardContent>
           </Card>
-        </DropdownMenuTrigger>
+        {/* </DropdownMenuTrigger>
         <DropdownMenuContent align="center" side="bottom" className="w-40">
           <DropdownMenuItem onSelect={(e) => {
             e.preventDefault();
@@ -93,9 +93,9 @@ const TrackCard: React.FC<TrackCardProps> = ({ item, items=[], reviews=[], revie
             Review this track
           </DropdownMenuItem>
         </DropdownMenuContent>
-      </DropdownMenu>
+      </DropdownMenu> */}
 
-      {showRankingDialog && !disableInteraction && (
+      {/* {showRankingDialog && !disableInteraction && (
         <RankingDialog
           item={item}
           items={items as Track[]}
@@ -106,7 +106,7 @@ const TrackCard: React.FC<TrackCardProps> = ({ item, items=[], reviews=[], revie
         >
           <></>
         </RankingDialog>
-      )}
+      )} */}
     </>
   );
 };

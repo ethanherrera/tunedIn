@@ -23,7 +23,7 @@ export default function ReviewedTracks() {
   });
   
   // Extract track IDs from reviews for batch fetching
-  const trackIds = trackReviews?.map(review => review.spotifyTrackId) || [];
+  const trackIds = trackReviews?.map(review => review.trackId) || [];
   
   // React Query for fetching tracks in batch with data transformation
   const { 
@@ -50,7 +50,7 @@ export default function ReviewedTracks() {
       const reviewsMap: Record<string, TrackReview> = {};
       if (trackReviews) {
         trackReviews.forEach(review => {
-          reviewsMap[review.spotifyTrackId] = review;
+          reviewsMap[review.trackId] = review;
         });
       }
       

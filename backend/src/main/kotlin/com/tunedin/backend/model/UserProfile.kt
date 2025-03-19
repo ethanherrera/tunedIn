@@ -7,7 +7,7 @@ import java.time.Instant
 @Document(collection = "user_profiles")
 data class UserProfile(
     @Id
-    val id: String,  // Spotify user ID
+    val id: String,
     val country: String? = null,
     val display_name: String? = null,
     val email: String? = null,
@@ -21,9 +21,7 @@ data class UserProfile(
     val uri: String? = null,
     val accessToken: String? = null,
     val refreshToken: String? = null,
-    val tokenExpiresAt: Instant? = null,
-    val recentActivities: List<RecentActivity> = emptyList(),
-    val friendIds: List<String> = emptyList(),  // List of friend user IDs
+    val friendIds: List<String> = emptyList(),
     val createdAt: Instant = Instant.now(),
     val updatedAt: Instant = Instant.now()
 )

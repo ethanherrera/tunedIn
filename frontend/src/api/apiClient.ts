@@ -92,7 +92,7 @@ export interface SpotifySearchResponse {
 
 // Review types
 export interface SaveReviewRequest {
-  spotifyTrackId: string;
+  trackId: string;
   opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
   description: string;
   ranking?: number;
@@ -102,7 +102,7 @@ export interface SaveReviewRequest {
 export interface TrackReview {
   id: string;
   userId: string;
-  spotifyTrackId: string;
+  trackId: string;
   opinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED';
   description: string;
   rating: number;
@@ -306,11 +306,6 @@ export const reviewApi = {
     return response.data;
   },
   
-  getTrackReviews: async (spotifyTrackId: string): Promise<TrackReview[]> => {
-    const response = await apiClient.get<TrackReview[]>(`/reviews/track/${spotifyTrackId}`);
-    return response.data;
-  },
-  
   getFriendTrackReviews: async (friendId: string): Promise<TrackReview[]> => {
     const response = await apiClient.get<TrackReview[]>(`/reviews/user/${friendId}`);
     return response.data;
@@ -321,8 +316,8 @@ export const reviewApi = {
     return response.data;
   },
   
-  deleteReviewByTrackId: async (spotifyTrackId: string): Promise<{ success: boolean, message: string }> => {
-    const response = await apiClient.delete<{ success: boolean, message: string }>(`/reviews/track/${spotifyTrackId}`);
+  deleteReviewByTrackId: async (trackId: string): Promise<{ success: boolean, message: string }> => {
+    const response = await apiClient.delete<{ success: boolean, message: string }>(`/reviews/track/${trackId}`);
     return response.data;
   },
   
@@ -338,15 +333,15 @@ export const reviewApi = {
   
   /**
    * Get the current user's reviews for multiple tracks in a single request
-   * @param spotifyTrackIds Array of Spotify track IDs to get reviews for
+   * @param trackIds Array of Spotify track IDs to get reviews for
    * @returns Map of track IDs to the list of reviews for that track
    */
-  getTrackReviewsBatch: async (spotifyTrackIds: string[]): Promise<Record<string, TrackReview[]>> => {
-    if (spotifyTrackIds.length === 0) {
+  getTrackReviewsBatch: async (trackIds: string[]): Promise<Record<string, TrackReview[]>> => {
+    if (trackIds.length === 0) {
       return {};
     }
     
-    const response = await apiClient.post<Record<string, TrackReview[]>>('/reviews/batch/tracks', spotifyTrackIds);
+    const response = await apiClient.post<Record<string, TrackReview[]>>('/reviews/batch/tracks', trackIds);
     return response.data;
   }
 };
@@ -357,7 +352,7 @@ export interface AlbumReviewRequest {
   description: string;
   ranking?: number;
   genres?: string[];
-  spotifyTrackIds: string[];
+  trackIds: string[];
 }
 
 // Interface for album review response
@@ -371,7 +366,7 @@ export interface AlbumReview {
   ranking: number;
   createdAt: number;
   genres: string[];
-  spotifyTrackIds: string[];
+  trackIds: string[];
 }
 
 export const albumReviewApi = {
@@ -413,6 +408,18 @@ export const userApi = {
     return response.data;
   },
   
+  getUserProfileById: async (userId: string): Promise<UserProfile | null> => {
+    try {
+      const response = await apiClient.get<UserProfile>(`/users/profile/${userId}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.status === 404) {
+        return null;
+      }
+      throw error;
+    }
+  },
+  
   getMe: async () => {
     const response = await fetch('/api/users/me');
     if (!response.ok) {
@@ -431,6 +438,19 @@ export const friendsApi = {
   checkUserExists: async (userId: string): Promise<{ exists: boolean }> => {
     const response = await apiClient.get<{ exists: boolean }>(`/friends/check-user/${userId}`);
     return response.data;
+  },
+  
+  getUserProfile: async (userId: string): Promise<UserProfile | null> => {
+    try {
+      const response = await apiClient.get<UserProfile>(`/friends/user/${userId}`);
+      return response.data;
+    } catch (error: any) {
+      // If user not found, return null
+      if (error.response && error.response.status === 404) {
+        return null;
+      }
+      throw error;
+    }
   },
   
   sendFriendRequest: async (receiverId: string): Promise<any> => {
