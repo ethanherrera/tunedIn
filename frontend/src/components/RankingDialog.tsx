@@ -270,7 +270,7 @@ const RankingDialog: React.FC<RankingDialogProps> = ({item, items=[], itemType, 
     // If inserting at the end
     else if (position >= relevantItems.length) {
       console.log('Inserting at end');
-      finalRanking = relevantReviews[relevantReviews.length - 1].ranking + 1000000;
+      finalRanking = relevantReviews[relevantReviews.length - 1].ranking * 2;
     } 
     // If inserting in the middle
     else {
@@ -282,23 +282,6 @@ const RankingDialog: React.FC<RankingDialogProps> = ({item, items=[], itemType, 
     submitFinalReview(selectedOpinion, finalRanking);
   }, [relevantItems, relevantReviews, calculateDefaultRanking, submitFinalReview]);
 
-  // Update comparison item when searchMid changes
-  useEffect(() => {
-    if (!showComparison || relevantItems.length === 0) return;
-    
-    // If there's only one item to compare against, make the comparison once and then finalize
-    if (relevantItems.length === 1) {
-      setComparisonItem(relevantItems[0]);
-      return;
-    }
-    
-    if (searchMid >= 0 && searchMid < relevantItems.length) {
-      const newComparisonItem = relevantItems[searchMid];
-      console.log('Setting comparison item to:', newComparisonItem);
-      setComparisonItem(newComparisonItem);
-    }
-  }, [searchMid, relevantItems, showComparison]);
-
   // Handle user's comparison choice
   const handleComparisonChoice = useCallback((preferCurrent: boolean) => {
     if (!opinion) return;
@@ -308,19 +291,7 @@ const RankingDialog: React.FC<RankingDialogProps> = ({item, items=[], itemType, 
     
     // If binary search is complete, finalize ranking
     if (searchHigh <= searchLow + 1) {
-      let finalPosition;
-      
-      // Determine the final position based on the user's preference
-      if (preferCurrent) {
-        // If user prefers current item over the comparison item at searchLow,
-        // place it before the comparison item
-        finalPosition = searchLow;
-      } else {
-        // If user prefers comparison item over current item,
-        // place current item after the comparison item
-        finalPosition = searchHigh;
-      }
-      
+      const finalPosition = preferCurrent ? searchLow : searchHigh;
       console.log('Binary search complete, finalizing with position:', finalPosition);
       finalizeRankingWithPosition(opinion, finalPosition);
       return;
@@ -340,42 +311,27 @@ const RankingDialog: React.FC<RankingDialogProps> = ({item, items=[], itemType, 
       newLow = searchMid;
     }
     
-    console.log('New search bounds:', { newLow, newHigh });
-    
     // Calculate new midpoint for next comparison
-    let newMid = Math.floor((newLow + newHigh) / 2);
+    const newMid = Math.floor((newLow + newHigh) / 2);
+    console.log('New search bounds:', { newLow, newHigh });
     console.log('New midpoint:', newMid);
-    
-    // Check if the new midpoint would be the same as the current one
-    if (newMid === searchMid) {
-      // If we're stuck at the same midpoint, force progress
-      if (preferCurrent) {
-        // If user prefers current item, move midpoint down
-        newMid = Math.max(newLow, searchMid - 1);
-      } else {
-        // If user prefers comparison item, move midpoint up
-        newMid = Math.min(newHigh - 1, searchMid + 1);
-      }
-      console.log('Adjusted midpoint to avoid duplicate comparison:', newMid);
-    }
-    
-    // Ensure the midpoint is within valid bounds
-    if (newMid < 0) newMid = 0;
-    if (newMid >= relevantItems.length) newMid = relevantItems.length - 1;
-    
-    // Check if we've narrowed down to the final comparison
-    if (newHigh - newLow <= 1) {
-      console.log('Narrowed down to final comparison, finalizing with position:', preferCurrent ? newLow : newHigh);
-      finalizeRankingWithPosition(opinion, preferCurrent ? newLow : newHigh);
-      return;
-    }
     
     // Update state in a specific order to ensure proper rendering
     setSearchLow(newLow);
     setSearchHigh(newHigh);
     setSearchMid(newMid);
+  }, [opinion, searchHigh, searchLow, searchMid, finalizeRankingWithPosition]);
+
+  // Update comparison item when searchMid changes
+  useEffect(() => {
+    if (!showComparison || relevantItems.length === 0) return;
     
-  }, [opinion, searchHigh, searchLow, searchMid, finalizeRankingWithPosition, relevantItems.length]);
+    if (searchMid >= 0 && searchMid < relevantItems.length) {
+      const newComparisonItem = relevantItems[searchMid];
+      console.log('Setting comparison item to:', newComparisonItem);
+      setComparisonItem(newComparisonItem);
+    }
+  }, [searchMid, relevantItems, showComparison]);
 
   // Initialize binary search comparison based on selected opinion
   const initializeComparison = useCallback((selectedOpinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED') => {
@@ -473,12 +429,7 @@ const RankingDialog: React.FC<RankingDialogProps> = ({item, items=[], itemType, 
     const high = relevantItemsForOpinion.length;  // Use length instead of length-1 to allow placement at the end
     
     // Start with the middle item for the first comparison
-    let mid = Math.floor((low + high) / 2);
-    
-    // Ensure the midpoint is within valid bounds
-    if (mid >= relevantItemsForOpinion.length) {
-      mid = relevantItemsForOpinion.length - 1;
-    }
+    const mid = Math.floor((low + high) / 2);
     
     console.log('Binary search initial values:', { low, high, mid });
     
