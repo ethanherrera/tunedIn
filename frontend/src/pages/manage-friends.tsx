@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useFriendsList, useSentRequests, useReceivedRequests, useSendFriendRequest, useRemoveFriend, useCancelFriendRequest, useAcceptFriendRequest, useDeclineFriendRequest } from '@/hooks/queryHooks'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -8,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { friendsApi, userApi } from '@/api/apiClient'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/ui/page-header'
+import { useRefreshManageFriends } from '@/hooks/queryHooks'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,8 +26,7 @@ export default function ManageFriends() {
   const [activeTab, setActiveTab] = useState('friends')
   const [isSearching, setIsSearching] = useState(false)
   const [searchResult, setSearchResult] = useState<{ exists: boolean } | null>(null)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const queryClient = useQueryClient()
+
   
   // Alert dialog state
   const [alertOpen, setAlertOpen] = useState(false)
@@ -33,162 +34,41 @@ export default function ManageFriends() {
     title: string;
     description: string;
     action: () => void;
-  }>({
-    title: '',
-    description: '',
-    action: () => {},
-  })
+  }>({title: '', description: '', action: () => {}})
   
-  // Fetch friends list
+  // Use custom hooks for friend-related queries
   const { 
     data: friends, 
     isLoading: isLoadingFriends, 
     isError: isErrorFriends,
     error: friendsError
-  } = useQuery({
-    queryKey: ['friends'],
-    queryFn: friendsApi.getFriendsList
-  })
+  } = useFriendsList()
   
-  // Fetch sent friend requests
   const { 
     data: sentRequests, 
     isLoading: isLoadingSentRequests, 
     isError: isErrorSentRequests,
     error: sentRequestsError
-  } = useQuery({
-    queryKey: ['sentRequests'],
-    queryFn: friendsApi.getSentRequests
-  })
+  } = useSentRequests()
   
-  // Fetch received friend requests
   const { 
     data: receivedRequests, 
     isLoading: isLoadingReceivedRequests, 
     isError: isErrorReceivedRequests,
     error: receivedRequestsError
-  } = useQuery({
-    queryKey: ['receivedRequests'],
-    queryFn: friendsApi.getPendingRequests
-  })
+  } = useReceivedRequests()
   
-  // Function to refresh all friend-related data
-  const refreshData = async () => {
-    setIsRefreshing(true)
-    try {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['friends'] }),
-        queryClient.invalidateQueries({ queryKey: ['sentRequests'] }),
-        queryClient.invalidateQueries({ queryKey: ['receivedRequests'] })
-      ])
-      toast.success("Data refreshed", {
-        description: "Friend information has been updated"
-      })
-    } catch (error) {
-      toast.error("Refresh failed", {
-        description: "Failed to refresh data"
-      })
-    } finally {
-      setIsRefreshing(false)
-    }
-  }
+  // Use custom hooks for friend-related mutations
+  const sendRequestMutation = useSendFriendRequest()
+  const removeFriendMutation = useRemoveFriend()
+  const cancelRequestMutation = useCancelFriendRequest()
+  const acceptRequestMutation = useAcceptFriendRequest()
+  const declineRequestMutation = useDeclineFriendRequest()
   
-  // Mutation for sending friend requests
-  const sendRequestMutation = useMutation({
-    mutationFn: friendsApi.sendFriendRequest,
-    onSuccess: () => {
-      toast.success("Friend request sent", {
-        description: `Request sent to ${searchQuery}`
-      })
-      // Invalidate all friend-related queries
-      queryClient.invalidateQueries({ queryKey: ['sentRequests'] })
-      queryClient.invalidateQueries({ queryKey: ['receivedRequests'] })
-      queryClient.invalidateQueries({ queryKey: ['friends'] })
-      setSearchQuery('')
-      setSearchResult(null)
-    },
-    onError: (error: any) => {
-      toast.error("Failed to send request", {
-        description: error.message || "An error occurred"
-      })
-    }
-  })
+  // Use the refresh hook for managing friend data
+  const { refreshData, isRefreshing } = useRefreshManageFriends()
   
-  // Mutation for removing friends
-  const removeFriendMutation = useMutation({
-    mutationFn: friendsApi.removeFriend,
-    onSuccess: () => {
-      toast.success("Friend removed", {
-        description: "Friend has been removed from your list"
-      })
-      // Invalidate all friend-related queries
-      queryClient.invalidateQueries({ queryKey: ['friends'] })
-      queryClient.invalidateQueries({ queryKey: ['sentRequests'] })
-      queryClient.invalidateQueries({ queryKey: ['receivedRequests'] })
-    },
-    onError: (error: any) => {
-      toast.error("Failed to remove friend", {
-        description: error.message || "An error occurred"
-      })
-    }
-  })
   
-  // Mutation for canceling friend requests
-  const cancelRequestMutation = useMutation({
-    mutationFn: (requestId: string) => friendsApi.declineFriendRequest(requestId),
-    onSuccess: () => {
-      toast.success("Request canceled", {
-        description: "Friend request has been canceled"
-      })
-      // Invalidate all friend-related queries
-      queryClient.invalidateQueries({ queryKey: ['sentRequests'] })
-      queryClient.invalidateQueries({ queryKey: ['receivedRequests'] })
-      queryClient.invalidateQueries({ queryKey: ['friends'] })
-    },
-    onError: (error: any) => {
-      toast.error("Failed to cancel request", {
-        description: error.message || "An error occurred"
-      })
-    }
-  })
-  
-  // Mutation for accepting friend requests
-  const acceptRequestMutation = useMutation({
-    mutationFn: friendsApi.acceptFriendRequest,
-    onSuccess: () => {
-      toast.success("Friend request accepted", {
-        description: "You are now friends!"
-      })
-      // Invalidate all friend-related queries
-      queryClient.invalidateQueries({ queryKey: ['receivedRequests'] })
-      queryClient.invalidateQueries({ queryKey: ['sentRequests'] })
-      queryClient.invalidateQueries({ queryKey: ['friends'] })
-    },
-    onError: (error: any) => {
-      toast.error("Failed to accept request", {
-        description: error.message || "An error occurred"
-      })
-    }
-  })
-  
-  // Mutation for declining friend requests
-  const declineRequestMutation = useMutation({
-    mutationFn: friendsApi.declineFriendRequest,
-    onSuccess: () => {
-      toast.success("Friend request declined", {
-        description: "Request has been declined"
-      })
-      // Invalidate all friend-related queries
-      queryClient.invalidateQueries({ queryKey: ['receivedRequests'] })
-      queryClient.invalidateQueries({ queryKey: ['sentRequests'] })
-      queryClient.invalidateQueries({ queryKey: ['friends'] })
-    },
-    onError: (error: any) => {
-      toast.error("Failed to decline request", {
-        description: error.message || "An error occurred"
-      })
-    }
-  })
   
   // Helper function to show confirmation dialog
   const showConfirmation = (title: string, description: string, action: () => void) => {
@@ -457,4 +337,4 @@ export default function ManageFriends() {
       </Card>
     </div>
   )
-} 
+}

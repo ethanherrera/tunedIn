@@ -8,6 +8,7 @@ import { ArtistScrollArea } from "@/components/ArtistScrollArea";
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Separator } from "@/components/ui/separator";
+import { useSpotifySearch } from '@/hooks/queryHooks';
 
 export default function Search() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -16,20 +17,12 @@ export default function Search() {
   // Only search if we have a query
   const shouldSearch = debouncedSearchQuery.trim().length > 0;
 
-  // React Query for search results
+  // Use custom hook for search results
   const { 
     data: searchResults, 
     isLoading, 
     error 
-  } = useQuery({
-    queryKey: ['spotifySearch', debouncedSearchQuery],
-    queryFn: () => spotifyApi.search({
-      q: debouncedSearchQuery,
-      type: 'track,album,artist',
-      limit: 20
-    }),
-    enabled: shouldSearch,
-  });
+  } = useSpotifySearch(debouncedSearchQuery, shouldSearch);
 
   // Extract results by type
   const tracks = searchResults?.tracks?.items || [];
@@ -121,4 +114,4 @@ export default function Search() {
       </div>
     </div>
   );
-} 
+}

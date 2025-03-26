@@ -1,13 +1,15 @@
 import React, { useState, useMemo } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
-import MusicScrollArea from "@/components/MusicScrollArea.tsx"
 import { Separator } from "@/components/ui/separator"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { spotifyApi, reviewApi, Track, Artist } from "@/api/apiClient"
 import { PageHeader } from "@/components/ui/page-header"
 import { toast } from "sonner"
 import { SearchBar } from "@/components/ui/search-bar"
+import { useTopTracks, useTopArtists, useTrackReviews, useRefreshTopItems } from '@/hooks/queryHooks';
+import TrackScrollArea from "@/components/TrackScrollArea"
+import ArtistScrollArea from "@/components/ArtistScrollArea"
 
 interface FilterOptions {
   timeRange: 'short_term' | 'medium_term' | 'long_term';
@@ -16,10 +18,9 @@ interface FilterOptions {
 }
 
 export default function TopTracksAndArtists() {
-  const [isRefreshing, setIsRefreshing] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const queryClient = useQueryClient()
-  
+  const { refreshData, isRefreshing } = useRefreshTopItems();
+
   const [tracksFilters, setTracksFilters] = React.useState<FilterOptions>({
     timeRange: 'medium_term',
     limit: 50,
@@ -32,34 +33,25 @@ export default function TopTracksAndArtists() {
     offset: 0
   });
 
-  // React Query for top tracks
+  // Use custom hooks for top tracks
   const { 
     data: tracksData, 
     isLoading: tracksLoading, 
     error: tracksError, 
     isError: isTracksError 
-  } = useQuery({
-    queryKey: ['topTracks', tracksFilters],
-    queryFn: () => spotifyApi.getTopItems('tracks', tracksFilters),
-  });
+  } = useTopTracks(tracksFilters);
 
-  // React Query for top artists
+  // Use custom hooks for top artists
   const { 
     data: artistsData, 
     isLoading: artistsLoading, 
     error: artistsError, 
     isError: isArtistsError 
-  } = useQuery({
-    queryKey: ['topArtists', artistsFilters],
-    queryFn: () => spotifyApi.getTopItems('artists', artistsFilters),
-  });
+  } = useTopArtists(artistsFilters);
 
-  // React Query for all track reviews
-  const { data: trackReviews } = useQuery({
-    queryKey: ['trackReviews'],
-    queryFn: () => reviewApi.getUserReviews(),
-  });
-  
+  // Use custom hook for track reviews
+  const { data: trackReviews } = useTrackReviews();
+
   // Filter tracks based on search query
   const filteredTracks = useMemo(() => {
     if (!tracksData?.items || !searchQuery.trim()) {
@@ -100,26 +92,6 @@ export default function TopTracksAndArtists() {
     });
   }, [artistsData?.items, searchQuery]);
   
-  // Combined function to refresh all data
-  const refreshData = async () => {
-    setIsRefreshing(true)
-    try {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['topTracks'] }),
-        queryClient.invalidateQueries({ queryKey: ['topArtists'] }),
-        queryClient.invalidateQueries({ queryKey: ['trackReviews'] })
-      ])
-      toast.success("Data refreshed", {
-        description: "Your top tracks and artists have been updated"
-      })
-    } catch (error) {
-      toast.error("Refresh failed", {
-        description: "Failed to refresh your data"
-      })
-    } finally {
-      setIsRefreshing(false)
-    }
-  }
 
   const handleTracksTimeRangeChange = (value: string) => {
     setTracksFilters(prev => ({
@@ -220,9 +192,8 @@ export default function TopTracksAndArtists() {
         ) : (
           <div className="flex flex-col gap-2">
             <Separator />
-            <MusicScrollArea 
+            <TrackScrollArea 
               items={filteredTracks as Track[]} 
-              itemType="track" 
               reviews={trackReviews} 
               showRating={true}
             />
@@ -257,9 +228,8 @@ export default function TopTracksAndArtists() {
         ) : (
           <div className="flex flex-col gap-2">
             <Separator />
-            <MusicScrollArea 
+            <ArtistScrollArea 
               items={filteredArtists as Artist[]} 
-              itemType="artist"
             />
           </div>
         )}
@@ -294,4 +264,4 @@ export default function TopTracksAndArtists() {
       </div>
     </div>
   );
-} 
+}

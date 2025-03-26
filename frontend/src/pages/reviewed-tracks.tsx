@@ -6,81 +6,28 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/ui/page-header";
 import { toast } from "sonner";
 import { SearchBar } from "@/components/ui/search-bar";
+import { useTrackReviews, useTracksBatch, useRefreshReviewedTracks } from '@/hooks/queryHooks';
 
 export default function ReviewedTracks() {
-  const [isRefreshing, setIsRefreshing] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
-  const queryClient = useQueryClient();
   
-  // React Query for all track reviews
+  // Use custom hook for track reviews
   const { 
     data: trackReviews, 
     isLoading: isTrackReviewsLoading, 
     error: trackReviewsError
-  } = useQuery({
-    queryKey: ['trackReviews'],
-    queryFn: () => reviewApi.getUserReviews(),
-  });
+  } = useTrackReviews();
   
   // Extract track IDs from reviews for batch fetching
   const trackIds = trackReviews?.map(review => review.trackId) || [];
   
-  // React Query for fetching tracks in batch with data transformation
+  // Use custom hook for batch track fetching
   const { 
     data: groupedTracks, 
     isLoading: isTracksLoading, 
     error: tracksError 
-  } = useQuery({
-    queryKey: ['tracks', trackIds],
-    queryFn: async () => {
-      // If no track IDs, return empty result
-      if (trackIds.length === 0) {
-        return { 
-          liked: [], 
-          neutral: [], 
-          disliked: [], 
-          reviewsMap: {} 
-        };
-      }
-      
-      // Fetch tracks in batch
-      const tracksData = await spotifyApi.getTracksBatch(trackIds);
-      
-      // Create a map of track IDs to review objects
-      const reviewsMap: Record<string, TrackReview> = {};
-      if (trackReviews) {
-        trackReviews.forEach(review => {
-          reviewsMap[review.trackId] = review;
-        });
-      }
-      
-      // Group tracks by opinion based on their associated reviews
-      const liked: Track[] = [];
-      const neutral: Track[] = [];
-      const disliked: Track[] = [];
-      
-      tracksData.tracks.forEach(track => {
-        const review = reviewsMap[track.id];
-        if (review) {
-          if (review.opinion === 'LIKED') {
-            liked.push(track);
-          } else if (review.opinion === 'NEUTRAL') {
-            neutral.push(track);
-          } else if (review.opinion === 'DISLIKE') {
-            disliked.push(track);
-          }
-        }
-      });
-      
-      return {
-        liked,
-        neutral,
-        disliked,
-        reviewsMap
-      };
-    },
-    enabled: trackIds.length > 0, // Only run query if we have track IDs
-  });
+  } = useTracksBatch(trackIds);
   
   // Filter tracks based on search query
   const filteredTracks = useMemo(() => {
@@ -110,25 +57,8 @@ export default function ReviewedTracks() {
     };
   }, [groupedTracks, searchQuery]);
   
-  // Function to refresh data
-  const refreshData = async () => {
-    setIsRefreshing(true);
-    try {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['trackReviews'] }),
-        queryClient.invalidateQueries({ queryKey: ['tracks'] })
-      ]);
-      toast.success("Data refreshed", {
-        description: "Your reviewed tracks have been updated"
-      });
-    } catch (error) {
-      toast.error("Refresh failed", {
-        description: "Failed to refresh your reviewed tracks"
-      });
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
+  // Use the refresh hook for data management
+  const { refreshData, isRefreshing } = useRefreshReviewedTracks();
   
   // Helper function to render a section
   const renderSection = (title: string, tracks: Track[]) => {
@@ -161,7 +91,7 @@ export default function ReviewedTracks() {
   const error = trackReviewsError || tracksError;
 
   // Check if there are any tracks after filtering
-  const hasFilteredTracks = filteredTracks && (
+  const hasFilteredTracks = filteredTracks && filteredTracks.liked && filteredTracks.neutral && filteredTracks.disliked && (
     filteredTracks.liked.length > 0 || 
     filteredTracks.neutral.length > 0 || 
     filteredTracks.disliked.length > 0
@@ -215,4 +145,4 @@ export default function ReviewedTracks() {
       </div>
     </div>
   );
-} 
+}

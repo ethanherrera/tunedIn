@@ -8,7 +8,7 @@ const REFRESH_COOLDOWN = 10000;
 
 interface PageHeaderProps {
   title: string;
-  onRefresh?: () => Promise<void>;
+  onRefresh?: () => void;
   isRefreshing?: boolean;
   isLoading?: boolean;
   className?: string;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,11 +6,9 @@ import {
 import { Button } from "./ui/button.tsx";
 import { Textarea } from "./ui/textarea.tsx";
 import { DialogTitle } from "./ui/dialog.tsx";
-import { Progress } from "./ui/progress.tsx";
-import { Album, Artist, reviewApi, Track, TrackReview, AlbumReview, userApi } from "@/api/apiClient.ts";
+import { Track, TrackReview } from "@/api/apiClient.ts";
 import { toast } from "sonner";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import MusicCardUI from "./MusicCardUI.tsx";
+import { useUserProfile, useTrackReviewMutation } from "@/hooks/queryHooks";
 import TrackCardUI from "./TrackCardUI.tsx";
 
 interface TrackRankingDialogProps {
@@ -28,13 +26,9 @@ const TrackRankingDialog: React.FC<TrackRankingDialogProps> = ({item, items=[], 
   const [opinion, setOpinion] = useState<'DISLIKE' | 'NEUTRAL' | 'LIKED' | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const queryClient = useQueryClient();
   
   // Fetch current user profile to get user ID
-  const { data: userProfile } = useQuery({
-    queryKey: ['userProfile'],
-    queryFn: userApi.getProfile,
-  });
+  const { data: userProfile } = useUserProfile();
 
   useEffect(() => {
     if (isSubmitted && onOpenChange) {
@@ -70,26 +64,8 @@ const TrackRankingDialog: React.FC<TrackRankingDialogProps> = ({item, items=[], 
     return Math.round((min + Math.random() * (max - min)) * 10) / 10;
   };
 
-  // React Query mutation for saving the review
-  const saveMutation = useMutation({
-    mutationFn: (reviewData: any) => {
-      // The backend expects a TrackReview object with a userId
-      return reviewApi.saveTrackReview({
-        ...reviewData,
-      });
-    },
-    onSuccess: () => {
-      setIsSubmitted(true);
-      toast.success("Review saved successfully!");
-      queryClient.invalidateQueries({ queryKey: ['trackReviews'] });
-      queryClient.invalidateQueries({ queryKey: ['tracks'] });
-    },
-    onError: (error) => {
-      console.error("Error saving review:", error);
-      toast.error("Failed to save review");
-      setIsSubmitting(false);
-    }
-  });
+  // Use the track review mutation hook
+  const saveMutation = useTrackReviewMutation();
 
   const onOpinionSelected = (newOpinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED') => {
     if (!userProfile || !userProfile.id) {
@@ -101,7 +77,6 @@ const TrackRankingDialog: React.FC<TrackRankingDialogProps> = ({item, items=[], 
     const newRating = generateRandomRating(newOpinion);
     setIsSubmitting(true);
     
-    // Save the review with React Query
     saveMutation.mutate({
       trackId: item.id,
       userId: userProfile.id,
@@ -109,6 +84,14 @@ const TrackRankingDialog: React.FC<TrackRankingDialogProps> = ({item, items=[], 
       description: reviewText,
       rating: newRating,
       ranking: newRating,
+    }, {
+      onSuccess: () => {
+        setIsSubmitted(true);
+        setIsSubmitting(false);
+      },
+      onError: () => {
+        setIsSubmitting(false);
+      }
     });
   };
 
@@ -169,4 +152,4 @@ const TrackRankingDialog: React.FC<TrackRankingDialogProps> = ({item, items=[], 
   );
 };
 
-export default TrackRankingDialog; 
+export default TrackRankingDialog;

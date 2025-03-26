@@ -1,53 +1,28 @@
 import React, { useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
-import MusicScrollArea from "@/components/MusicScrollArea.tsx"
 import { Separator } from "@/components/ui/separator"
 import { Track } from "@/types/spotify"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { spotifyApi, reviewApi } from "@/api/apiClient"
 import { PageHeader } from "@/components/ui/page-header"
 import { toast } from "sonner"
+import { useRecentlyPlayed, useTrackReviews, useRefreshRecentlyPlayed } from "@/hooks/queryHooks"
+import TrackScrollArea from "@/components/TrackScrollArea"
 
 export default function RecentlyPlayed() {
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const queryClient = useQueryClient()
-  
-  // React Query for recently played tracks
+  // Use custom hooks for queries
   const { 
     data: recentlyPlayedData, 
     isLoading: tracksLoading, 
     error: tracksError, 
     isError: isTracksError 
-  } = useQuery({
-    queryKey: ['recentlyPlayed'],
-    queryFn: () => spotifyApi.getRecentlyPlayed({ limit: 50 }),
-  });
+  } = useRecentlyPlayed(50);
 
-  // React Query for all track reviews
-  const { data: trackReviews } = useQuery({
-    queryKey: ['trackReviews'],
-    queryFn: () => reviewApi.getUserReviews(),
-  });
-  
-  // Function to refresh data
-  const refreshData = async () => {
-    setIsRefreshing(true)
-    try {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['recentlyPlayed'] }),
-        queryClient.invalidateQueries({ queryKey: ['trackReviews'] })
-      ])
-      toast.success("Data refreshed", {
-        description: "Recently played tracks have been updated"
-      })
-    } catch (error) {
-      toast.error("Refresh failed", {
-        description: "Failed to refresh data"
-      })
-    } finally {
-      setIsRefreshing(false)
-    }
-  }
+  // Use custom hook for track reviews
+  const { data: trackReviews } = useTrackReviews();
+
+  // Use refresh hook
+  const { refreshData, isRefreshing } = useRefreshRecentlyPlayed();
 
   // Extract just the tracks from the PlayHistoryItems
   const tracks = recentlyPlayedData?.items.map(item => item.track);
@@ -78,7 +53,7 @@ export default function RecentlyPlayed() {
           <div>
             <div className="flex flex-col gap-2">
               <Separator />
-              <MusicScrollArea items={tracks as Track[]} itemType="track" reviews={trackReviews} showRating={true}/>
+              <TrackScrollArea items={tracks as Track[]} reviews={trackReviews} showRating={true}/>
             </div>
           </div>
         )}
