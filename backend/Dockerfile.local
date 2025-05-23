@@ -3,24 +3,35 @@
 # DO NOT USE IN PRODUCTION ENVIRONMENT
 # =====================================================
 
-FROM eclipse-temurin:21-jdk-jammy as builder
+FROM eclipse-temurin:21-jdk-jammy
 
 WORKDIR /app
-COPY . .
-RUN ./mvnw clean package -DskipTests
 
-FROM eclipse-temurin:21-jre-jammy
+# Copy dependency files first for better Docker layer caching
+COPY pom.xml ./
+COPY mvnw ./
+COPY .mvn .mvn
 
-WORKDIR /app
-COPY --from=builder /app/target/*.jar app.jar
+# Make mvnw executable
+RUN chmod +x ./mvnw
+
+# Download dependencies (this layer will be cached unless pom.xml changes)
+RUN ./mvnw dependency:go-offline -B
+
+# Copy source code (this will be volume mounted in development)
+COPY src ./src
 
 # Development environment labels
 LABEL environment="development" \
       description="TunedIn backend service for local development" \
       maintainer="TunedIn Development Team"
 
-# Set environment variables
+# Set environment variables for development
 ENV SPRING_PROFILES_ACTIVE=local
+ENV SPRING_DEVTOOLS_RESTART_ENABLED=true
+ENV SPRING_DEVTOOLS_LIVERELOAD_ENABLED=true
 
 EXPOSE ${SERVER_PORT:-8000}
-ENTRYPOINT ["java", "-jar", "app.jar"] 
+
+# Use spring-boot:run for development with hot reload
+CMD ["./mvnw", "spring-boot:run", "-Dspring-boot.run.jvmArguments=-Dspring.devtools.restart.enabled=true -Dspring.devtools.livereload.enabled=true"] 

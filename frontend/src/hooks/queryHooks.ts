@@ -18,7 +18,6 @@ export const useFriendsList = () => {
     queryFn: friendsApi.getFriendsList
   });
 };
-
 export const useSentRequests = () => {
   return useQuery({
     queryKey: ['sentRequests'],

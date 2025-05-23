@@ -8,8 +8,9 @@ import { Textarea } from "./ui/textarea.tsx";
 import { DialogTitle } from "./ui/dialog.tsx";
 import { Track, TrackReview } from "@/api/apiClient.ts";
 import { toast } from "sonner";
-import { useUserProfile, useTrackReviewMutation } from "@/hooks/queryHooks";
+import { useUserProfile, useTrackReviewMutation, useTrackReviews } from "@/hooks/queryHooks";
 import TrackCardUI from "./TrackCardUI.tsx";
+import { Star } from "lucide-react";
 
 interface TrackRankingDialogProps {
   children: React.ReactNode;
@@ -20,10 +21,11 @@ interface TrackRankingDialogProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-const TrackRankingDialog: React.FC<TrackRankingDialogProps> = ({item, items=[], review, reviews=[], onOpenChange}) => {
+const TrackRankingDialog: React.FC<TrackRankingDialogProps> = ({item, items=[], review, onOpenChange}) => {
   const [reviewText, setReviewText] = useState("");
   const maxLength = 300;
-  const [opinion, setOpinion] = useState<'DISLIKE' | 'NEUTRAL' | 'LIKED' | null>(null);
+  const [rating, setRating] = useState<number>(0);
+  const [hoverRating, setHoverRating] = useState<number>(0);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -40,50 +42,33 @@ const TrackRankingDialog: React.FC<TrackRankingDialogProps> = ({item, items=[], 
     }
   }, [isSubmitted, onOpenChange]);
 
-  // Generate random rating based on opinion
-  const generateRandomRating = (selectedOpinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED') => {
-    let min = 0;
-    let max = 0;
-    
-    switch (selectedOpinion) {
-      case 'LIKED':
-        min = 7.0;
-        max = 10.0;
-        break;
-      case 'NEUTRAL':
-        min = 4.0;
-        max = 6.9;
-        break;
-      case 'DISLIKE':
-        min = 0.0;
-        max = 3.9;
-        break;
-    }
-    
-    // Generate random number with one decimal place
-    return Math.round((min + Math.random() * (max - min)) * 10) / 10;
+  // Determine opinion based on rating
+  const getOpinionFromRating = (ratingValue: number): 'DISLIKE' | 'NEUTRAL' | 'LIKED' => {
+    if (ratingValue >= 7.0) return 'LIKED';
+    if (ratingValue >= 4.0) return 'NEUTRAL';
+    return 'DISLIKE';
   };
 
   // Use the track review mutation hook
   const saveMutation = useTrackReviewMutation();
 
-  const onOpinionSelected = (newOpinion: 'DISLIKE' | 'NEUTRAL' | 'LIKED') => {
+  const onRatingSelected = (selectedRating: number) => {
     if (!userProfile || !userProfile.id) {
       toast.error("Unable to save review: User profile not loaded");
       return;
     }
     
-    setOpinion(newOpinion);
-    const newRating = generateRandomRating(newOpinion);
+    setRating(selectedRating);
+    const opinion = getOpinionFromRating(selectedRating);
     setIsSubmitting(true);
     
     saveMutation.mutate({
       trackId: item.id,
       userId: userProfile.id,
-      opinion: newOpinion,
+      opinion: opinion,
       description: reviewText,
-      rating: newRating,
-      ranking: newRating,
+      rating: selectedRating,
+      ranking: selectedRating,
     }, {
       onSuccess: () => {
         setIsSubmitted(true);
@@ -93,6 +78,89 @@ const TrackRankingDialog: React.FC<TrackRankingDialogProps> = ({item, items=[], 
         setIsSubmitting(false);
       }
     });
+  };
+
+  // Handle star rating interactions
+  const handleStarClick = (starIndex: number, isHalf: boolean = false) => {
+    if (isSubmitting || isSubmitted) return;
+    const newRating = starIndex + (isHalf ? 0.5 : 1);
+    onRatingSelected(newRating);
+  };
+
+  const handleStarHover = (starIndex: number, isHalf: boolean = false) => {
+    if (isSubmitting || isSubmitted) return;
+    const newHoverRating = starIndex + (isHalf ? 0.5 : 1);
+    setHoverRating(newHoverRating);
+  };
+
+  const handleStarLeave = () => {
+    if (isSubmitting || isSubmitted) return;
+    // Keep the last hovered value instead of resetting to 0
+    // This maintains the visual state when mouse leaves the star area
+  };
+
+  // Star rating component
+  const StarRating = () => {
+    const stars = [];
+    const displayRating = hoverRating || rating;
+
+    for (let i = 0; i < 10; i++) {
+      const starValue = i + 1;
+      const isFullyFilled = displayRating >= starValue;
+      const isHalfFilled = displayRating >= starValue - 0.5 && displayRating < starValue;
+
+      stars.push(
+        <div key={i} className="relative cursor-pointer group">
+          {/* Background star (empty) */}
+          <Star className="w-8 h-8 text-gray-300 absolute" />
+          
+          {/* Filled star */}
+          {isFullyFilled && (
+            <Star className="w-8 h-8 fill-yellow-400 text-yellow-400 absolute" />
+          )}
+          
+          {/* Half filled star */}
+          {isHalfFilled && (
+            <div className="absolute overflow-hidden w-4 h-8">
+              <Star className="w-8 h-8 fill-yellow-400 text-yellow-400" />
+            </div>
+          )}
+          
+          {/* Invisible clickable areas */}
+          <div className="flex w-8 h-8 relative z-10">
+            {/* Left half for half star */}
+            <div
+              className="w-4 h-8 cursor-pointer"
+              onMouseEnter={() => handleStarHover(i, true)}
+              onMouseLeave={handleStarLeave}
+              onClick={() => handleStarClick(i, true)}
+            />
+            {/* Right half for full star */}
+            <div
+              className="w-4 h-8 cursor-pointer"
+              onMouseEnter={() => handleStarHover(i, false)}
+              onMouseLeave={handleStarLeave}
+              onClick={() => handleStarClick(i, false)}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative w-full">
+        {/* Stars container - centered and fixed position */}
+        <div className="flex items-center justify-center gap-1">
+          {stars}
+        </div>
+        {/* Text container - fixed position below stars */}
+        <div className="flex justify-center mt-2">
+          <span className="text-sm text-muted-foreground">
+            {displayRating > 0 ? `${displayRating}/10` : 'Rate this track'}
+          </span>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -119,32 +187,14 @@ const TrackRankingDialog: React.FC<TrackRankingDialogProps> = ({item, items=[], 
                   </div>
                 </div>
                 {/** This is the rating section */}
-                <div className="flex flex-row justify-between w-full">
-                  <Button 
-                    variant="secondary" 
-                    className="bg-red-500" 
-                    onClick={() => onOpinionSelected("DISLIKE")}
-                    disabled={isSubmitting || isSubmitted}
-                  >
-                    Not a fan
-                  </Button>
-                  <Button 
-                    variant="secondary" 
-                    className="bg-yellow-600" 
-                    onClick={() => onOpinionSelected("NEUTRAL")}
-                    disabled={isSubmitting || isSubmitted}
-                  >
-                    Okay.
-                  </Button>
-                  <Button 
-                    variant="secondary" 
-                    className="bg-green-500" 
-                    onClick={() => onOpinionSelected("LIKED")}
-                    disabled={isSubmitting || isSubmitted}
-                  >
-                    Great!
-                  </Button>
-              </div>
+                <div className="flex flex-col items-center w-full gap-4">
+                  <StarRating />
+                  {isSubmitted && (
+                    <div className="text-green-500 text-center">
+                      Thank you for your rating!
+                    </div>
+                  )}
+                </div>
             </div>
         </DialogContent>
       </Dialog>

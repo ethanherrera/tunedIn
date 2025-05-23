@@ -65,10 +65,10 @@ const defaultNavMain = [
         title: "Search",
         view: "search",
       },
-      {
-        title: "For You",
-        view: "forYou",
-      },
+      // {
+      //   title: "For You",
+      //   view: "forYou",
+      // },
     ],
   },
   {
@@ -79,14 +79,14 @@ const defaultNavMain = [
         title: "Tracks",
         view: "tracks",
       },
-      {
-        title: "Albums",
-        view: "albums",
-      },
-      {
-        title: "Artists",
-        view: "artists",
-      },
+      // {
+      //   title: "Albums",
+      //   view: "albums",
+      // },
+      // {
+      //   title: "Artists",
+      //   view: "artists",
+      // },
     ],
   },
   {
@@ -103,52 +103,52 @@ const defaultNavMain = [
       },
     ]
   },
-  {
-    title: "Friends",
-    icon: BookOpen,
-    items: [
-      {
-        title: "Recent Activity",
-        view: "recentActivity",
-      },
-      {
-        title: "Your Friends",
-        view: "yourFriends",
-      },
-      {
-        title: "Manage Friends",
-        view: "manageFriends",
-      }
-    ],
-  },
-  {
-    title: "Profile",
-    icon: User,
-    items: [
-      {
-        title: "Info",
-        view: "profileInfo",
-      },
-      {
-        title: "Recent Activity",
-        view: "profileActivity",
-      },
-    ],
-  },
-  {
-    title: "Settings",
-    icon: Settings,
-    items: [
-      {
-        title: "General",
-        view: "generalSettings",
-      },
-      {
-        title: "Account",
-        view: "accountSettings",
-      },
-    ],
-  },
+  // {
+  //   title: "Friends",
+  //   icon: BookOpen,
+  //   items: [
+  //     {
+  //       title: "Recent Activity",
+  //       view: "recentActivity",
+  //     },
+  //     {
+  //       title: "Your Friends",
+  //       view: "yourFriends",
+  //     },
+  //     {
+  //       title: "Manage Friends",
+  //       view: "manageFriends",
+  //     }
+  //   ],
+  // },
+  // {
+  //   title: "Profile",
+  //   icon: User,
+  //   items: [
+  //     {
+  //       title: "Info",
+  //       view: "profileInfo",
+  //     },
+  //     {
+  //       title: "Recent Activity",
+  //       view: "profileActivity",
+  //     },
+  //   ],
+  // },
+  // {
+  //   title: "Settings",
+  //   icon: Settings,
+  //   items: [
+  //     {
+  //       title: "General",
+  //       view: "generalSettings",
+  //     },
+  //     {
+  //       title: "Account",
+  //       view: "accountSettings",
+  //     },
+  //   ],
+  // },
 ]
 
 const defaultProjects = [

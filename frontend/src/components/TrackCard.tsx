@@ -1,13 +1,6 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import { ThumbsUp, ThumbsDown, Minus } from "lucide-react";
 import { Track, TrackReview } from "@/api/apiClient.ts";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
 import TrackRankingDialog from "@/components/TrackRankingDialog";
 import { useDominantColor } from "@/lib/colorExtractor";
 
@@ -23,22 +16,6 @@ const TrackCard: React.FC<TrackCardProps> = ({ item, items=[], reviews=[], revie
   const [showRankingDialog, setShowRankingDialog] = useState(false);
   const { color } = useDominantColor(item.album.images[0]?.url);
   const [isHovered, setIsHovered] = useState(false);
-
-  // Function to render the opinion icon
-  const renderOpinionIcon = () => {
-    if (!review) return null;
-
-    switch (review.opinion) {
-      case 'LIKED':
-        return <ThumbsUp className="h-3 w-3 text-green-500 mr-1" />;
-      case 'DISLIKE':
-        return <ThumbsDown className="h-3 w-3 text-red-500 mr-1" />;
-      case 'NEUTRAL':
-        return <Minus className="h-3 w-3 text-yellow-500 mr-1" />;
-      default:
-        return null;
-    }
-  };
 
   const handleCardClick = () => {
     if (!disableInteraction) {
@@ -93,9 +70,6 @@ const TrackCard: React.FC<TrackCardProps> = ({ item, items=[], reviews=[], revie
       {showRankingDialog && (
         <TrackRankingDialog
           item={item}
-          items={items}
-          review={review}
-          reviews={reviews}
           onOpenChange={(open) => setShowRankingDialog(open)}
         >
           <></>
