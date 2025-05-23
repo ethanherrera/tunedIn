@@ -23,7 +23,7 @@ docker compose -f docker-compose.local.yml up -d
 echo "Development environment started!"
 echo "MongoDB: localhost:27017"
 echo "Backend: http://localhost:8000"
-echo "Frontend: http://localhost:5137"
+echo "Frontend: http://localhost:5173"
 echo "Reverse Proxy: http://localhost:80"
 echo ""
 echo "To view logs: docker compose -f docker-compose.local.yml logs -f"

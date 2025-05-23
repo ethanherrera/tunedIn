@@ -109,6 +109,7 @@ export interface TrackReview {
   rating: number;
   ranking: number;
   createdAt: number;
+  updatedAt: number;
   genres: string[];
 }
 

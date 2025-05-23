@@ -52,14 +52,18 @@ const TrackRankingDialog: React.FC<TrackRankingDialogProps> = ({item, items=[], 
   // Use the track review mutation hook
   const saveMutation = useTrackReviewMutation();
 
-  const onRatingSelected = (selectedRating: number) => {
+  const handleSubmit = () => {
     if (!userProfile || !userProfile.id) {
       toast.error("Unable to save review: User profile not loaded");
       return;
     }
     
-    setRating(selectedRating);
-    const opinion = getOpinionFromRating(selectedRating);
+    if (rating === 0) {
+      toast.error("Please select a rating before submitting");
+      return;
+    }
+    
+    const opinion = getOpinionFromRating(rating);
     setIsSubmitting(true);
     
     saveMutation.mutate({
@@ -67,8 +71,8 @@ const TrackRankingDialog: React.FC<TrackRankingDialogProps> = ({item, items=[], 
       userId: userProfile.id,
       opinion: opinion,
       description: reviewText,
-      rating: selectedRating,
-      ranking: selectedRating,
+      rating: rating,
+      ranking: rating,
     }, {
       onSuccess: () => {
         setIsSubmitted(true);
@@ -84,7 +88,7 @@ const TrackRankingDialog: React.FC<TrackRankingDialogProps> = ({item, items=[], 
   const handleStarClick = (starIndex: number, isHalf: boolean = false) => {
     if (isSubmitting || isSubmitted) return;
     const newRating = starIndex + (isHalf ? 0.5 : 1);
-    onRatingSelected(newRating);
+    setRating(newRating);
   };
 
   const handleStarHover = (starIndex: number, isHalf: boolean = false) => {
@@ -189,6 +193,15 @@ const TrackRankingDialog: React.FC<TrackRankingDialogProps> = ({item, items=[], 
                 {/** This is the rating section */}
                 <div className="flex flex-col items-center w-full gap-4">
                   <StarRating />
+                  {rating > 0 && !isSubmitted && (
+                    <Button 
+                      onClick={handleSubmit}
+                      disabled={isSubmitting}
+                      className="w-full max-w-xs"
+                    >
+                      {isSubmitting ? "Submitting..." : "Submit Rating"}
+                    </Button>
+                  )}
                   {isSubmitted && (
                     <div className="text-green-500 text-center">
                       Thank you for your rating!

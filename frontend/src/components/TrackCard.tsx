@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Track, TrackReview } from "@/api/apiClient.ts";
-import TrackRankingDialog from "@/components/TrackRankingDialog";
+import TrackCardDialog from "@/components/TrackCardDialog";
 import { useDominantColor } from "@/lib/colorExtractor";
 
 interface TrackCardProps {
@@ -13,13 +13,13 @@ interface TrackCardProps {
 }
 
 const TrackCard: React.FC<TrackCardProps> = ({ item, items=[], reviews=[], review, disableInteraction=false}) => {
-  const [showRankingDialog, setShowRankingDialog] = useState(false);
+  const [showCardDialog, setShowCardDialog] = useState(false);
   const { color } = useDominantColor(item.album.images[0]?.url);
   const [isHovered, setIsHovered] = useState(false);
 
   const handleCardClick = () => {
     if (!disableInteraction) {
-      setShowRankingDialog(true);
+      setShowCardDialog(true);
     }
   };
 
@@ -67,13 +67,15 @@ const TrackCard: React.FC<TrackCardProps> = ({ item, items=[], reviews=[], revie
         </CardContent>
       </Card>
 
-      {showRankingDialog && (
-        <TrackRankingDialog
+      {showCardDialog && (
+        <TrackCardDialog
           item={item}
-          onOpenChange={(open) => setShowRankingDialog(open)}
+          items={items}
+          review={review}
+          onOpenChange={(open: boolean) => setShowCardDialog(open)}
         >
           <></>
-        </TrackRankingDialog>
+        </TrackCardDialog>
       )}
     </>
   );

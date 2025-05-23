@@ -61,7 +61,7 @@ class CorsFilter : Filter {
             "http://tunedin.app",
             "http://www.tunedin.app",
             "https://tunedin-frontend-prod-jibc6pxvva-uc.a.run.app",
-            "http://localhost:5137"
+            "http://localhost:5173"
         )
         
         return allowedOrigins.contains(origin)

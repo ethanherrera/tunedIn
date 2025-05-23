@@ -243,7 +243,26 @@ export const useRecentlyPlayed = (limit: number = 50) => {
 export const useTrackReviews = () => {
   return useQuery({
     queryKey: ['trackReviews'],
-    queryFn: () => reviewApi.getUserReviews()
+    queryFn: async () => {
+      const reviews = await reviewApi.getUserReviews();
+      const trackIds = reviews.map(review => review.trackId);
+      const tracksResponse = await spotifyApi.getTracksBatch(trackIds);
+      const tracks = tracksResponse.tracks || [];
+      
+      // Create a map of tracks for quick lookup
+      const tracksMap: Record<string, Track> = {};
+      tracks.forEach(track => {
+        tracksMap[track.id] = track;
+      });
+      
+      // Attach track data to each review
+      return reviews.map(review => ({
+        ...review,
+        track: tracksMap[review.trackId]
+      }));
+    },
+    staleTime: 0,
+    gcTime: Infinity
   });
 };
 
@@ -255,14 +274,39 @@ export const useTrackReviewMutation = () => {
         ...reviewData,
       });
     },
-    onSuccess: () => {
-      toast.success("Review saved successfully!");
-      queryClient.invalidateQueries({ queryKey: ['trackReviews'] });
-      queryClient.invalidateQueries({ queryKey: ['tracks'] });
+    onMutate: async (newReview) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['trackReviews'] });
+
+      // Snapshot the previous value
+      const previousReviews = queryClient.getQueryData(['trackReviews']);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(['trackReviews'], (old: any[]) => {
+        const reviews = [...(old || [])];
+        const index = reviews.findIndex(r => r.trackId === newReview.trackId);
+        if (index >= 0) {
+          reviews[index] = { ...reviews[index], ...newReview };
+        } else {
+          reviews.push(newReview);
+        }
+        return reviews;
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousReviews };
     },
-    onError: (error) => {
-      console.error("Error saving review:", error);
+    onError: (err, newReview, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousReviews) {
+        queryClient.setQueryData(['trackReviews'], context.previousReviews);
+      }
+      console.error("Error saving review:", err);
       toast.error("Failed to save review");
+    },
+    onSettled: () => {
+      // Always refetch after error or success to make sure our optimistic update is correct
+      queryClient.invalidateQueries({ queryKey: ['trackReviews'] });
     }
   });
 };
@@ -274,43 +318,7 @@ export const useTracksBatch = (trackIds: string[]) => {
     queryKey: ['tracks', trackIds],
     queryFn: async () => {
       const response = await spotifyApi.getTracksBatch(trackIds);
-      const tracks = response.tracks || [];
-      
-      // Create a map of track reviews for quick lookup
-      const reviewsMap: Record<string, TrackReview> = {};
-      if (trackReviews) {
-        trackReviews.forEach(review => {
-          reviewsMap[review.trackId] = review;
-        });
-      }
-      
-      // Group tracks by opinion
-      const grouped = {
-        liked: [] as Track[],
-        neutral: [] as Track[],
-        disliked: [] as Track[],
-        reviewsMap
-      };
-      
-      // Group tracks based on their reviews
-      tracks.forEach(track => {
-        const review = reviewsMap[track.id];
-        if (review) {
-          switch (review.opinion) {
-            case 'LIKED':
-              grouped.liked.push(track);
-              break;
-            case 'NEUTRAL':
-              grouped.neutral.push(track);
-              break;
-            case 'DISLIKE':
-              grouped.disliked.push(track);
-              break;
-          }
-        }
-      });
-      
-      return grouped;
+      return response.tracks || [];
     },
     enabled: trackIds.length > 0
   });

@@ -37,7 +37,7 @@ class SecurityConfig {
                 "http://tunedin.app",
                 "http://www.tunedin.app",
                 "https://tunedin-frontend-prod-jibc6pxvva-uc.a.run.app",
-                "http://localhost:5137"
+                "http://localhost:5173"
             )
             allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
             allowedHeaders = listOf("*")

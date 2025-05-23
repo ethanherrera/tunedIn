@@ -1,15 +1,12 @@
 import { useState, useMemo } from "react";
 import { TrackScrollArea } from "@/components/TrackScrollArea.tsx";
 import { Separator } from "@/components/ui/separator";
-import { reviewApi, spotifyApi, Track, TrackReview } from "@/api/apiClient";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Track } from "@/api/apiClient";
 import { PageHeader } from "@/components/ui/page-header";
-import { toast } from "sonner";
 import { SearchBar } from "@/components/ui/search-bar";
-import { useTrackReviews, useTracksBatch, useRefreshReviewedTracks } from '@/hooks/queryHooks';
+import { useTrackReviews, useRefreshReviewedTracks } from '@/hooks/queryHooks';
 
 export default function ReviewedTracks() {
-
   const [searchQuery, setSearchQuery] = useState("");
   
   // Use custom hook for track reviews
@@ -18,56 +15,58 @@ export default function ReviewedTracks() {
     isLoading: isTrackReviewsLoading, 
     error: trackReviewsError
   } = useTrackReviews();
-  
-  // Extract track IDs from reviews for batch fetching
-  const trackIds = trackReviews?.map(review => review.trackId) || [];
-  
-  // Use custom hook for batch track fetching
-  const { 
-    data: groupedTracks, 
-    isLoading: isTracksLoading, 
-    error: tracksError 
-  } = useTracksBatch(trackIds);
-  
-  // Filter tracks based on search query
-  const filteredTracks = useMemo(() => {
-    if (!groupedTracks || !searchQuery.trim()) {
-      return groupedTracks;
-    }
-    
+
+  // Filter and group tracks based on search query
+  const groupedTracks = useMemo(() => {
+    if (!trackReviews) return null;
+
+    const tracks = trackReviews.map(review => review.track);
     const query = searchQuery.toLowerCase().trim();
     
     // Filter function to check if a track matches the search query
     const filterTrack = (track: Track) => {
+      if (!query) return true;
       return (
-        // Search in track name
         track.name.toLowerCase().includes(query) ||
-        // Search in artist names
         track.artists.some(artist => artist.name.toLowerCase().includes(query)) ||
-        // Search in album name
         track.album.name.toLowerCase().includes(query)
       );
     };
-    
-    return {
-      liked: groupedTracks.liked.filter(filterTrack),
-      neutral: groupedTracks.neutral.filter(filterTrack),
-      disliked: groupedTracks.disliked.filter(filterTrack),
-      reviewsMap: groupedTracks.reviewsMap
+
+    // Group tracks by opinion
+    const grouped = {
+      liked: [] as Track[],
+      neutral: [] as Track[],
+      disliked: [] as Track[]
     };
-  }, [groupedTracks, searchQuery]);
-  
+
+    // Group tracks based on their reviews
+    trackReviews.forEach(review => {
+      const track = review.track;
+      if (!filterTrack(track)) return;
+      
+      switch (review.opinion) {
+        case 'LIKED':
+          grouped.liked.push(track);
+          break;
+        case 'NEUTRAL':
+          grouped.neutral.push(track);
+          break;
+        case 'DISLIKE':
+          grouped.disliked.push(track);
+          break;
+      }
+    });
+
+    return grouped;
+  }, [trackReviews, searchQuery]);
+
   // Use the refresh hook for data management
   const { refreshData, isRefreshing } = useRefreshReviewedTracks();
   
   // Helper function to render a section
   const renderSection = (title: string, tracks: Track[]) => {
     if (!tracks || tracks.length === 0) return null;
-    
-    // Get reviews for these tracks
-    const reviews = tracks
-      .map(track => groupedTracks?.reviewsMap[track.id])
-      .filter(Boolean) as TrackReview[];
     
     return (
       <div className="mb-8">
@@ -77,24 +76,20 @@ export default function ReviewedTracks() {
         <div className="flex flex-col gap-2">
           <Separator />
           <TrackScrollArea
-            items={tracks} 
-            reviews={reviews}
+            items={tracks}
+            reviews={trackReviews}
+            showRating={true}
           />
         </div>
       </div>
     );
   };
 
-  // Determine if we're still loading
-  const isLoading = isTrackReviewsLoading || isTracksLoading;
-  // Determine if there's an error
-  const error = trackReviewsError || tracksError;
-
   // Check if there are any tracks after filtering
-  const hasFilteredTracks = filteredTracks && filteredTracks.liked && filteredTracks.neutral && filteredTracks.disliked && (
-    filteredTracks.liked.length > 0 || 
-    filteredTracks.neutral.length > 0 || 
-    filteredTracks.disliked.length > 0
+  const hasFilteredTracks = groupedTracks && (
+    groupedTracks.liked.length > 0 || 
+    groupedTracks.neutral.length > 0 || 
+    groupedTracks.disliked.length > 0
   );
 
   return (
@@ -104,7 +99,7 @@ export default function ReviewedTracks() {
           title="Your Reviewed Tracks" 
           onRefresh={refreshData}
           isRefreshing={isRefreshing}
-          isLoading={isLoading}
+          isLoading={isTrackReviewsLoading}
           className="flex-wrap"
         />
         
@@ -119,13 +114,13 @@ export default function ReviewedTracks() {
       </div>
       
       <div className="mt-6">
-        {isLoading ? (
+        {isTrackReviewsLoading ? (
           <div className="flex justify-center items-center h-64">
             <p>Loading your tracks...</p>
           </div>
-        ) : error ? (
+        ) : trackReviewsError ? (
           <div className="flex justify-center items-center h-64 text-red-500">
-            <p>{(error as Error).message}</p>
+            <p>{(trackReviewsError as Error).message}</p>
           </div>
         ) : !hasFilteredTracks ? (
           <div className="flex justify-center items-center h-64">
@@ -137,9 +132,9 @@ export default function ReviewedTracks() {
           </div>
         ) : (
           <div>
-            {renderSection("Tracks You Liked", filteredTracks.liked)}
-            {renderSection("Tracks You Feel Neutral About", filteredTracks.neutral)}
-            {renderSection("Tracks You Disliked", filteredTracks.disliked)}
+            {renderSection("Tracks You Liked", groupedTracks.liked)}
+            {renderSection("Tracks You Feel Neutral About", groupedTracks.neutral)}
+            {renderSection("Tracks You Disliked", groupedTracks.disliked)}
           </div>
         )}
       </div>
